@@ -1,0 +1,159 @@
+buildscript {
+    repositories {
+        maven { url "https://plugins.gradle.org/m2" }
+    }
+
+    dependencies {
+        classpath group: 'com.bmuschko', name: 'gradle-clover-plugin', version: '2.2.1'
+        classpath group: 'com.github.ben-manes', name: 'gradle-versions-plugin', version: '0.20.0'
+        classpath group: 'me.champeau.gradle', name: 'jmh-gradle-plugin', version: '0.4.8'
+        classpath group: 'org.owasp', name: 'dependency-check-gradle', version: '4.0.0.1'
+        classpath group: 'gradle.plugin.com.github.spotbugs', name: 'spotbugs-gradle-plugin', version: '1.6.6'
+        classpath group: 'org.ajoberstar.reckon', name: 'reckon-gradle', version: '0.9.0'
+    }
+}
+
+apply plugin: 'idea'
+apply plugin: 'org.ajoberstar.reckon'
+apply plugin: 'com.github.ben-manes.versions'
+
+description = """Measure behavior of critical components in production"""
+
+subprojects {
+    apply plugin: 'java'
+    apply plugin: 'maven-publish'
+    apply plugin: 'com.bmuschko.clover'
+    apply plugin: 'com.github.spotbugs'
+    apply plugin: 'org.owasp.dependencycheck'
+
+    sourceCompatibility = 1.8
+    targetCompatibility = 1.8
+
+    group = 'io.ultrabrew.' + rootProject.name
+    archivesBaseName = rootProject.name + '-' + name
+
+    repositories {
+        jcenter()
+    }
+
+    dependencies {
+        compileOnly 'com.github.spotbugs:spotbugs-annotations:3.1.9'
+
+        testCompile group: 'org.jmockit', name: 'jmockit', version: '1.44'
+        testCompile group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: '5.3.2'
+        testRuntime group: 'org.junit.jupiter', name: 'junit-jupiter-engine', version: '5.3.2'
+        testCompile group: 'org.hamcrest', name: 'hamcrest-all', version: '1.3'
+
+        clover group: 'org.openclover', name: 'clover', version: '4.2.1'
+
+        spotbugsPlugins 'com.h3xstream.findsecbugs:findsecbugs-plugin:1.8.0'
+
+        archives group: 'org.apache.maven.wagon', name: 'wagon-ssh-external', version: '3.2.0'
+    }
+
+    test {
+        useJUnitPlatform()
+
+        // Required as of JMockIt 1.42
+        // https://jmockit.github.io/tutorial/Introduction.html#runningTests
+        doFirst {
+            jvmArgs "-javaagent:${classpath.find { it.name.contains("jmockit") }.absolutePath}"
+        }
+
+        testLogging {
+            events 'passed', 'skipped', 'failed'
+        }
+
+        reports {
+            html.enabled = true
+        }
+    }
+
+    clover {
+        targetPercentage = '100.000%'
+        report {
+            html = true
+            testResultsDir = project.tasks.getByName('test').reports.junitXml.destination
+            testResultsInclude = 'TEST-*.xml'
+        }
+    }
+
+    check.dependsOn cloverGenerateReport, dependencyCheckAnalyze
+
+    dependencyCheck {
+        skipConfigurations = ['clover']
+        format = 'ALL'
+    }
+
+    spotbugs {
+        sourceSets = [sourceSets.main]
+    }
+
+    spotbugsMain.reports {
+        xml.enabled = false
+        html.enabled = true
+    }
+
+    spotbugsTest.reports {
+        xml.enabled = false
+        html.enabled = true
+    }
+
+    task sourceJar(type: Jar) {
+        classifier = 'sources'
+        from sourceSets.main.allSource
+    }
+
+    task javadocJar(type: Jar, dependsOn: javadoc) {
+        classifier = 'javadoc'
+        from javadoc.destinationDir
+    }
+
+    javadoc.options {
+        noQualifiers << 'java.*'
+    }
+
+    reckon {
+        scopeFromProp()
+        snapshotFromProp()
+    }
+
+    publishing {
+        publications {
+            mavenJava(MavenPublication) {
+                from components.java
+                artifact sourceJar
+                artifact javadocJar
+
+                afterEvaluate {
+                    artifactId = archivesBaseName
+                }
+            }
+        }
+
+        repositories {
+            maven {
+                def artifactory = 'https://oss.jfrog.org/artifactory/oss-snapshot-local'
+                def bintray = 'https://api.bintray.com/maven/ultrabrew/m2/' + rootProject.name + '/;publish=1'
+
+                afterEvaluate {
+                    url = version.toString().endsWith('-SNAPSHOT') ? artifactory : bintray
+                }
+                credentials {
+                    username = System.getenv('BINTRAY_USER')
+                    password = System.getenv('BINTRAY_API_KEY')
+                }
+            }
+        }
+    }
+
+    // disable the tasks for the 'examples' aggregator project
+    gradle.taskGraph.whenReady {
+        gradle.taskGraph.allTasks.forEach {
+            if (it.project.name == 'examples') {
+                it.onlyIf { false }
+            }
+        }
+    }
+
+}

@@ -1,0 +1,5 @@
+rootProject.name = 'metrics'
+
+include 'core', 'benchmark'
+include 'reporter-influxdb', 'reporter-opentsdb'
+include 'examples:webapp', 'examples:undertow-httphandler'

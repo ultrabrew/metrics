@@ -1,0 +1,29 @@
+apply plugin: 'me.champeau.gradle.jmh'
+
+publishMavenJavaPublicationToMavenRepository {
+    enabled = false
+}
+
+dependencies {
+    jmh project(':core')
+
+    jmh group: 'org.openjdk.jmh', name: 'jmh-core', version: '1.21'
+    jmh group: 'org.openjdk.jmh', name: 'jmh-generator-annprocess', version: '1.21'
+    jmh group: 'io.dropwizard.metrics', name: 'metrics-core', version: '3.2.2'
+    jmh group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.11.1'
+    jmh group: 'org.apache.logging.log4j', name: 'log4j-slf4j-impl', version: '2.11.1'
+}
+
+jmh {
+    includeTests = false
+    fork = 1
+    zip64 = true
+    duplicateClassesStrategy = 'warn'
+    //profilers = ['hs_gc']
+}
+
+// XXX Is this still needed if we upgrade jmh plugin to latest?
+task deleteEmptyBmList(type: Delete) {
+    delete "${buildDir}/jmh-generated-classes/META-INF/BenchmarkList"
+}
+jmhCompileGeneratedClasses.finalizedBy deleteEmptyBmList
