@@ -26,15 +26,17 @@ their age. As a result, we saw the need to write a new library designed
 primarily for scale and to support essential features such as dynamic
 dimensions.
 
-### Requirements
+### Concepts
 
-1. Support [dynamic dimensions (tag keys and values)][TagSet] at the time of
+To better understand the concepts and terms used by this library, please see [CONCEPTS.md](CONCEPTS.md)
+
+### Key Requirements
+
+1. Support [dynamic dimensions (tag keys and values)][Tags] at the time of
    measurement.
 2. Reduce GC pressure by minimizing the number of objects created by the
    library.
-3. Support accurate aggregation in reporters via [monoids][Monoid], *i.e.*,
-   support [multiple fields][FieldSet] in a single metric to properly calculate
-   a mean value across multiple heterogeneous servers and/or dimensions.
+3. Support accurate aggregation in reporters via [monoids][Monoid]
 4. Minimize number of dependencies.
 5. Decouple instrumentation from reporting in the following ways:
     1. adding a new reporter or modifying an existing reporter does not
@@ -305,9 +307,8 @@ This project is licensed under the terms of the [Apache 2.0](LICENSE) open sourc
 refer to [LICENSE](LICENSE) for the full terms.
 
 [DropWizard]: https://metrics.dropwizard.io
-[Monoid]: https://en.wikipedia.org/wiki/Monoid
-[TagSet]: https://docs.influxdata.com/influxdb/latest/write_protocols/line_protocol_tutorial/#tag-set
-[FieldSet]: https://docs.influxdata.com/influxdb/v1.2/write_protocols/line_protocol_tutorial/#field-set
+[Monoid]: CONCEPTS.md#monoid
+[Tags]: CONCEPTS.md#tag-key-and-tag-value
 [statsd]: https://github.com/etsy/statsd
 [InfluxDB]: https://www.influxdata.com/time-series-platform/influxdb/
 [OpenTSDB]: http://opentsdb.net
