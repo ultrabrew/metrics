@@ -15,7 +15,7 @@
 
 ### Metric
 A quantifiable characteristic of an application that is being measured. Metrics have numeric values that are either 64-bit signed integers or 64-bit double-precision floating-point values. Metrics have names that are strings and should meaningfully describe the quantity being measured. Some examples -
-* `webserver.rps` the number of requests per second being processed by a web server
+* `webserver.requests` the number of requests per second being processed by a web server
 * `webserver.request.latency` time taken (latency, cumulative or percentiles) to process requests by a web server
 
 ### Tag Key and Tag Value
@@ -28,6 +28,17 @@ For the purposes of this library, a timestamp represents the end of a time inter
 
 ### Timeseries
 A time series is a sequence of timestamp and numeric-value pairs where consecutive timestamps are monotonically increasing. For our purposes, the identity of a time series is the unique combination of metric name and associated tags, and the series itself consists of the timestamps for which values were reported and values of the metric at those timestamps.
+
+The values in a timeseries can be sparse i.e., there could be discontinuity in the sequence of timestamp-value pairs. An example of this could be number of errors. An application might not generate errors during most time-intervals but might do so for some. As a result, values would only show up for intervals when errors were recorded.
+
+```metric name: webserver.errors```
+| timestamp | value |
+| --------: | ----: | 
+|     12:00 |     5 |
+|     12:01 |     3 |
+|     12:05 |     4 |
+|     12:12 |    15 |
+|     12:40 |     2 |
 
 ### Gauge
 A Gauge is a type of metric whose value can increase or decrease over various measurements. Gauges are represented using 64-bit longs. There is an implementation for Java Doubles as well. Gauges are aggregated over time and reported as
@@ -51,6 +62,34 @@ Reporters (aka Metric Reporters) track metrics and handle the work of reporting 
 
 ### Time Window
 Reporters that aggregate metrics over time intervals should hold metric state for two intervals: one for data presently arriving, and one for data that arrived in the past. Past data can then be reported without locking state for the present data. We call this set of two intervals a time window. Users can extend our time-window reporter to facilitate tracking of state across the intervals.
+
+```
+application started at 12:00.00
+wallclock time: 12:00.01
++--------------------------+
+|   12:00    |    12:01    |
+| (current)  |             |
+|  writes go |   not in    |
+|  here      |   use       |
++--------------------------+
+
+wallclock time: 12:01.01
++--------------------------+
+|   12:00    |    12:01    |
+| (previous) |  (current)  |
+|  reporters |   writes go |
+|  read here |   here      |
++--------------------------+
+
+wallclock time: 12:02.01
++--------------------------+
+|   12:01    |    12:02    |
+| (previous) |  (current)  |
+|  reporters |   writes go |
+|  read here |   here      |
++--------------------------+
+
+```
 
 ### Monoid
 To achieve accurate aggregates over large deployments, value aggregations should be associative. For example, average latency and latency percentiles should not be calculated at each host because such values cannot be further combined from multiple hosts in any meaningful or mathematically-correct manner. Using monoids such as sum and count help (for mean latency) since they can indeed be added across hosts to obtain total latency across all hosts as well as total number of requests, which can
