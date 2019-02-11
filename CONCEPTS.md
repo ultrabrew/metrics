@@ -31,9 +31,9 @@ A time series is a sequence of timestamp and numeric-value pairs where consecuti
 
 The values in a timeseries can be sparse i.e., there could be discontinuity in the sequence of timestamp-value pairs. An example of this could be number of errors. An application might not generate errors during most time-intervals but might do so for some. As a result, values would only show up for intervals when errors were recorded.
 
-```metric name: webserver.errors```
+`metric name: webserver.errors`
 | timestamp | value |
-| --------: | ----: | 
+|      ---: |  ---: | 
 |     12:00 |     5 |
 |     12:01 |     3 |
 |     12:05 |     4 |
