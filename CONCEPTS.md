@@ -33,7 +33,7 @@ The values in a timeseries can be sparse i.e., there could be discontinuity in t
 
 `metric name: webserver.errors`
 | timestamp | value |
-|      ---: |  ---: | 
+|       --- |   --- | 
 |     12:00 |     5 |
 |     12:01 |     3 |
 |     12:05 |     4 |
