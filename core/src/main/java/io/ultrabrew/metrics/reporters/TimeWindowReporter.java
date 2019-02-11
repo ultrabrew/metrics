@@ -16,7 +16,7 @@ import java.util.function.Function;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract class TimeWindowReporter implements Reporter, Runnable, AutoCloseable {
+public abstract class TimeWindowReporter implements Reporter, AutoCloseable {
 
   private Logger logger = LoggerFactory.getLogger(TimeWindowReporter.class);
 
@@ -87,8 +87,7 @@ public abstract class TimeWindowReporter implements Reporter, Runnable, AutoClos
   private void init() {
   }
 
-  @Override
-  public void run() {
+  private void run() {
     int id = this.threadId.get();
     String threadName = getThreadName(id);
     logger.info("Starting {}", threadName);
@@ -121,7 +120,7 @@ public abstract class TimeWindowReporter implements Reporter, Runnable, AutoClos
   protected void start() {
     synchronized (this) {
       if (!isRunning()) {
-        reportingThread = new Thread(this, getThreadName(threadId.get()));
+        reportingThread = new Thread(this::run, getThreadName(threadId.get()));
         reportingThread.setDaemon(true);
         reportingThread.start();
       } else {
