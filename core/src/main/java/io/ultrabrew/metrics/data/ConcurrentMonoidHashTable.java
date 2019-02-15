@@ -18,25 +18,24 @@ import sun.misc.Unsafe;
  * measurement values.
  *
  * <p>The hash table stores each tag set as a separate record within the hash table. When {@link
- * #apply(String[], long,
- * long)} is called, the hash table will use the {@link #index(String[], boolean)} method to find
- * any existing record or create a new record if none found. If a new record is created it will be
- * initialized with initialized {@link #identity} to store the monoid identity in the left hand
- * value, before applying the monoid binary operation with {@link #combine(long[], long,
- * long)}.</p>
+ * #apply(String[], long, long)} is called, the hash table will use the {@link #index(String[],
+ * boolean)} method to find any existing record or create a new record if none found. If a new
+ * record is created it will be initialized with initialized {@link #identity} to store the monoid
+ * identity in the left hand value, before applying the monoid binary operation with {@link
+ * #combine(long[], long, long)}.</p>
  *
  * <p>For performance reasons, the monoid implementations may choose to avoid atomic operation on
- * the whole record, and
- * may apply the binary operation or setting the identity for each field in the record separately.
- * This may cause small inaccuracies in the combined values, if two or more threads are
- * simultaneously setting the identity and applying the binary operation. It is guaranteed that only
- * one thread sets the identity at a time, but simultaneous applications of binary operations are
- * not prevented during setting the identity. Similarly, when iterating the hash table with cursor,
- * the reading and writing may interleave, which may cause slight inaccuracy.</p>
+ * the whole record, and may apply the binary operation or setting the identity for each field in
+ * the record separately. This may cause small inaccuracies in the combined values, if two or more
+ * threads are simultaneously setting the identity and applying the binary operation. It is
+ * guaranteed that only one thread sets the identity at a time, but simultaneous applications of
+ * binary operations are not prevented during setting the identity. Similarly, when iterating the
+ * hash table with cursor, the reading and writing may interleave, which may cause slight
+ * inaccuracy.</p>
  *
  * <p>The monoid implementation may choose to ignore some tags by overriding the {@link
- * #hashCode(String[])} method to
- * skip any tag key-value pairs the aggregator is not interested on.</p>
+ * #hashCode(String[])} method to skip any tag key-value pairs the aggregator is not interested
+ * on.</p>
  *
  * <p>All implementing classes <b>MUST</b> be thread-safe.</p>
  */
@@ -184,7 +183,8 @@ public abstract class ConcurrentMonoidHashTable implements Aggregator {
       return;
     }
 
-    // decodes two int values, table index and slot index from a long. The higher 32 bits represent the table index and lower 32 bits represent the slot index.
+    // Decode table index and slot index from a long.
+    // Upper 32 bits represent the table index and lower 32 bits represent the slot index.
     // This logic is replicated in multiple places for performance reasons.
     int tableIndex = (int) ((index & TABLE_MASK) >> 32);
     int slotIndex = (int) (index & SLOT_MASK);
@@ -253,9 +253,9 @@ public abstract class ConcurrentMonoidHashTable implements Aggregator {
    * <p>When a slot in the table is taken, it will never be released nor changed.</p>
    *
    * @param tags key to use for table
-   * @return index position in the table for the record. The 64 bit long value has two int values encoded into it.
-   * The higher 32 bits represent the table index and the lower 32 bits represent the slot index.
-   * And returns {@link #NOT_FOUND} if record not found.
+   * @return index position in the table for the record. The 64 bit long value has two int values
+   * encoded into it. The higher 32 bits represent the table index and the lower 32 bits represent
+   * the slot index. And returns {@link #NOT_FOUND} if record not found.
    */
   long index(final String[] tags, final boolean isReading) {
     final long key = hashCode(tags);
@@ -272,9 +272,10 @@ public abstract class ConcurrentMonoidHashTable implements Aggregator {
 
         // check if we found our key
         if (key == candidate) {
-          // encodes two int values, table index and slot index into a long. The higher 32 bits represent the table index and lower 32 bits represent the slot index.
+          // Encode table index and slot index into a long.
+          // Upper 32 bits represent the table index and lower 32 bits represent the slot index.
           // This logic is replicated in multiple places for performance reasons.
-          return ((long)tableIndex) << 32 | ((long)slotIndex);
+          return ((long) tableIndex) << 32 | ((long) slotIndex);
         }
 
         boolean emptySlot = 0L == candidate;
@@ -309,7 +310,9 @@ public abstract class ConcurrentMonoidHashTable implements Aggregator {
                 synchronized (this) {
                   if (tagIndex >= tagSets.length) {
                     final int oldLength = tagSets.length;
-                    final int newLength = oldLength > TAGSETS_MAX_INCREMENT ? oldLength + TAGSETS_MAX_INCREMENT : oldLength * 2;
+                    final int newLength =
+                        oldLength > TAGSETS_MAX_INCREMENT ? oldLength + TAGSETS_MAX_INCREMENT
+                            : oldLength * 2;
                     tagSets = Arrays.copyOf(tagSets, newLength);
                   }
                 }
@@ -318,9 +321,10 @@ public abstract class ConcurrentMonoidHashTable implements Aggregator {
               // Store tags in the tag array for iteration purposes only
               tagSets[tagIndex] = tags;
 
-              // encodes two int values, table index and slot index into a long. The higher 32 bits represent the table index and lower 32 bits represent the slot index.
+              // Encode table index and slot index into a long.
+              // Upper 32 bits represent the table index and lower 32 bits represent the slot index.
               // This logic is replicated in multiple places for performance reasons.
-              return ((long)tableIndex) << 32 | ((long)slotIndex);
+              return ((long) tableIndex) << 32 | ((long) slotIndex);
             }
           }
         } else {
@@ -379,7 +383,8 @@ public abstract class ConcurrentMonoidHashTable implements Aggregator {
   private int nextTableCapacity(final int lastTableCapacity) {
     int nextTableCapacity;
     if (capacity < maxCapacity / 2) {
-      nextTableCapacity = Math.min(lastTableCapacity << 1, maxCapacity - capacity); // double the size;
+      nextTableCapacity = Math
+          .min(lastTableCapacity << 1, maxCapacity - capacity); // double the size;
     } else {
       nextTableCapacity = Math.min(lastTableCapacity, maxCapacity - capacity); // grow linearly
     }
@@ -619,7 +624,8 @@ public abstract class ConcurrentMonoidHashTable implements Aggregator {
         return false;
       }
 
-      // decodes two int values, table index and slot index from a long. The higher 32 bits represent the table index and lower 32 bits represent the slot index.
+      // Decode table index and slot index from long.
+      // Upper 32 bits represent the table index and lower 32 bits represent the slot index.
       // This logic is replicated in multiple places for performance reasons.
       int tableIndex = (int) ((index & TABLE_MASK) >> 32);
       int slotIndex = (int) (index & SLOT_MASK);
