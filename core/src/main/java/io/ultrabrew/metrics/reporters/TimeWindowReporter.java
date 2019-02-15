@@ -81,12 +81,6 @@ public abstract class TimeWindowReporter implements Reporter, AutoCloseable {
    */
   protected abstract void doReport(Map<String, Aggregator> aggregators);
 
-  /**
-   * Place holder method to reset the underline data structure for the next window.
-   */
-  private void init() {
-  }
-
   private void run() {
     int id = this.threadId.get();
     String threadName = getThreadName(id);
@@ -111,7 +105,6 @@ public abstract class TimeWindowReporter implements Reporter, AutoCloseable {
       } catch (Throwable t) {
         logger.error("Error reporting metrics", t);
       }
-      init();
     }
 
     logger.info("Ending {}", threadName);
