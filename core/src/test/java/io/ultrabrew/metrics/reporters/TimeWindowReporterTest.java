@@ -23,9 +23,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import mockit.Capturing;
 import mockit.Deencapsulation;
 import mockit.Expectations;
-import mockit.Mocked;
 import mockit.Verifications;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -283,7 +283,7 @@ public class TimeWindowReporterTest {
   }
 
   @Test
-  public void logsErrorWhileReportingMetrics(@Mocked Logger logger) throws InterruptedException {
+  public void logsErrorWhileReportingMetrics(@Capturing Logger logger) throws InterruptedException {
 
     RuntimeException exptected = new RuntimeException();
 
@@ -293,7 +293,6 @@ public class TimeWindowReporterTest {
         throw exptected;
       }
     };
-    Deencapsulation.setField(reporter, logger);
     reporter.start();
 
     Thread.sleep(1001);

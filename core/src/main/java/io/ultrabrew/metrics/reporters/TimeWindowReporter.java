@@ -18,7 +18,7 @@ import org.slf4j.LoggerFactory;
 
 public abstract class TimeWindowReporter implements Reporter, AutoCloseable {
 
-  private Logger logger = LoggerFactory.getLogger(TimeWindowReporter.class);
+  private static final Logger logger = LoggerFactory.getLogger(TimeWindowReporter.class);
 
   public static final int DEFAULT_WINDOW_STEP_SIZE_SEC = 60;
 
