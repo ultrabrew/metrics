@@ -61,9 +61,9 @@ public abstract class ConcurrentMonoidHashTable implements Aggregator {
   // Certainty required to meet the spec of probablePrime
   private static final int DEFAULT_PRIME_CERTAINTY = 100;
 
-  private static final long TABLE_MASK = 0x0FFFFFFF00000000l;
-  private static final long SLOT_MASK = 0x00000000FFFFFFFFl;
-  private static final long NOT_FOUND = 0x1000000000000000l;
+  private static final long TABLE_MASK = 0x0FFFFFFF00000000L;
+  private static final long SLOT_MASK = 0x00000000FFFFFFFFL;
+  private static final long NOT_FOUND = 0x1000000000000000L;
 
 
   ///CLOVER:OFF
