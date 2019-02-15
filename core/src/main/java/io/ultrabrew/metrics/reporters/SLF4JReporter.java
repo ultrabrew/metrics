@@ -19,19 +19,16 @@ import org.slf4j.LoggerFactory;
  * <p>The log message format is: {@code "{tags}{tagFieldDelimiter}{fields} {metricId}"}, where</p>
  * <ul>
  * <li>{@code tags} is a list of {@code tagKey '=' tagValue} pairs delimited by given tag delimiter
- * (default is
- * {@code " "}).</li>
- * <li>{@code tagFieldDelimiter} separates the tags and fields by given delimiter (default is {@code
- * " "}.</li>
- * <li>{@code fields} is a list of {@code fieldName '=' fieldValue} pairs delimited by given field
- * delimiter
  * (default is {@code " "}).</li>
+ * <li>{@code tagFieldDelimiter} separates the tags and fields by given delimiter (default is
+ * {@code " "}.</li>
+ * <li>{@code fields} is a list of {@code fieldName '=' fieldValue} pairs delimited by given field
+ * delimiter (default is {@code " "}).</li>
  * <li>{@code metricId} is the identifier of the metric.</li>
  * </ul>
  *
  * <p>This reporter <b>IS NOT</b> intended to be used in production environments, and is only
- * provided for debugging
- * purposes.</p>
+ * provided for debugging purposes.</p>
  */
 public class SLF4JReporter extends TimeWindowReporter {
 
