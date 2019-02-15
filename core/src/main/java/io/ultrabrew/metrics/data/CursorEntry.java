@@ -64,9 +64,8 @@ public interface CursorEntry {
   /**
    * Retrieves fields available in all rows.
    *
-   * <p>The fields names and values are always in same order, and you can use the index of the field
-   * name array to
-   * retrieve the corresponding value of the field.</p>
+   * <p>The fields names and values are always in same order, and you can use the index of the
+   * field name array to retrieve the corresponding value of the field.</p>
    *
    * @return a sorted array of field names
    */
@@ -76,8 +75,7 @@ public interface CursorEntry {
    * Retrieves types of the fields available is all rows.
    *
    * <p>The types and fields are always in same order, and you can use the index of the type array
-   * to
-   * retrieve the corresponding field of the row.</p>
+   * to retrieve the corresponding field of the row.</p>
    *
    * @return a sorted array of type of fields
    */
