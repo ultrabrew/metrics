@@ -29,9 +29,6 @@ package io.ultrabrew.metrics;
  *
  * Note: The tag key-value array must always be sorted in the same order.
  *
- * TODO: Should we have instead lambda code that returns the value and we call it when we want to
- * report this, we don't care about intermediate values anyway, or do we?
- *
  * <p>This class is thread-safe.</p>
  */
 public class Gauge extends Metric {
