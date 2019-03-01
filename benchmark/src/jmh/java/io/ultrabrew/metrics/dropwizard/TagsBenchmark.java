@@ -36,11 +36,11 @@ public class TagsBenchmark {
   private static final String DROPWIZARD_TIMER_TAGNAME_PREFIX = "timer.tagName.";
   private static final String DROPWIZARD_GAUGE_TAGNAME_PREFIX = "gauge.tagName.";
 
-  private MetricRegistry foundationRegistry;
-  private Counter foundationCounter;
-  private Timer foundationTimer;
-  private Gauge foundationGauge;
-  private SLF4JReporter foundationReporter;
+  private MetricRegistry ultrabrewRegistry;
+  private Counter ultrabrewCounter;
+  private Timer ultrabrewTimer;
+  private Gauge ultrabrewGauge;
+  private SLF4JReporter ultrabrewReporter;
 
   private com.codahale.metrics.MetricRegistry dropwizardRegistry;
   private Slf4jReporter dropwizardReporter;
@@ -53,12 +53,12 @@ public class TagsBenchmark {
 
   @Setup
   public void setup() {
-    foundationRegistry = new MetricRegistry();
-    foundationCounter = foundationRegistry.counter("counter");
-    foundationTimer = foundationRegistry.timer("timer");
-    foundationGauge = foundationRegistry.gauge("gauge");
-    foundationReporter = new SLF4JReporter("foundation");
-    foundationRegistry.addReporter(foundationReporter);
+    ultrabrewRegistry = new MetricRegistry();
+    ultrabrewCounter = ultrabrewRegistry.counter("counter");
+    ultrabrewTimer = ultrabrewRegistry.timer("timer");
+    ultrabrewGauge = ultrabrewRegistry.gauge("gauge");
+    ultrabrewReporter = new SLF4JReporter("ultrabrew");
+    ultrabrewRegistry.addReporter(ultrabrewReporter);
 
     dropwizardRegistry = new com.codahale.metrics.MetricRegistry();
     dropwizardReporter = Slf4jReporter.forRegistry(dropwizardRegistry)
@@ -69,8 +69,8 @@ public class TagsBenchmark {
   }
 
   @Benchmark
-  public void counterFoundation() {
-    foundationCounter.inc(TAGNAME, String.valueOf(tagValue++ % cardinality));
+  public void counterUltrabrew() {
+    ultrabrewCounter.inc(TAGNAME, String.valueOf(tagValue++ % cardinality));
     Blackhole.consumeCPU(CONSUME_CPU);
   }
 
@@ -84,10 +84,10 @@ public class TagsBenchmark {
   }
 
   @Benchmark
-  public void timerFoundation() {
-    final long startTime = foundationTimer.start();
+  public void timerUltrabrew() {
+    final long startTime = ultrabrewTimer.start();
     Blackhole.consumeCPU(CONSUME_CPU);
-    foundationTimer.stop(startTime, TAGNAME, String.valueOf(tagValue++ % cardinality));
+    ultrabrewTimer.stop(startTime, TAGNAME, String.valueOf(tagValue++ % cardinality));
   }
 
   @Benchmark
@@ -101,8 +101,8 @@ public class TagsBenchmark {
   }
 
   @Benchmark
-  public void gaugeFoundation() {
-    foundationGauge.set(value++ % 100L, TAGNAME, String.valueOf(tagValue++ % cardinality));
+  public void gaugeUltrabrew() {
+    ultrabrewGauge.set(value++ % 100L, TAGNAME, String.valueOf(tagValue++ % cardinality));
     Blackhole.consumeCPU(CONSUME_CPU);
   }
 
