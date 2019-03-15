@@ -4,6 +4,7 @@
 
 package io.ultrabrew.metrics;
 
+import io.ultrabrew.metrics.util.DistributionBucket;
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 import java.util.Map;
@@ -44,7 +45,7 @@ public class MetricRegistry {
    * exists
    */
   public Counter counter(final String id) {
-    return getOrCreate(id, Counter.class);
+    return getOrCreate(Counter.class, id);
   }
 
   /**
@@ -56,7 +57,7 @@ public class MetricRegistry {
    * exists
    */
   public Gauge gauge(final String id) {
-    return getOrCreate(id, Gauge.class);
+    return getOrCreate(Gauge.class, id);
   }
 
   /**
@@ -69,7 +70,7 @@ public class MetricRegistry {
    * exists
    */
   public GaugeDouble gaugeDouble(final String id) {
-    return getOrCreate(id, GaugeDouble.class);
+    return getOrCreate(GaugeDouble.class, id);
   }
 
   /**
@@ -81,7 +82,11 @@ public class MetricRegistry {
    * exists
    */
   public Timer timer(final String id) {
-    return getOrCreate(id, Timer.class);
+    return getOrCreate(Timer.class, id);
+  }
+
+  public Histogram histogram(final String id, DistributionBucket bucket) {
+    return getOrCreate(Histogram.class, id, bucket);
   }
 
   /**
@@ -89,15 +94,15 @@ public class MetricRegistry {
    * measurement of given class. The class must have an accessible constructor that takes
    * MetricRegistry and String as parameters.
    *
-   * @param id identifier of the measurement
    * @param klass custom measurement class extending Metric
+   * @param id identifier of the measurement
    * @param <T> custom measurement class extending Metric
    * @return a new or pre-existing custom measurement
    * @throws IllegalStateException measurement with different type, but same identifier already
    * exists
    */
   public <T extends Metric> T custom(final String id, final Class<T> klass) {
-    return getOrCreate(id, klass);
+    return getOrCreate(klass, id);
   }
 
   /**
@@ -109,7 +114,8 @@ public class MetricRegistry {
     reporters.add(reporter);
   }
 
-  private <T extends Metric> T getOrCreate(final String id, final Class<T> klass) {
+  private <T extends Metric> T getOrCreate(final Class<T> klass, final Object... args) {
+    String id = (String) args[0];
     Metric m = measurements.get(id);
     if (m != null) {
       return tryCast(klass, m);
@@ -120,8 +126,16 @@ public class MetricRegistry {
         return tryCast(klass, m);
       }
       try {
-        T instance = klass.getDeclaredConstructor(MetricRegistry.class, String.class)
-            .newInstance(this, id);
+        Class<?>[] argTypes = new Class[args.length + 1];
+        Object[] initargs = new Object[args.length + 1];
+        int i = 0;
+        argTypes[i] = MetricRegistry.class;
+        initargs[i] = this;
+        for (; i < args.length; i++) {
+          argTypes[i + 1] = args[i].getClass();
+          initargs[i + 1] = args[i];
+        }
+        T instance = klass.getDeclaredConstructor(argTypes).newInstance(initargs);
         measurements.put(id, instance);
         return instance;
       } catch (InstantiationException | IllegalAccessException | InvocationTargetException |
