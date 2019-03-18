@@ -11,12 +11,15 @@ import java.net.URI;
 import mockit.Expectations;
 import mockit.Mocked;
 import mockit.Verifications;
+import org.apache.http.HttpEntity;
 import org.apache.http.StatusLine;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.entity.BasicHttpEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.apache.http.util.EntityUtils;
 
 public class InfluxDBClientTest {
 
@@ -28,6 +31,9 @@ public class InfluxDBClientTest {
 
   @Mocked
   CloseableHttpResponse closeableHttpResponse;
+
+  @Mocked
+  EntityUtils entityUtils;
 
   private InfluxDBClient client;
 
@@ -45,6 +51,11 @@ public class InfluxDBClientTest {
       result = statusLine;
       statusLine.getStatusCode();
       result = 204;
+      HttpEntity httpEntity = new BasicHttpEntity();
+      closeableHttpResponse.getEntity();
+      result = httpEntity;
+      entityUtils.consumeQuietly(httpEntity);
+      times = 2;
     }};
     String[] tags = {"host", "server01", "region", "us-west"};
     String[] fields = {"temp", "80", "fanSpeed", "743"};
@@ -65,6 +76,11 @@ public class InfluxDBClientTest {
       result = statusLine;
       statusLine.getStatusCode();
       result = 500;
+      HttpEntity httpEntity = new BasicHttpEntity();
+      closeableHttpResponse.getEntity();
+      result = httpEntity;
+      entityUtils.consumeQuietly(httpEntity);
+      times = 2;
     }};
     String[] tags = {"host", "server01", "region", "us-west"};
     String[] fields = {"temp", "80", "fanSpeed", "743"};
@@ -74,6 +90,29 @@ public class InfluxDBClientTest {
     client.write("cpu_load_short", tags, fields, 1534055562000000007L);
     client.write("cpu_load_short", tags, fields, 1534055562000000008L);
     assertThrows(IOException.class, client::flush);
+  }
+  
+  @Test
+  public void testWriteFailsIllegalHttpResponse() throws Exception {
+    new Expectations() {{
+      httpClient.execute((HttpUriRequest) any);
+      result = closeableHttpResponse;
+      closeableHttpResponse.getStatusLine();
+      result = null;
+      HttpEntity httpEntity = new BasicHttpEntity();
+      closeableHttpResponse.getEntity();
+      result = httpEntity;
+      entityUtils.consumeQuietly(httpEntity);
+      times = 2;
+    }};
+    String[] tags = {"host", "server01", "region", "us-west"};
+    String[] fields = {"temp", "80", "fanSpeed", "743"};
+    client.write("cpu_load_short", tags, fields, 1534055562000000003L);
+    client.write("cpu_load_short", tags, fields, 1534055562000000004L);
+    assertThrows(RuntimeException.class, client::flush);
+    client.write("cpu_load_short", tags, fields, 1534055562000000007L);
+    client.write("cpu_load_short", tags, fields, 1534055562000000008L);
+    assertThrows(RuntimeException.class, client::flush);
   }
 
   @Test
