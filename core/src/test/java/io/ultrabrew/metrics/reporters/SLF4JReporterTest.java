@@ -260,22 +260,22 @@ public class SLF4JReporterTest {
 
     long start = System.currentTimeMillis();
 
-    DistributionBucket bucket = new DistributionBucket(new int[]{0, 10, 50, 100});
+    DistributionBucket bucket = new DistributionBucket(new long[]{0, 10, 50, 100});
     Histogram histogram = metricRegistry.histogram("histogram", bucket);
-    histogram.update(-13, "tag", "100");
-    histogram.update(-1, "tag", "100");
-    histogram.update(0, "tag", "100");
-    histogram.update(9, "tag", "100");
-    histogram.update(10, "tag", "100");
-    histogram.update(49, "tag", "100");
-    histogram.update(50, "tag", "100");
-    histogram.update(150, "tag", "100");
+    histogram.set(-13, "tag", "100");
+    histogram.set(-1, "tag", "100");
+    histogram.set(0, "tag", "100");
+    histogram.set(9, "tag", "100");
+    histogram.set(10, "tag", "100");
+    histogram.set(49, "tag", "100");
+    histogram.set(50, "tag", "100");
+    histogram.set(150, "tag", "100");
 
-    histogram.update(15, "tag", "101");
-    histogram.update(49, "tag", "101");
-    histogram.update(75, "tag", "101");
-    histogram.update(99, "tag", "101");
-    histogram.update(100, "tag", "101");
+    histogram.set(15, "tag", "101");
+    histogram.set(49, "tag", "101");
+    histogram.set(75, "tag", "101");
+    histogram.set(99, "tag", "101");
+    histogram.set(100, "tag", "101");
 
     Thread.sleep(calculateDelay(1000, start) + 150);
 
@@ -286,10 +286,10 @@ public class SLF4JReporterTest {
       assertEquals(2, objects.size());
 
       compare(objects.get(0), "tag=100",
-          "count=8 sum=254 min=-13 max=150 underflow=2 0_10=2 10_50=2 50_100=1 overflow=1",
+          "count=8 sum=254 min=-13 max=150 0_10=2 10_50=2 50_100=1 overflow=1 underflow=2",
           "histogram");
       compare(objects.get(1), "tag=101",
-          "count=5 sum=338 min=15 max=100 underflow=0 0_10=0 10_50=2 50_100=2 overflow=1",
+          "count=5 sum=338 min=15 max=100 0_10=0 10_50=2 50_100=2 overflow=1 underflow=0",
           "histogram");
     }};
   }

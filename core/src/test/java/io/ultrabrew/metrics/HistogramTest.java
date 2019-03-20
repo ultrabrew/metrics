@@ -6,6 +6,7 @@ import static org.hamcrest.Matchers.greaterThan;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import io.ultrabrew.metrics.util.DistributionBucket;
+import io.ultrabrew.metrics.util.Intervals;
 import mockit.Expectations;
 import mockit.Verifications;
 import org.junit.jupiter.api.Test;
@@ -15,15 +16,15 @@ public class HistogramTest {
   @Test
   void testHistoGram() {
     MetricRegistry metricRegistry = new MetricRegistry();
-    DistributionBucket bucket = new DistributionBucket(new int[]{0, 10, 100});
+    DistributionBucket bucket = new DistributionBucket(new long[]{0, 10, 100});
     Histogram histogram = metricRegistry.histogram("latency", bucket);
 
     new Expectations(histogram) {{
       histogram.emit(anyLong, (String[]) any);
     }};
 
-    final long startTime = histogram.start();
-    histogram.stop(startTime);
+    final long startTime = Intervals.start();
+    histogram.set(Intervals.stop(startTime));
 
     new Verifications() {{
       String[] tags;
@@ -33,7 +34,7 @@ public class HistogramTest {
       assertEquals(0, tags.length);
     }};
 
-    histogram.stop(startTime, "TEST-key", "test-value");
+    histogram.set(Intervals.stop(startTime), "TEST-key", "test-value");
 
     new Verifications() {{
       String[] tags;
@@ -43,7 +44,7 @@ public class HistogramTest {
       assertThat(tags, arrayContaining("TEST-key", "test-value"));
     }};
 
-    histogram.update(100L);
+    histogram.set(100L);
 
     new Verifications() {{
       String[] tags;

@@ -9,4 +9,12 @@ public class Intervals {
   public static long calculateDelay(final long interval, final long currentTime) {
     return interval - (currentTime % interval);
   }
+
+  public static long start() {
+    return System.nanoTime();
+  }
+
+  public static long stop(final long startTime) {
+    return System.nanoTime() - startTime;
+  }
 }

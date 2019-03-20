@@ -14,7 +14,7 @@ public class BasicHistogramAggregator extends ConcurrentIntTable implements Aggr
 
   private static final Logger LOGGER = LoggerFactory.getLogger(BasicHistogramAggregator.class);
   private static final String[] AGG_FIELDS = {"count", "sum", "min", "max"};
-  private static final int[] IDENTITY = {0, 0, Integer.MAX_VALUE, Integer.MIN_VALUE};
+  private static final long[] IDENTITY = {0L, 0L, Long.MAX_VALUE, Long.MIN_VALUE};
 
   private final String metricId;
   private final DistributionBucket buckets;
@@ -45,15 +45,15 @@ public class BasicHistogramAggregator extends ConcurrentIntTable implements Aggr
   }
 
   @Override
-  protected void combine(int[] table, long baseOffset, int latency) {
-    add(table, baseOffset, 0, 1);
-    add(table, baseOffset, 1, latency);
-    min(table, baseOffset, 2, latency);
-    max(table, baseOffset, 3, latency);
+  protected void combine(int[] table, long baseOffset, long value) {
+    addToAggField(table, baseOffset, 0, 1);
+    addToAggField(table, baseOffset, 1, value);
+    minAggField(table, baseOffset, 2, value);
+    maxAggField(table, baseOffset, 3, value);
 
-    //Increments the bucket counter by 1 responding to the given latency
-    int bucketIndex = buckets.getBucketIndex(latency);
-    add(table, baseOffset, AGG_FIELDS.length + bucketIndex, 1);
+    //Increments the bucket counter by 1 responding to the given value
+    int bucketIndex = buckets.getBucketIndex(value);
+    addToDataField(table, baseOffset, AGG_FIELDS.length + bucketIndex, 1);
   }
 
   @Override
@@ -69,12 +69,12 @@ public class BasicHistogramAggregator extends ConcurrentIntTable implements Aggr
   private Cursor newCursor(boolean sorted) {
     String[] fields = buildFields();
     Type[] types = buildTypes(fields.length);
-    int[] identity = buildIdentity(fields.length);
+    long[] identity = buildIdentity(fields.length);
     return new CursorImpl(tagSets, fields, types, identity, sorted);
   }
 
-  private int[] buildIdentity(int length) {
-    int[] identity = new int[length];
+  private long[] buildIdentity(int length) {
+    long[] identity = new long[length];
     System.arraycopy(IDENTITY, 0, identity, 0, IDENTITY.length);
     return identity;
   }
@@ -99,14 +99,14 @@ public class BasicHistogramAggregator extends ConcurrentIntTable implements Aggr
 
     final private String[] fields;
     final private Type[] types;
-    private int[] identity;
+    private long[] identity;
     final private String[][] tagSets;
     private int i = -1;
     private long base = 0;
     private int[] table;
 
     private CursorImpl(final String[][] tagSets, final String[] fields, final Type[] types,
-        int[] identity, final boolean sorted) {
+        long[] identity, final boolean sorted) {
       this.fields = fields;
       this.types = types;
       this.identity = identity;
