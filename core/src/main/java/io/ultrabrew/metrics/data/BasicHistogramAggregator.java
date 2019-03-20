@@ -1,5 +1,9 @@
 package io.ultrabrew.metrics.data;
 
+import static io.ultrabrew.metrics.Metric.DEFAULT_CARDINALITY;
+import static io.ultrabrew.metrics.Metric.DEFAULT_MAX_CARDINALITY;
+
+import io.ultrabrew.metrics.Histogram;
 import io.ultrabrew.metrics.util.DistributionBucket;
 import java.util.Arrays;
 import org.slf4j.Logger;
@@ -16,18 +20,20 @@ public class BasicHistogramAggregator extends ConcurrentIntTable implements Aggr
   private final DistributionBucket buckets;
   private final int bucketCount;
 
+  public BasicHistogramAggregator(Histogram histogram) {
+    this(histogram.id, histogram.bucket, histogram.cardinality, histogram.maxCardinality);
+  }
+
   public BasicHistogramAggregator(final String metricId, final DistributionBucket buckets) {
-    this(metricId, buckets, DEFAULT_CAPACITY, DEFAULT_MAX_CAPACITY);
+    this(metricId, buckets, DEFAULT_CARDINALITY, DEFAULT_MAX_CARDINALITY);
   }
 
-  public BasicHistogramAggregator(final String metricId, final DistributionBucket buckets,
-      final int capacity) {
-    this(metricId, buckets, capacity, DEFAULT_MAX_CAPACITY);
+  public BasicHistogramAggregator(final String metricId, final DistributionBucket buckets, final int capacity) {
+    this(metricId, buckets, capacity, DEFAULT_MAX_CARDINALITY);
   }
 
-  public BasicHistogramAggregator(final String metricId, final DistributionBucket buckets,
-      final int capacity, final int maxCapacity) {
-    super(AGG_FIELDS.length + buckets.getCount(), capacity, maxCapacity);
+  public BasicHistogramAggregator(final String metricId, final DistributionBucket buckets, final int capacity, final int maxCapacity) {
+    super(AGG_FIELDS.length + buckets.getCount(), capacity, maxCapacity, IDENTITY);
     this.metricId = metricId;
     this.buckets = buckets;
     this.bucketCount = buckets.getCount();

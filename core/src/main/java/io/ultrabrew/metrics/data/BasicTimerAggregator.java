@@ -4,7 +4,11 @@
 
 package io.ultrabrew.metrics.data;
 
+import static io.ultrabrew.metrics.Metric.DEFAULT_CARDINALITY;
+import static io.ultrabrew.metrics.Metric.DEFAULT_MAX_CARDINALITY;
+
 import io.ultrabrew.metrics.Gauge;
+import io.ultrabrew.metrics.Timer;
 
 /**
  * A monoid for common aggregation functions for a Timer metric class.
@@ -24,7 +28,11 @@ public class BasicTimerAggregator extends ConcurrentMonoidHashTable {
   private static final String[] FIELDS = {"count", "sum", "min", "max"};
   private static final Type[] TYPES = {Type.LONG, Type.LONG, Type.LONG, Type.LONG};
   private static final long[] IDENTITY = {0L, 0L, Long.MAX_VALUE, Long.MIN_VALUE};
-  private static final int DEFAULT_CAPACITY = 128;
+
+
+  public BasicTimerAggregator(final Timer timer) {
+    this(timer.id, timer.cardinality, timer.maxCardinality);
+  }
 
   /**
    * Create a monoid for common aggregation functions for a Counter.
@@ -32,7 +40,7 @@ public class BasicTimerAggregator extends ConcurrentMonoidHashTable {
    * @param metricId identifier of the metric associated with this aggregator
    */
   public BasicTimerAggregator(final String metricId) {
-    this(metricId, DEFAULT_CAPACITY);
+    this(metricId, DEFAULT_CARDINALITY);
   }
 
   /**
@@ -42,7 +50,7 @@ public class BasicTimerAggregator extends ConcurrentMonoidHashTable {
    * @param capacity requested capacity of table in records, actual capacity may be higher
    */
   public BasicTimerAggregator(final String metricId, final int capacity) {
-    super(metricId, capacity, FIELDS, TYPES, IDENTITY);
+    this(metricId, capacity, DEFAULT_MAX_CARDINALITY);
   }
 
   /**
@@ -55,7 +63,7 @@ public class BasicTimerAggregator extends ConcurrentMonoidHashTable {
    * value
    */
   public BasicTimerAggregator(final String metricId, final int capacity, final int maxCapacity) {
-    super(metricId, capacity, FIELDS, TYPES, IDENTITY, maxCapacity);
+    super(metricId, capacity, maxCapacity, FIELDS, TYPES, IDENTITY);
   }
 
   @Override

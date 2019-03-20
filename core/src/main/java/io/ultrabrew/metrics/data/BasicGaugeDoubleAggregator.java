@@ -4,6 +4,9 @@
 
 package io.ultrabrew.metrics.data;
 
+import static io.ultrabrew.metrics.Metric.DEFAULT_CARDINALITY;
+import static io.ultrabrew.metrics.Metric.DEFAULT_MAX_CARDINALITY;
+
 import io.ultrabrew.metrics.GaugeDouble;
 
 /**
@@ -23,10 +26,13 @@ import io.ultrabrew.metrics.GaugeDouble;
 public class BasicGaugeDoubleAggregator extends ConcurrentMonoidHashTable {
 
   private static final String[] FIELDS = {"count", "sum", "min", "max", "lastValue"};
-  private static final Type[] TYPES =
-      {Type.LONG, Type.DOUBLE, Type.DOUBLE, Type.DOUBLE, Type.DOUBLE};
+  private static final Type[] TYPES = {Type.LONG, Type.DOUBLE, Type.DOUBLE, Type.DOUBLE, Type.DOUBLE};
   private static final long[] IDENTITY = {0L, 0L, Long.MAX_VALUE, Long.MIN_VALUE, 0L};
-  private static final int DEFAULT_CAPACITY = 128;
+
+
+  public BasicGaugeDoubleAggregator(final GaugeDouble  gaugeDouble) {
+    this(gaugeDouble.id, gaugeDouble.cardinality, gaugeDouble.maxCardinality);
+  }
 
   /**
    * Create a monoid for common aggregation functions for a Counter.
@@ -34,7 +40,7 @@ public class BasicGaugeDoubleAggregator extends ConcurrentMonoidHashTable {
    * @param metricId identifier of the metric associated with this aggregator
    */
   public BasicGaugeDoubleAggregator(final String metricId) {
-    this(metricId, DEFAULT_CAPACITY);
+    this(metricId, DEFAULT_CARDINALITY);
   }
 
   /**
@@ -44,7 +50,7 @@ public class BasicGaugeDoubleAggregator extends ConcurrentMonoidHashTable {
    * @param capacity requested capacity of table in records, actual capacity may be higher
    */
   public BasicGaugeDoubleAggregator(final String metricId, final int capacity) {
-    super(metricId, capacity, FIELDS, TYPES, IDENTITY);
+    this(metricId, capacity, DEFAULT_MAX_CARDINALITY);
   }
 
   /**
@@ -56,9 +62,8 @@ public class BasicGaugeDoubleAggregator extends ConcurrentMonoidHashTable {
    * @param maxCapacity requested max capacity of table in records. Table doesn't grow beyond this
    * value.
    */
-  public BasicGaugeDoubleAggregator(final String metricId, final int capacity,
-      final int maxCapacity) {
-    super(metricId, capacity, FIELDS, TYPES, IDENTITY, maxCapacity);
+  public BasicGaugeDoubleAggregator(final String metricId, final int capacity, final int maxCapacity) {
+    super(metricId, capacity, maxCapacity, FIELDS, TYPES, IDENTITY);
   }
 
   @Override

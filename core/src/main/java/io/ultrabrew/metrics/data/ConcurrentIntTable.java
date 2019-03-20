@@ -15,8 +15,6 @@ public abstract class ConcurrentIntTable {
 
   // Certainty required to meet the spec of probablePrime
   private static final int DEFAULT_PRIME_CERTAINTY = 100;
-  protected static final int DEFAULT_CAPACITY = 128;
-  protected static final int DEFAULT_MAX_CAPACITY = 4096; //4k
   private static final int DEFAULT_INITIAL_CAPACITY = 16;
   private static final float DEFAULT_LOAD_FACTOR = 0.7f;
   private static final int TAGSETS_MAX_INCREMENT = 131072; // 128k
@@ -54,13 +52,13 @@ public abstract class ConcurrentIntTable {
   private List<Integer> tableCapacities;
   private final int recordSize;
   private final int maxCapacity;
+  private final int[] identity;
 
   private volatile int capacity;
   protected volatile String[][] tagSets;
   private volatile int used = 0;
 
-  public ConcurrentIntTable(final int recordSize, int initialCapacity, final int maxCapacity) {
-
+  public ConcurrentIntTable(final int recordSize, int initialCapacity, final int maxCapacity, final int[] identity) {
     if (initialCapacity < 0) {
       throw new IllegalArgumentException("Illegal initial capacity");
     }
@@ -77,6 +75,7 @@ public abstract class ConcurrentIntTable {
     this.recordSize = ((int) Math.ceil(numInts / 16.0)) << 4;
     this.capacity = initialCapacity;
     this.maxCapacity = maxCapacity;
+    this.identity = identity.clone();
     this.tables = new ArrayList<>();
     this.recordCounts = new ArrayList<>();
     this.tableCapacities = new ArrayList<>();
@@ -274,6 +273,11 @@ public abstract class ConcurrentIntTable {
 
               // reset timestamp
               unsafe.putLongVolatile(table, offset + Unsafe.ARRAY_LONG_INDEX_SCALE, 0L);
+              // It is ok if we lose some data from other threads while writing identity
+              for (int i = 0; i < identity.length; i++) {
+                unsafe.putIntVolatile(table,
+                    offset + (RESERVED_FIELDS + i) * Unsafe.ARRAY_INT_INDEX_SCALE, identity[i]);
+              }
 
               //increment the total size;
               int tagIndex = unsafe.getAndAddInt(this, usedOffset, 1);

@@ -4,6 +4,8 @@
 
 package io.ultrabrew.metrics.data;
 
+import static io.ultrabrew.metrics.Metric.DEFAULT_MAX_CARDINALITY;
+
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -47,8 +49,6 @@ public abstract class ConcurrentMonoidHashTable implements Aggregator {
    * Unsafe class for atomic operations on the hash table.
    */
   private static final Unsafe unsafe = UnsafeHelper.unsafe;
-
-  private static final int DEFAULT_MAX_CAPACITY = 4096; //4k
 
   private static final int TAGSETS_MAX_INCREMENT = 131072; // 128k
 
@@ -122,26 +122,14 @@ public abstract class ConcurrentMonoidHashTable implements Aggregator {
    * Create a simple linear probing hash table for a monoid operation.
    *
    * @param metricId identifier of the metric
-   * @param initialCapacity requested capacity of table in records, actual capacity may be higher
-   * @param fields sorted array of field names used in reporting
-   * @param types type of each corresponding field
-   * @param identity monoid's identity, where each value is corresponding to the given fields names
-   */
-  protected ConcurrentMonoidHashTable(final String metricId, final int initialCapacity,
-      final String[] fields, final Type[] types, final long[] identity) {
-    this(metricId, initialCapacity, fields, types, identity, DEFAULT_MAX_CAPACITY);
-  }
-
-  /**
-   * @param metricId identifier of the metric
    * @param initialCapacity requested capacity of table in records
+   * @param maxCapacity maximum capacity of table in records.
    * @param fields sorted array of field names used in reporting
    * @param types type of each corresponding field
    * @param identity monoid's identity, where each value is corresponding to the given fields names
-   * @param maxCapacity maximum capacity of table in records.
    */
   protected ConcurrentMonoidHashTable(final String metricId, int initialCapacity,
-      final String[] fields, final Type[] types, final long[] identity, final int maxCapacity) {
+      final int maxCapacity, final String[] fields, final Type[] types, final long[] identity) {
 
     if (fields.length != identity.length || fields.length == 0) {
       throw new IllegalArgumentException(

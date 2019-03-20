@@ -4,6 +4,9 @@
 
 package io.ultrabrew.metrics.data;
 
+import static io.ultrabrew.metrics.Metric.DEFAULT_CARDINALITY;
+import static io.ultrabrew.metrics.Metric.DEFAULT_MAX_CARDINALITY;
+
 import io.ultrabrew.metrics.Counter;
 
 /**
@@ -21,7 +24,10 @@ public class BasicCounterAggregator extends ConcurrentMonoidHashTable {
   private static final String[] FIELDS = {"sum"};
   private static final Type[] TYPES = {Type.LONG};
   private static final long[] IDENTITY = {0L};
-  private static final int DEFAULT_CAPACITY = 128;
+
+  public BasicCounterAggregator(final Counter counter) {
+    this(counter.id, counter.cardinality, counter.maxCardinality);
+  }
 
   /**
    * Create a monoid for common aggregation functions for a Counter.
@@ -29,7 +35,7 @@ public class BasicCounterAggregator extends ConcurrentMonoidHashTable {
    * @param metricId identifier of the metric associated with this aggregator
    */
   public BasicCounterAggregator(final String metricId) {
-    this(metricId, DEFAULT_CAPACITY);
+    this(metricId, DEFAULT_CARDINALITY);
   }
 
   /**
@@ -39,7 +45,7 @@ public class BasicCounterAggregator extends ConcurrentMonoidHashTable {
    * @param capacity requested capacity of table in records, actual capacity may be higher
    */
   public BasicCounterAggregator(final String metricId, final int capacity) {
-    super(metricId, capacity, FIELDS, TYPES, IDENTITY);
+    this(metricId, capacity, DEFAULT_MAX_CARDINALITY);
   }
 
   /**
@@ -52,7 +58,7 @@ public class BasicCounterAggregator extends ConcurrentMonoidHashTable {
    * value.
    */
   public BasicCounterAggregator(final String metricId, final int capacity, final int maxCapacity) {
-    super(metricId, capacity, FIELDS, TYPES, IDENTITY, maxCapacity);
+    super(metricId, capacity, maxCapacity, FIELDS, TYPES, IDENTITY);
   }
 
   @Override

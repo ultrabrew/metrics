@@ -4,6 +4,9 @@
 
 package io.ultrabrew.metrics.data;
 
+import static io.ultrabrew.metrics.Metric.DEFAULT_CARDINALITY;
+import static io.ultrabrew.metrics.Metric.DEFAULT_MAX_CARDINALITY;
+
 import io.ultrabrew.metrics.Gauge;
 
 /**
@@ -25,7 +28,10 @@ public class BasicGaugeAggregator extends ConcurrentMonoidHashTable {
   private static final String[] FIELDS = {"count", "sum", "min", "max", "lastValue"};
   private static final Type[] TYPES = {Type.LONG, Type.LONG, Type.LONG, Type.LONG, Type.LONG};
   private static final long[] IDENTITY = {0L, 0L, Long.MAX_VALUE, Long.MIN_VALUE, 0L};
-  private static final int DEFAULT_CAPACITY = 128;
+
+  public BasicGaugeAggregator(final Gauge gauge) {
+    this(gauge.id, gauge.cardinality, gauge.maxCardinality);
+  }
 
   /**
    * Create a monoid for common aggregation functions for a Counter.
@@ -33,7 +39,7 @@ public class BasicGaugeAggregator extends ConcurrentMonoidHashTable {
    * @param metricId identifier of the metric associated with this aggregator
    */
   public BasicGaugeAggregator(final String metricId) {
-    this(metricId, DEFAULT_CAPACITY);
+    this(metricId, DEFAULT_CARDINALITY);
   }
 
   /**
@@ -43,7 +49,7 @@ public class BasicGaugeAggregator extends ConcurrentMonoidHashTable {
    * @param capacity requested capacity of table in records, actual capacity may be higher
    */
   public BasicGaugeAggregator(final String metricId, final int capacity) {
-    super(metricId, capacity, FIELDS, TYPES, IDENTITY);
+    this(metricId, capacity, DEFAULT_MAX_CARDINALITY);
   }
 
   /**
@@ -56,7 +62,7 @@ public class BasicGaugeAggregator extends ConcurrentMonoidHashTable {
    * value.
    */
   public BasicGaugeAggregator(final String metricId, final int capacity, final int maxCapacity) {
-    super(metricId, capacity, FIELDS, TYPES, IDENTITY, maxCapacity);
+    super(metricId, capacity, maxCapacity, FIELDS, TYPES, IDENTITY);
   }
 
   @Override

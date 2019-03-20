@@ -7,6 +7,7 @@ package io.ultrabrew.metrics.reporters;
 import io.ultrabrew.metrics.Counter;
 import io.ultrabrew.metrics.Gauge;
 import io.ultrabrew.metrics.GaugeDouble;
+import io.ultrabrew.metrics.Histogram;
 import io.ultrabrew.metrics.Metric;
 import io.ultrabrew.metrics.Reporter;
 import io.ultrabrew.metrics.Timer;
@@ -14,6 +15,7 @@ import io.ultrabrew.metrics.data.Aggregator;
 import io.ultrabrew.metrics.data.BasicCounterAggregator;
 import io.ultrabrew.metrics.data.BasicGaugeAggregator;
 import io.ultrabrew.metrics.data.BasicGaugeDoubleAggregator;
+import io.ultrabrew.metrics.data.BasicHistogramAggregator;
 import io.ultrabrew.metrics.data.BasicTimerAggregator;
 import io.ultrabrew.metrics.data.Cursor;
 import io.ultrabrew.metrics.data.Type;
@@ -122,14 +124,15 @@ public abstract class AggregatingReporter implements Reporter {
    * aggregators for them, you should include these aggregators in the default aggregator list given
    * to {@link #AggregatingReporter(Map)}.
    */
-  public static final Map<Class<? extends Metric>, Function<String, ? extends Aggregator>> DEFAULT_AGGREGATORS =
+  public static final Map<Class<? extends Metric>, Function<Metric, ? extends Aggregator>> DEFAULT_AGGREGATORS =
       Collections
           .unmodifiableMap(
-              new java.util.HashMap<Class<? extends Metric>, Function<String, ? extends Aggregator>>() {{
-                put(Counter.class, BasicCounterAggregator::new);
-                put(Gauge.class, BasicGaugeAggregator::new);
-                put(GaugeDouble.class, BasicGaugeDoubleAggregator::new);
-                put(Timer.class, BasicTimerAggregator::new);
+              new java.util.HashMap<Class<? extends Metric>, Function<Metric, ? extends Aggregator>>() {{
+                put(Counter.class, metric -> new BasicCounterAggregator((Counter) metric));
+                put(Gauge.class, metric -> new BasicGaugeAggregator((Gauge) metric));
+                put(GaugeDouble.class, metric -> new BasicGaugeDoubleAggregator((GaugeDouble) metric));
+                put(Timer.class, metric -> new BasicTimerAggregator((Timer) metric));
+                put(Histogram.class, metric -> new BasicHistogramAggregator((Histogram) metric));
               }});
 
   /**
@@ -138,7 +141,7 @@ public abstract class AggregatingReporter implements Reporter {
    */
   protected final ConcurrentHashMap<String, Aggregator> aggregators;
 
-  private final Map<Class<? extends Metric>, Function<String, ? extends Aggregator>> defaultAggregators;
+  private final Map<Class<? extends Metric>, Function<Metric, ? extends Aggregator>> defaultAggregators;
 
   /**
    * Create an aggregating reporter with default aggregators for default metrics only.
@@ -154,7 +157,7 @@ public abstract class AggregatingReporter implements Reporter {
    * instance
    */
   protected AggregatingReporter(
-      final Map<Class<? extends Metric>, Function<String, ? extends Aggregator>> defaultAggregators) {
+      final Map<Class<? extends Metric>, Function<Metric, ? extends Aggregator>> defaultAggregators) {
     aggregators = new ConcurrentHashMap<>();
     this.defaultAggregators = Collections.unmodifiableMap(defaultAggregators);
   }
@@ -164,7 +167,7 @@ public abstract class AggregatingReporter implements Reporter {
       final String[] tags) {
     Aggregator aggregator = aggregators.get(metric.id);
     if (aggregator == null) {
-      aggregator = aggregators.computeIfAbsent(metric.id, (k) -> createAggregator(metric, k));
+      aggregator = aggregators.computeIfAbsent(metric.id, (k) -> createAggregator(metric));
     }
     aggregator.apply(tags != null ? tags : NO_TAGS, value, timestamp);
   }
@@ -174,16 +177,16 @@ public abstract class AggregatingReporter implements Reporter {
    * metric is received in this aggregator.
    *
    * @param metric metric instance producing the measurement event
-   * @param metricId identifier of the metric
    * @return a new aggregator for the given metric. If metric should not be aggregated, the NOOP
    * aggregator must be returned.
    */
-  protected Aggregator createAggregator(final Metric metric, final String metricId) {
+  protected Aggregator createAggregator(final Metric metric) {
     // TODO: Implement override by metric name
-    Function<String, ? extends Aggregator> supplier = defaultAggregators.get(metric.getClass());
+    Function<Metric, ? extends Aggregator> supplier = defaultAggregators.get(metric.getClass());
     if (supplier == null) {
       return NOOP;
     }
-    return supplier.apply(metricId);
+    return supplier.apply(metric);
   }
+
 }

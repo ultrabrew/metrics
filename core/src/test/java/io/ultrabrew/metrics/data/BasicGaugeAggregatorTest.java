@@ -10,6 +10,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 import java.util.Arrays;
+import mockit.Deencapsulation;
 import org.junit.jupiter.api.Test;
 
 public class BasicGaugeAggregatorTest {
@@ -111,5 +112,13 @@ public class BasicGaugeAggregatorTest {
 
     assertEquals(3, aggregator.size());
     assertEquals(3, aggregator.capacity()); // caped at the max capacity.
+  }
+
+  @Test
+  void testDefaultCardinality() {
+    BasicGaugeAggregator aggregator = new BasicGaugeAggregator("test");
+    int maxCapacity = Deencapsulation.getField(aggregator, "maxCapacity");
+    assertEquals(128, aggregator.capacity());
+    assertEquals(4096, maxCapacity);
   }
 }

@@ -23,21 +23,22 @@ public class BasicHistogramAggregatorTest {
     DistributionBucket bucket = new DistributionBucket(new int[]{0, 10, 100});
     final BasicHistogramAggregator table = new BasicHistogramAggregator("test", bucket);
 
-    table.apply(new String[]{"testTag", "value"}, -1, CURRENT_TIME);
-    table.apply(new String[]{"testTag", "value"}, 0, CURRENT_TIME);
-    table.apply(new String[]{"testTag", "value"}, 1L, CURRENT_TIME);
-    table.apply(new String[]{"testTag", "value"}, 10, CURRENT_TIME);
-    table.apply(new String[]{"testTag", "value"}, 50, CURRENT_TIME);
-    table.apply(new String[]{"testTag", "value"}, 100, CURRENT_TIME);
-    table.apply(new String[]{"testTag", "value"}, 101, CURRENT_TIME);
-    table.apply(new String[]{"testTag", "value"}, 150, CURRENT_TIME);
+    String[] tagset = {"testTag", "value"};
+    table.apply(tagset, -1, CURRENT_TIME);
+    table.apply(tagset, 0, CURRENT_TIME);
+    table.apply(tagset, 1L, CURRENT_TIME);
+    table.apply(tagset, 10, CURRENT_TIME);
+    table.apply(tagset, 50, CURRENT_TIME);
+    table.apply(tagset, 100, CURRENT_TIME);
+    table.apply(tagset, 101, CURRENT_TIME);
+    table.apply(tagset, 150, CURRENT_TIME);
 
     Cursor cursor = table.cursor();
     assertTrue(cursor.next());
     assertArrayEquals(
         new String[]{"count", "sum", "min", "max", "underflow", "0_10", "10_100", "overflow"},
         cursor.getFields());
-    assertArrayEquals(new String[]{"testTag", "value"}, cursor.getTags());
+    assertArrayEquals(tagset, cursor.getTags());
     assertEquals(CURRENT_TIME, cursor.lastUpdated()); // last updated timestamp
     assertEquals(8, cursor.readLong(0)); // count
     assertEquals(411, cursor.readLong(1)); // sum
@@ -50,6 +51,23 @@ public class BasicHistogramAggregatorTest {
 
     assertEquals(1, table.size());
     assertEquals(128, table.capacity());
+  }
+
+  @Test
+  void testMinAggregation() {
+    DistributionBucket bucket = new DistributionBucket(new int[]{0, 10, 100});
+    final BasicHistogramAggregator table = new BasicHistogramAggregator("test", bucket);
+
+    String[] tagset = {"testTag", "value"};
+    table.apply(tagset,15, CURRENT_TIME);
+    table.apply(tagset,49, CURRENT_TIME);
+    table.apply(tagset,75, CURRENT_TIME);
+    table.apply(tagset,99, CURRENT_TIME);
+    table.apply(tagset,100, CURRENT_TIME);
+
+    Cursor cursor = table.cursor();
+    assertTrue(cursor.next());
+    assertEquals(15, cursor.readLong(2)); //min
   }
 
   @Test
@@ -548,6 +566,32 @@ public class BasicHistogramAggregatorTest {
         () -> cursor.readDouble(0));
     assertThrows(UnsupportedOperationException.class,
         () -> cursor.readAndResetDouble(0));
+  }
 
+  @Test
+  void testSortedCursor() {
+    DistributionBucket bucket = new DistributionBucket(new int[]{0, 10, 100});
+    final BasicHistogramAggregator table = new BasicHistogramAggregator("test", bucket);
+
+    final String[] tagset1 = new String[]{"host", "h1", "colo", "c1"};
+    final String[] tagset2 = {"host", "h1"};
+
+    table.apply(tagset1, -1, CURRENT_TIME);
+    table.apply(tagset1, 0, CURRENT_TIME);
+    table.apply(tagset1, 1L, CURRENT_TIME);
+    table.apply(tagset1, 10, CURRENT_TIME);
+    table.apply(tagset2, 50, CURRENT_TIME);
+    table.apply(tagset2, 100, CURRENT_TIME);
+    table.apply(tagset2, 101, CURRENT_TIME);
+    table.apply(tagset2, 150, CURRENT_TIME);
+
+    Cursor cursor = table.sortedCursor();
+    assertTrue(cursor.next());
+    assertArrayEquals(tagset2, cursor.getTags());
+    assertEquals("test", cursor.getMetricId());
+
+    assertTrue(cursor.next());
+    assertArrayEquals(tagset1, cursor.getTags());
+    assertEquals("test", cursor.getMetricId());
   }
 }

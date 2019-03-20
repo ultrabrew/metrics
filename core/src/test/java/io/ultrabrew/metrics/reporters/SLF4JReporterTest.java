@@ -11,11 +11,13 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import io.ultrabrew.metrics.Counter;
 import io.ultrabrew.metrics.Gauge;
 import io.ultrabrew.metrics.GaugeDouble;
+import io.ultrabrew.metrics.Histogram;
 import io.ultrabrew.metrics.Metric;
 import io.ultrabrew.metrics.MetricRegistry;
 import io.ultrabrew.metrics.Timer;
 import io.ultrabrew.metrics.data.Aggregator;
 import io.ultrabrew.metrics.data.Cursor;
+import io.ultrabrew.metrics.util.DistributionBucket;
 import java.util.ArrayList;
 import java.util.List;
 import mockit.Capturing;
@@ -246,6 +248,49 @@ public class SLF4JReporterTest {
           "gaugeDouble");
       compare(objects.get(1), "tag2=101", "count=1 sum=102.0 min=102.0 max=102.0 lastValue=102.0",
           "gaugeDouble");
+    }};
+  }
+
+  @Test
+  void testHistogram(@Injectable Logger logger) throws InterruptedException {
+    reporter = new SLF4JReporter("testHistogram", 1);
+    Deencapsulation.setField(reporter, "reporter", logger);
+    MetricRegistry metricRegistry = new MetricRegistry();
+    metricRegistry.addReporter(reporter);
+
+    long start = System.currentTimeMillis();
+
+    DistributionBucket bucket = new DistributionBucket(new int[]{0, 10, 50, 100});
+    Histogram histogram = metricRegistry.histogram("histogram", bucket);
+    histogram.update(-13, "tag", "100");
+    histogram.update(-1, "tag", "100");
+    histogram.update(0, "tag", "100");
+    histogram.update(9, "tag", "100");
+    histogram.update(10, "tag", "100");
+    histogram.update(49, "tag", "100");
+    histogram.update(50, "tag", "100");
+    histogram.update(150, "tag", "100");
+
+    histogram.update(15, "tag", "101");
+    histogram.update(49, "tag", "101");
+    histogram.update(75, "tag", "101");
+    histogram.update(99, "tag", "101");
+    histogram.update(100, "tag", "101");
+
+    Thread.sleep(calculateDelay(1000, start) + 150);
+
+    new Verifications() {{
+      List<Object[]> objects = new ArrayList<>();
+      logger.info("lastUpdated={} {}{}{} {}", withCapture(objects));
+
+      assertEquals(2, objects.size());
+
+      compare(objects.get(0), "tag=100",
+          "count=8 sum=254 min=-13 max=150 underflow=2 0_10=2 10_50=2 50_100=1 overflow=1",
+          "histogram");
+      compare(objects.get(1), "tag=101",
+          "count=5 sum=338 min=15 max=100 underflow=0 0_10=0 10_50=2 50_100=2 overflow=1",
+          "histogram");
     }};
   }
 

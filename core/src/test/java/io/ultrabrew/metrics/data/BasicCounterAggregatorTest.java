@@ -491,4 +491,12 @@ public class BasicCounterAggregatorTest {
 
     assertFalse(cursor.next());
   }
+
+  @Test
+  void testDefaultCardinality() {
+    BasicCounterAggregator aggregator = new BasicCounterAggregator("test");
+    int maxCapacity = Deencapsulation.getField(aggregator, "maxCapacity");
+    assertEquals(128, aggregator.capacity());
+    assertEquals(4096, maxCapacity);
+  }
 }

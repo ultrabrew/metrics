@@ -15,6 +15,7 @@ public class ConcurrentMonoidHashTableTest {
     assertThrows(IllegalArgumentException.class, () -> new ConcurrentMonoidHashTable(
         "test",
         128,
+        4096,
         new String[]{"test"},
         new Type[]{Type.LONG},
         new long[]{0L, 1L}) {
