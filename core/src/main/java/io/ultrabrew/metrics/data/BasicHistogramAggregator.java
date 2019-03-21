@@ -1,3 +1,7 @@
+// Copyright 2019, Oath Inc.
+// Licensed under the terms of the Apache License 2.0 license. See LICENSE file in Ultrabrew Metrics
+// for terms.
+
 package io.ultrabrew.metrics.data;
 
 import static io.ultrabrew.metrics.Metric.DEFAULT_CARDINALITY;
