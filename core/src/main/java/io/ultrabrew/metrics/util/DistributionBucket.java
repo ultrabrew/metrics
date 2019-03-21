@@ -19,7 +19,7 @@ public class DistributionBucket {
 
     checkArgument(buckets.length > 1, "Minimum bucket length is 2");
     checkArgument(isSorted(buckets), "Bucket should be sorted in ascending order");
-    checkArgument(hasDuplicate(buckets), "Bucket should not have duplicate entries");
+    checkArgument(!hasDuplicate(buckets), "Bucket should not have duplicate entries");
 
     this.buckets = buckets.clone();
   }
@@ -75,7 +75,7 @@ public class DistributionBucket {
   }
 
   private boolean isSorted(final long[] buckets) {
-    return checkCondition(buckets, i -> buckets[i] > buckets[i + 1]);
+    return checkCondition(buckets, i -> buckets[i] < buckets[i + 1]);
   }
 
   private boolean hasDuplicate(final long[] buckets) {
@@ -84,7 +84,7 @@ public class DistributionBucket {
 
   private boolean checkCondition(final long[] buckets, Predicate<Integer> predicate) {
     for (int i = 0; i < buckets.length - 1; i++) {
-      if (predicate.test(i)) {
+      if (predicate.negate().test(i)) {
         return false;
       }
     }
