@@ -195,4 +195,25 @@ public class InfluxDBClientTest {
 
     assertEquals("test,foo=bar val=1 123\n", EntityUtils.toString(requests.get(0).getEntity()));
   }
+
+  @Test
+  public void testPayloadAfterException() throws Exception {
+    List<HttpPost> requests = new ArrayList<>();
+    new Expectations() {{
+      httpClient.execute(withCapture(requests));
+      result = new IOException();
+      result = closeableHttpResponse;
+      closeableHttpResponse.getStatusLine();
+      result = statusLine;
+      statusLine.getStatusCode();
+      result = 200;
+    }};
+
+    client.write("test_it", new String[]{"foo", "bar"}, new String[]{"val", "1"}, 123);
+    assertThrows(IOException.class, client::flush);
+    client.write("test_longer", new String[]{"foo", "bar"}, new String[]{"val", "1"}, 123);
+    client.flush();
+
+    assertEquals("test_longer,foo=bar val=1 123\n", EntityUtils.toString(requests.get(1).getEntity()));
+  }
 }

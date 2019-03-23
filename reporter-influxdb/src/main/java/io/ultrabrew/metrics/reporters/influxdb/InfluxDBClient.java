@@ -117,20 +117,20 @@ public class InfluxDBClient {
     HttpPost httpPost = new HttpPost(this.dbUri);
     httpPost.setEntity(
         new ByteArrayEntity(byteBuffer.array(), 0, byteBuffer.limit(), ContentType.DEFAULT_TEXT));
-    CloseableHttpResponse response = httpClient.execute(httpPost);
-    int statusCode;
     try {
-      statusCode = response.getStatusLine().getStatusCode();
-    } finally {
+      CloseableHttpResponse response = httpClient.execute(httpPost);
       EntityUtils.consumeQuietly(response.getEntity());
-    }
-    // Always clear the buffer. But this will lead to data loss in case of non 2xx response (i.e write operation failed)
-    // received from the InfluxDB server. Ideally non 2xx server response should be rare but revisit this part
-    // if data loss occurs frequently.
-    byteBuffer.clear();
-    if (statusCode / 100 != 2) {
-      throw new IOException("InfluxDB write failed: " + statusCode + " " + response.getStatusLine()
-          .getReasonPhrase());
+      int statusCode = response.getStatusLine().getStatusCode();
+      if (statusCode / 100 != 2) {
+        throw new IOException(
+            "InfluxDB write failed: " + statusCode + " " + response.getStatusLine()
+                .getReasonPhrase());
+      }
+    } finally {
+      // Always clear the buffer. But this will lead to data loss in case of non 2xx response (i.e write operation failed)
+      // received from the InfluxDB server. Ideally non 2xx server response should be rare but revisit this part
+      // if data loss occurs frequently.
+      byteBuffer.clear();
     }
   }
 }
