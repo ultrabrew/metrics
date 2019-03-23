@@ -176,4 +176,23 @@ public class InfluxDBClientTest {
       httpClient.execute((HttpUriRequest) any);
     }};
   }
+
+  @Test
+  public void testPayload() throws IOException {
+    List<HttpPost> requests = new ArrayList<>();
+    new Expectations() {{
+      httpClient.execute(withCapture(requests));
+      result = closeableHttpResponse;
+      closeableHttpResponse.getStatusLine();
+      result = statusLine;
+      statusLine.getStatusCode();
+      result = 200;
+    }};
+
+    InfluxDBClient c = new InfluxDBClient(URI.create("http://localhost:8086/write?db=test"), 100);
+    c.write("test", new String[]{"foo", "bar"}, new String[]{"val", "1"}, 123);
+    c.flush();
+
+    assertEquals("test,foo=bar val=1 123\n", EntityUtils.toString(requests.get(0).getEntity()));
+  }
 }
