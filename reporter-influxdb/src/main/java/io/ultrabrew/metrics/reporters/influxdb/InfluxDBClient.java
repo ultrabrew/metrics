@@ -115,7 +115,8 @@ public class InfluxDBClient {
     }
     byteBuffer.flip();
     HttpPost httpPost = new HttpPost(this.dbUri);
-    httpPost.setEntity(new ByteArrayEntity(byteBuffer.array(), ContentType.DEFAULT_TEXT));
+    httpPost.setEntity(
+        new ByteArrayEntity(byteBuffer.array(), 0, byteBuffer.limit(), ContentType.DEFAULT_TEXT));
     CloseableHttpResponse response = httpClient.execute(httpPost);
     int statusCode;
     try {
