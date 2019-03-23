@@ -4,16 +4,20 @@
 
 package io.ultrabrew.metrics.reporters.influxdb;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.List;
 import mockit.Expectations;
 import mockit.Mocked;
 import mockit.Verifications;
 import org.apache.http.HttpEntity;
 import org.apache.http.StatusLine;
 import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.entity.BasicHttpEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -32,9 +36,6 @@ public class InfluxDBClientTest {
   @Mocked
   CloseableHttpResponse closeableHttpResponse;
 
-  @Mocked
-  EntityUtils entityUtils;
-
   private InfluxDBClient client;
 
   @BeforeEach
@@ -51,11 +52,8 @@ public class InfluxDBClientTest {
       result = statusLine;
       statusLine.getStatusCode();
       result = 204;
-      HttpEntity httpEntity = new BasicHttpEntity();
       closeableHttpResponse.getEntity();
-      result = httpEntity;
-      entityUtils.consumeQuietly(httpEntity);
-      times = 2;
+      result = new BasicHttpEntity();
     }};
     String[] tags = {"host", "server01", "region", "us-west"};
     String[] fields = {"temp", "80", "fanSpeed", "743"};
@@ -65,6 +63,11 @@ public class InfluxDBClientTest {
     client.write("cpu_load_short", tags, fields, 1534055562000000007L);
     client.write("cpu_load_short", tags, fields, 1534055562000000008L);
     client.flush();
+
+    new Verifications() {{
+      EntityUtils.consumeQuietly((HttpEntity) any);
+      times = 2;
+    }};
   }
 
   @Test
@@ -76,11 +79,8 @@ public class InfluxDBClientTest {
       result = statusLine;
       statusLine.getStatusCode();
       result = 500;
-      HttpEntity httpEntity = new BasicHttpEntity();
       closeableHttpResponse.getEntity();
-      result = httpEntity;
-      entityUtils.consumeQuietly(httpEntity);
-      times = 2;
+      result = new BasicHttpEntity();
     }};
     String[] tags = {"host", "server01", "region", "us-west"};
     String[] fields = {"temp", "80", "fanSpeed", "743"};
@@ -90,8 +90,13 @@ public class InfluxDBClientTest {
     client.write("cpu_load_short", tags, fields, 1534055562000000007L);
     client.write("cpu_load_short", tags, fields, 1534055562000000008L);
     assertThrows(IOException.class, client::flush);
+
+    new Verifications() {{
+      EntityUtils.consumeQuietly((HttpEntity) any);
+      times = 2;
+    }};
   }
-  
+
   @Test
   public void testWriteFailsIllegalHttpResponse() throws Exception {
     new Expectations() {{
@@ -99,11 +104,8 @@ public class InfluxDBClientTest {
       result = closeableHttpResponse;
       closeableHttpResponse.getStatusLine();
       result = null;
-      HttpEntity httpEntity = new BasicHttpEntity();
       closeableHttpResponse.getEntity();
-      result = httpEntity;
-      entityUtils.consumeQuietly(httpEntity);
-      times = 2;
+      result = new BasicHttpEntity();
     }};
     String[] tags = {"host", "server01", "region", "us-west"};
     String[] fields = {"temp", "80", "fanSpeed", "743"};
@@ -113,6 +115,11 @@ public class InfluxDBClientTest {
     client.write("cpu_load_short", tags, fields, 1534055562000000007L);
     client.write("cpu_load_short", tags, fields, 1534055562000000008L);
     assertThrows(RuntimeException.class, client::flush);
+
+    new Verifications() {{
+      EntityUtils.consumeQuietly((HttpEntity) any);
+      times = 2;
+    }};
   }
 
   @Test
