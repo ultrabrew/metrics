@@ -45,7 +45,7 @@ public class InfluxDBClientTest {
 
   @Test
   public void testWriteSuccessful() throws Exception {
-    new Expectations() {{
+    new Expectations(EntityUtils.class) {{
       httpClient.execute((HttpUriRequest) any);
       result = closeableHttpResponse;
       closeableHttpResponse.getStatusLine();
@@ -72,7 +72,7 @@ public class InfluxDBClientTest {
 
   @Test
   public void testWriteFails() throws Exception {
-    new Expectations() {{
+    new Expectations(EntityUtils.class) {{
       httpClient.execute((HttpUriRequest) any);
       result = closeableHttpResponse;
       closeableHttpResponse.getStatusLine();
@@ -99,7 +99,7 @@ public class InfluxDBClientTest {
 
   @Test
   public void testWriteFailsIllegalHttpResponse() throws Exception {
-    new Expectations() {{
+    new Expectations(EntityUtils.class) {{
       httpClient.execute((HttpUriRequest) any);
       result = closeableHttpResponse;
       closeableHttpResponse.getStatusLine();
