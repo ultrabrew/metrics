@@ -14,8 +14,17 @@ cache:
   - $HOME/.gradle/wrapper/
 
 deploy:
+  # snapshots from master
   - provider: script
     skip_cleanup: true
     script: ./gradlew publish
     on:
+      branch: master
+      jdk: oraclejdk8
+  # releases from tags
+  - provider: script
+    skip_cleanup: true
+    script: ./gradlew publish
+    on:
+      tags: true
       jdk: oraclejdk8
