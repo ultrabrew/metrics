@@ -83,6 +83,7 @@ subprojects {
     dependencyCheck {
         skipConfigurations = ['clover', 'jmh']
         format = 'ALL'
+        failBuildOnCVSS = 4.0
     }
 
     spotbugs {
