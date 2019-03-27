@@ -4,7 +4,7 @@ buildscript {
     }
 
     dependencies {
-        classpath group: 'com.bmuschko', name: 'gradle-clover-plugin', version: '2.2.1'
+        classpath group: 'com.bmuschko', name: 'gradle-clover-plugin', version: '2.2.2'
         classpath group: 'com.github.ben-manes', name: 'gradle-versions-plugin', version: '0.20.0'
         classpath group: 'me.champeau.gradle', name: 'jmh-gradle-plugin', version: '0.4.8'
         classpath group: 'org.owasp', name: 'dependency-check-gradle', version: '4.0.0.1'
