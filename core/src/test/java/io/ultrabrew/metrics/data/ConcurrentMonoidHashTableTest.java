@@ -12,7 +12,7 @@ public class ConcurrentMonoidHashTableTest {
 
   @Test
   public void testNotMatchingFieldsAndIdentity() {
-    assertThrows(IllegalArgumentException.class, () -> new ConcurrentMonoidHashTable(
+    assertThrows(AssertionError.class, () -> new ConcurrentMonoidHashTable(
         "test",
         128,
         4096,

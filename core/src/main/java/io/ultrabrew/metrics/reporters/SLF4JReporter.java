@@ -4,11 +4,18 @@
 
 package io.ultrabrew.metrics.reporters;
 
+import static io.ultrabrew.metrics.reporters.AggregatingReporter.DEFAULT_AGGREGATORS;
+
+import io.ultrabrew.metrics.Metric;
+import io.ultrabrew.metrics.MetricRegistry;
 import io.ultrabrew.metrics.data.Aggregator;
 import io.ultrabrew.metrics.data.Cursor;
 import io.ultrabrew.metrics.data.CursorEntry;
 import io.ultrabrew.metrics.data.Type;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Function;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,6 +39,10 @@ import org.slf4j.LoggerFactory;
  */
 public class SLF4JReporter extends TimeWindowReporter {
 
+  private static final String DEFULT_TAG_DELIMITER = " ";
+  private static final String DEFULT_FIELD_DELIMITER = " ";
+  private static final String DEFULT_TAGFIELD_DELIMITER = " ";
+
   private Logger reporter;
   private CharSequence tagDelimiter;
   private CharSequence fieldDelimiter;
@@ -44,7 +55,7 @@ public class SLF4JReporter extends TimeWindowReporter {
    * @param name name of the logger
    */
   public SLF4JReporter(final String name) {
-    this(name, " ", " ", " ", DEFAULT_WINDOW_STEP_SIZE_SEC);
+    this(name, DEFAULT_WINDOW_STEP_SIZE_SEC);
   }
 
   /**
@@ -54,7 +65,8 @@ public class SLF4JReporter extends TimeWindowReporter {
    * @param windowSizeSeconds window size in seconds
    */
   public SLF4JReporter(final String name, final int windowSizeSeconds) {
-    this(name, " ", " ", " ", windowSizeSeconds);
+    this(name, DEFULT_TAG_DELIMITER, DEFULT_FIELD_DELIMITER, DEFULT_TAGFIELD_DELIMITER,
+        windowSizeSeconds);
   }
 
   /**
@@ -70,7 +82,46 @@ public class SLF4JReporter extends TimeWindowReporter {
       final CharSequence fieldDelimiter,
       final CharSequence tagFieldDelimiter, final int windowSizeSeconds) {
 
-    super(name, windowSizeSeconds);
+    this(name, tagDelimiter, fieldDelimiter, tagFieldDelimiter, windowSizeSeconds,
+        DEFAULT_AGGREGATORS);
+  }
+
+  /**
+   * Create a SLF4J Logger reporter with given delimiters.
+   *
+   * @param name name of the logger
+   * @param tagDelimiter delimiter to be used to join tag key-value pairs
+   * @param fieldDelimiter delimiter to be used to join field name-value pairs
+   * @param tagFieldDelimiter delimiter to be used to separate tags and fields
+   * @param windowSizeSeconds window size in seconds
+   * @param defaultAggregators window size in seconds
+   */
+  public SLF4JReporter(final String name, final CharSequence tagDelimiter,
+      final CharSequence fieldDelimiter,
+      final CharSequence tagFieldDelimiter, final int windowSizeSeconds,
+      final Map<Class<? extends Metric>, Function<Metric, ? extends Aggregator>> defaultAggregators) {
+
+    this(name, tagDelimiter, fieldDelimiter, tagFieldDelimiter, windowSizeSeconds,
+        DEFAULT_AGGREGATORS, Collections.EMPTY_MAP);
+  }
+
+  /**
+   * Create a SLF4J Logger reporter with given delimiters.
+   *
+   * @param name name of the logger
+   * @param tagDelimiter delimiter to be used to join tag key-value pairs
+   * @param fieldDelimiter delimiter to be used to join field name-value pairs
+   * @param tagFieldDelimiter delimiter to be used to separate tags and fields
+   * @param windowSizeSeconds window size in seconds
+   * @param defaultAggregators window size in seconds
+   */
+  public SLF4JReporter(final String name, final CharSequence tagDelimiter,
+      final CharSequence fieldDelimiter,
+      final CharSequence tagFieldDelimiter, final int windowSizeSeconds,
+      final Map<Class<? extends Metric>, Function<Metric, ? extends Aggregator>> defaultAggregators,
+      final Map<String, Function<Metric, ? extends Aggregator>> metricAggregators) {
+
+    super(name, windowSizeSeconds, defaultAggregators, metricAggregators);
 
     reporter = LoggerFactory.getLogger(name);
     this.tagDelimiter = tagDelimiter;
@@ -141,5 +192,64 @@ public class SLF4JReporter extends TimeWindowReporter {
       sb.append(types[i].readAndReset(cursor, i));
     }
     return sb == null ? "" : sb.toString();
+  }
+
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  public static final class Builder {
+
+    private String name;
+    private int windowStepSize = DEFAULT_WINDOW_STEP_SIZE_SEC;
+    private CharSequence tagDelimiter = DEFULT_TAG_DELIMITER;
+    private CharSequence fieldDelimiter = DEFULT_FIELD_DELIMITER;
+    private CharSequence tagFieldDelimiter = DEFULT_TAGFIELD_DELIMITER;
+
+    private Map<Class<? extends Metric>, Function<Metric, ? extends Aggregator>> defaultAggregators = DEFAULT_AGGREGATORS;
+    private Map<String, Function<Metric, ? extends Aggregator>> metricAggregators = new HashMap<>();
+
+    public Builder withName(String name) {
+      this.name = name;
+      return this;
+    }
+
+    public Builder withStepSize(int windowStepSize) {
+      this.windowStepSize = windowStepSize;
+      return this;
+    }
+
+    public Builder withTagDelimiter(CharSequence tagDelimiter) {
+      this.tagDelimiter = tagDelimiter;
+      return this;
+    }
+
+    public Builder withFieldDelimiter(CharSequence fieldDelimiter) {
+      this.fieldDelimiter = fieldDelimiter;
+      return this;
+    }
+
+    public Builder withTagFieldDelimiter(CharSequence tagFieldDelimiter) {
+      this.tagFieldDelimiter = tagFieldDelimiter;
+      return this;
+    }
+
+    public Builder withDefaultAggregators(
+        final Map<Class<? extends Metric>, Function<Metric, ? extends Aggregator>> defaultAggregators) {
+      this.defaultAggregators = defaultAggregators;
+      return this;
+    }
+
+    public Builder addMetricAggregator(final String metricId,
+        Function<Metric, ? extends Aggregator> supplier) {
+      this.metricAggregators.put(metricId, supplier);
+      return this;
+    }
+
+    public SLF4JReporter build() {
+      return new SLF4JReporter(name, tagDelimiter, fieldDelimiter, tagFieldDelimiter,
+          windowStepSize, defaultAggregators, metricAggregators);
+    }
+
   }
 }

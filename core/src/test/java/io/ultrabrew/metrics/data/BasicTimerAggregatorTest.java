@@ -96,7 +96,7 @@ public class BasicTimerAggregatorTest {
 
   @Test
   public void testInvalidMaxCapacity() {
-    assertThrows(IllegalArgumentException.class, () -> new BasicTimerAggregator("test", 10, 9));
+    assertThrows(AssertionError.class, () -> new BasicTimerAggregator("test", 10, 9));
   }
 
   @Test

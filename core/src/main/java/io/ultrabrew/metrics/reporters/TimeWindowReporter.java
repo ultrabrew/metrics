@@ -10,6 +10,7 @@ import io.ultrabrew.metrics.Metric;
 import io.ultrabrew.metrics.Reporter;
 import io.ultrabrew.metrics.data.Aggregator;
 import io.ultrabrew.metrics.util.Intervals;
+import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
@@ -41,12 +42,18 @@ public abstract class TimeWindowReporter implements Reporter, AutoCloseable {
   }
 
   public TimeWindowReporter(final String name, final int windowStepSizeSeconds,
-      final Map<Class<? extends Metric>, Function<Metric, ? extends Aggregator>> aggregators) {
+      final Map<Class<? extends Metric>, Function<Metric, ? extends Aggregator>> defaultAggregators) {
+    this(name, windowStepSizeSeconds, defaultAggregators, Collections.EMPTY_MAP);
+  }
+
+  public TimeWindowReporter(final String name, final int windowStepSizeSeconds,
+      final Map<Class<? extends Metric>, Function<Metric, ? extends Aggregator>> defaultAggregators,
+      final Map<String, Function<Metric, ? extends Aggregator>> metricAggregators) {
     this.name = name;
     this.windowStepSizeMillis = windowStepSizeSeconds * 1000;
-    this.reporters[0] = new AggregatingReporter(aggregators) {
+    this.reporters[0] = new AggregatingReporter(defaultAggregators, metricAggregators) {
     };
-    this.reporters[1] = new AggregatingReporter(aggregators) {
+    this.reporters[1] = new AggregatingReporter(defaultAggregators, metricAggregators) {
     };
     this.threadId = new AtomicInteger(1);
   }

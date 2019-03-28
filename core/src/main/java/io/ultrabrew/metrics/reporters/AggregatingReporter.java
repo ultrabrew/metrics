@@ -7,7 +7,6 @@ package io.ultrabrew.metrics.reporters;
 import io.ultrabrew.metrics.Counter;
 import io.ultrabrew.metrics.Gauge;
 import io.ultrabrew.metrics.GaugeDouble;
-import io.ultrabrew.metrics.Histogram;
 import io.ultrabrew.metrics.Metric;
 import io.ultrabrew.metrics.Reporter;
 import io.ultrabrew.metrics.Timer;
@@ -15,7 +14,6 @@ import io.ultrabrew.metrics.data.Aggregator;
 import io.ultrabrew.metrics.data.BasicCounterAggregator;
 import io.ultrabrew.metrics.data.BasicGaugeAggregator;
 import io.ultrabrew.metrics.data.BasicGaugeDoubleAggregator;
-import io.ultrabrew.metrics.data.BasicHistogramAggregator;
 import io.ultrabrew.metrics.data.BasicTimerAggregator;
 import io.ultrabrew.metrics.data.Cursor;
 import io.ultrabrew.metrics.data.Type;
@@ -130,9 +128,9 @@ public abstract class AggregatingReporter implements Reporter {
               new java.util.HashMap<Class<? extends Metric>, Function<Metric, ? extends Aggregator>>() {{
                 put(Counter.class, metric -> new BasicCounterAggregator((Counter) metric));
                 put(Gauge.class, metric -> new BasicGaugeAggregator((Gauge) metric));
-                put(GaugeDouble.class, metric -> new BasicGaugeDoubleAggregator((GaugeDouble) metric));
+                put(GaugeDouble.class,
+                    metric -> new BasicGaugeDoubleAggregator((GaugeDouble) metric));
                 put(Timer.class, metric -> new BasicTimerAggregator((Timer) metric));
-                put(Histogram.class, metric -> new BasicHistogramAggregator((Histogram) metric));
               }});
 
   /**
@@ -142,6 +140,8 @@ public abstract class AggregatingReporter implements Reporter {
   protected final ConcurrentHashMap<String, Aggregator> aggregators;
 
   private final Map<Class<? extends Metric>, Function<Metric, ? extends Aggregator>> defaultAggregators;
+
+  private final Map<String, Function<Metric, ? extends Aggregator>> metricAggregators;
 
   /**
    * Create an aggregating reporter with default aggregators for default metrics only.
@@ -158,8 +158,21 @@ public abstract class AggregatingReporter implements Reporter {
    */
   protected AggregatingReporter(
       final Map<Class<? extends Metric>, Function<Metric, ? extends Aggregator>> defaultAggregators) {
-    aggregators = new ConcurrentHashMap<>();
+    this(defaultAggregators, Collections.EMPTY_MAP);
+  }
+
+  /**
+   * Create an aggregating reporter with given default aggregators.
+   *
+   * @param defaultAggregators a map of a metric class to a supplier creating a new aggregator
+   * instance
+   */
+  protected AggregatingReporter(
+      final Map<Class<? extends Metric>, Function<Metric, ? extends Aggregator>> defaultAggregators,
+      final Map<String, Function<Metric, ? extends Aggregator>> metricAggregators) {
+    this.aggregators = new ConcurrentHashMap<>();
     this.defaultAggregators = Collections.unmodifiableMap(defaultAggregators);
+    this.metricAggregators = Collections.unmodifiableMap(metricAggregators);
   }
 
   @Override
@@ -181,8 +194,10 @@ public abstract class AggregatingReporter implements Reporter {
    * aggregator must be returned.
    */
   protected Aggregator createAggregator(final Metric metric) {
-    // TODO: Implement override by metric name
-    Function<Metric, ? extends Aggregator> supplier = defaultAggregators.get(metric.getClass());
+    Function<Metric, ? extends Aggregator> supplier = metricAggregators.get(metric.id);
+    if (supplier == null) {
+      supplier = defaultAggregators.get(metric.getClass());
+    }
     if (supplier == null) {
       return NOOP;
     }

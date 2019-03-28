@@ -4,6 +4,7 @@
 
 package io.ultrabrew.metrics.reporters;
 
+import static io.ultrabrew.metrics.reporters.AggregatingReporter.DEFAULT_AGGREGATORS;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -11,11 +12,11 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import io.ultrabrew.metrics.Counter;
 import io.ultrabrew.metrics.Gauge;
 import io.ultrabrew.metrics.GaugeDouble;
-import io.ultrabrew.metrics.Histogram;
 import io.ultrabrew.metrics.Metric;
 import io.ultrabrew.metrics.MetricRegistry;
 import io.ultrabrew.metrics.Timer;
 import io.ultrabrew.metrics.data.Aggregator;
+import io.ultrabrew.metrics.data.BasicHistogramAggregator;
 import io.ultrabrew.metrics.data.Cursor;
 import io.ultrabrew.metrics.util.DistributionBucket;
 import java.util.ArrayList;
@@ -115,6 +116,42 @@ public class SLF4JReporterTest {
       compare(objects.get(7), "testTag=value2", "sum=1", "counter");
       compare(objects.get(8), "testTag=value testTag2=value", "sum=1", "counter");
       compare(objects.get(9), "", "sum=1", "counter");
+    }};
+  }
+
+  @Test
+  void testCustomDelimiter(@Injectable Logger logger) throws InterruptedException {
+    String tagDelimiter = ":";
+    String fieldDelimiter = "-";
+    String tagFieldDelimiter = "#";
+    reporter = SLF4JReporter.builder().withName("testReport").withStepSize(1)
+        .withTagDelimiter(tagDelimiter).withFieldDelimiter(fieldDelimiter)
+        .withTagFieldDelimiter(tagFieldDelimiter)
+        .withDefaultAggregators(DEFAULT_AGGREGATORS).build();
+    Deencapsulation.setField(reporter, "reporter", logger);
+    MetricRegistry metricRegistry = new MetricRegistry();
+    metricRegistry.addReporter(reporter);
+
+    long start = System.currentTimeMillis();
+
+    Gauge gauge = metricRegistry.gauge("gauge");
+    gauge.set(12345L, "tag1", "100", "tag2", "200");
+
+    Thread.sleep(calculateDelay(1000, start) + 150);
+
+    new Verifications() {{
+      List<Object[]> objects = new ArrayList<>();
+      logger.info("lastUpdated={} {}{}{} {}", withCapture(objects));
+
+      assertEquals(1, objects.size());
+      Object[] o = objects.get(0);
+      assertEquals(5, o.length);
+      assertNotNull(o[0]);
+      assertEquals("tag1=100" + tagDelimiter + "tag2=200", o[1]);
+      assertEquals(tagFieldDelimiter, o[2]); // delimiter
+      assertEquals("count=1" + fieldDelimiter + "sum=12345" + fieldDelimiter + "min=12345"
+          + fieldDelimiter + "max=12345" + fieldDelimiter + "lastValue=12345", o[3]);
+      assertEquals("gauge", o[4]);
     }};
   }
 
@@ -253,29 +290,35 @@ public class SLF4JReporterTest {
 
   @Test
   void testHistogram(@Injectable Logger logger) throws InterruptedException {
-    reporter = new SLF4JReporter("testHistogram", 1);
-    Deencapsulation.setField(reporter, "reporter", logger);
+
+    String metricId = "latency";
+    DistributionBucket bucket = new DistributionBucket(new long[]{0, 10, 50, 100});
+
+    reporter = SLF4JReporter.builder().withName("testHistogram").withStepSize(1)
+        .addMetricAggregator(metricId, (metric) -> new BasicHistogramAggregator(metricId, bucket))
+        .build();
+
+    Deencapsulation.setField(this.reporter, "reporter", logger);
     MetricRegistry metricRegistry = new MetricRegistry();
-    metricRegistry.addReporter(reporter);
+    metricRegistry.addReporter(this.reporter);
 
     long start = System.currentTimeMillis();
 
-    DistributionBucket bucket = new DistributionBucket(new long[]{0, 10, 50, 100});
-    Histogram histogram = metricRegistry.histogram("histogram", bucket);
-    histogram.set(-13, "tag", "100");
-    histogram.set(-1, "tag", "100");
-    histogram.set(0, "tag", "100");
-    histogram.set(9, "tag", "100");
-    histogram.set(10, "tag", "100");
-    histogram.set(49, "tag", "100");
-    histogram.set(50, "tag", "100");
-    histogram.set(150, "tag", "100");
+    Gauge gauge = metricRegistry.gauge(metricId);
+    gauge.set(-13, "tag", "100");
+    gauge.set(-1, "tag", "100");
+    gauge.set(0, "tag", "100");
+    gauge.set(9, "tag", "100");
+    gauge.set(10, "tag", "100");
+    gauge.set(49, "tag", "100");
+    gauge.set(50, "tag", "100");
+    gauge.set(150, "tag", "100");
 
-    histogram.set(15, "tag", "101");
-    histogram.set(49, "tag", "101");
-    histogram.set(75, "tag", "101");
-    histogram.set(99, "tag", "101");
-    histogram.set(100, "tag", "101");
+    gauge.set(15, "tag", "101");
+    gauge.set(49, "tag", "101");
+    gauge.set(75, "tag", "101");
+    gauge.set(99, "tag", "101");
+    gauge.set(100, "tag", "101");
 
     Thread.sleep(calculateDelay(1000, start) + 150);
 
@@ -287,10 +330,10 @@ public class SLF4JReporterTest {
 
       compare(objects.get(0), "tag=100",
           "count=8 sum=254 min=-13 max=150 0_10=2 10_50=2 50_100=1 overflow=1 underflow=2",
-          "histogram");
+          "latency");
       compare(objects.get(1), "tag=101",
           "count=5 sum=338 min=15 max=100 0_10=0 10_50=2 50_100=2 overflow=1 underflow=0",
-          "histogram");
+          "latency");
     }};
   }
 

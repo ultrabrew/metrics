@@ -4,7 +4,6 @@
 
 package io.ultrabrew.metrics;
 
-import io.ultrabrew.metrics.util.DistributionBucket;
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 import java.util.Map;
@@ -45,7 +44,7 @@ public class MetricRegistry {
    * exists
    */
   public Counter counter(final String id) {
-    return getOrCreate(Counter.class, id);
+    return getOrCreate(id, Counter.class);
   }
 
   /**
@@ -57,7 +56,7 @@ public class MetricRegistry {
    * exists
    */
   public Gauge gauge(final String id) {
-    return getOrCreate(Gauge.class, id);
+    return getOrCreate(id, Gauge.class);
   }
 
   /**
@@ -70,7 +69,7 @@ public class MetricRegistry {
    * exists
    */
   public GaugeDouble gaugeDouble(final String id) {
-    return getOrCreate(GaugeDouble.class, id);
+    return getOrCreate(id, GaugeDouble.class);
   }
 
   /**
@@ -82,11 +81,7 @@ public class MetricRegistry {
    * exists
    */
   public Timer timer(final String id) {
-    return getOrCreate(Timer.class, id);
-  }
-
-  public Histogram histogram(final String id, DistributionBucket bucket) {
-    return getOrCreate(Histogram.class, id, bucket);
+    return getOrCreate(id, Timer.class);
   }
 
   /**
@@ -102,7 +97,7 @@ public class MetricRegistry {
    * exists
    */
   public <T extends Metric> T custom(final String id, final Class<T> klass) {
-    return getOrCreate(klass, id);
+    return getOrCreate(id, klass);
   }
 
   /**
@@ -114,8 +109,7 @@ public class MetricRegistry {
     reporters.add(reporter);
   }
 
-  private <T extends Metric> T getOrCreate(final Class<T> klass, final Object... args) {
-    String id = (String) args[0];
+  private <T extends Metric> T getOrCreate(final String id, final Class<T> klass) {
     Metric m = measurements.get(id);
     if (m != null) {
       return tryCast(klass, m);
@@ -126,16 +120,8 @@ public class MetricRegistry {
         return tryCast(klass, m);
       }
       try {
-        Class<?>[] argTypes = new Class[args.length + 1];
-        Object[] initargs = new Object[args.length + 1];
-        int i = 0;
-        argTypes[i] = MetricRegistry.class;
-        initargs[i] = this;
-        for (; i < args.length; i++) {
-          argTypes[i + 1] = args[i].getClass();
-          initargs[i + 1] = args[i];
-        }
-        T instance = klass.getDeclaredConstructor(argTypes).newInstance(initargs);
+        T instance = klass.getDeclaredConstructor(MetricRegistry.class, String.class)
+            .newInstance(this, id);
         measurements.put(id, instance);
         return instance;
       } catch (InstantiationException | IllegalAccessException | InvocationTargetException |

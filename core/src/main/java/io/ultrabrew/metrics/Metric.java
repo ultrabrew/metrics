@@ -35,33 +35,21 @@ public abstract class Metric {
    * @param id identifier of the metric
    */
   protected Metric(final MetricRegistry registry, final String id) {
-    this(registry, id, DEFAULT_CARDINALITY);
+    this(registry, id, DEFAULT_MAX_CARDINALITY);
   }
+
 
   /**
    * Create a metric associated with a metric registry.
    *
    * @param registry metric registry the metric is associated with
    * @param id identifier of the metric
-   * @param cardinality initial cardinality
-   */
-  protected Metric(final MetricRegistry registry, final String id, final int cardinality) {
-    this(registry, id, cardinality, DEFAULT_MAX_CARDINALITY);
-  }
-
-  /**
-   * Create a metric associated with a metric registry.
-   *
-   * @param registry metric registry the metric is associated with
-   * @param id identifier of the metric
-   * @param cardinality initial cardinality
    * @param maxCardinality max cardinality. New dimensions will dropped beyond this.
    */
-  protected Metric(final MetricRegistry registry, final String id, final int cardinality,
-      final int maxCardinality) {
+  protected Metric(final MetricRegistry registry, final String id, final int maxCardinality) {
     this.registry = registry;
     this.id = id;
-    this.cardinality = cardinality;
+    this.cardinality = DEFAULT_CARDINALITY;
     this.maxCardinality = maxCardinality;
   }
 

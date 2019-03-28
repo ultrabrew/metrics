@@ -63,11 +63,11 @@ public class BasicHistogramAggregatorTest {
     final BasicHistogramAggregator table = new BasicHistogramAggregator("test", bucket);
 
     String[] tagset = {"testTag", "value"};
-    table.apply(tagset,15, CURRENT_TIME);
-    table.apply(tagset,49, CURRENT_TIME);
-    table.apply(tagset,75, CURRENT_TIME);
-    table.apply(tagset,99, CURRENT_TIME);
-    table.apply(tagset,100, CURRENT_TIME);
+    table.apply(tagset, 15, CURRENT_TIME);
+    table.apply(tagset, 49, CURRENT_TIME);
+    table.apply(tagset, 75, CURRENT_TIME);
+    table.apply(tagset, 99, CURRENT_TIME);
+    table.apply(tagset, 100, CURRENT_TIME);
 
     Cursor cursor = table.cursor();
     assertTrue(cursor.next());
@@ -496,14 +496,14 @@ public class BasicHistogramAggregatorTest {
   @Test
   public void createWithNegativeSize() {
     DistributionBucket bucket = new DistributionBucket(new long[]{0, 10, 100});
-    assertThrows(IllegalArgumentException.class,
+    assertThrows(AssertionError.class,
         () -> new BasicHistogramAggregator("test", bucket, -1));
   }
 
   @Test
   public void testInvalidMaxCapacity() {
     DistributionBucket bucket = new DistributionBucket(new long[]{0, 10, 100});
-    assertThrows(IllegalArgumentException.class,
+    assertThrows(AssertionError.class,
         () -> new BasicHistogramAggregator("test", bucket, 10, 9));
   }
 

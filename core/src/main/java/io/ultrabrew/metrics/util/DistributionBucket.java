@@ -4,8 +4,6 @@
 
 package io.ultrabrew.metrics.util;
 
-import static io.ultrabrew.metrics.util.Commons.checkArgument;
-
 import java.util.function.Predicate;
 
 public class DistributionBucket {
@@ -17,9 +15,9 @@ public class DistributionBucket {
 
   public DistributionBucket(final long[] buckets) {
 
-    checkArgument(buckets.length > 1, "Minimum bucket length is 2");
-    checkArgument(isSorted(buckets), "Bucket should be sorted in ascending order");
-    checkArgument(!hasDuplicate(buckets), "Bucket should not have duplicate entries");
+    assert buckets.length >= 2 : "Minimum bucket length is 2";
+    assert isSorted(buckets) : "Bucket should be sorted in ascending order";
+    assert !hasDuplicate(buckets) : "Bucket should not have duplicate entries";
 
     this.buckets = buckets.clone();
   }
@@ -74,21 +72,21 @@ public class DistributionBucket {
     return low;
   }
 
-  private boolean isSorted(final long[] buckets) {
-    return checkCondition(buckets, i -> buckets[i] < buckets[i + 1]);
+  private static boolean isSorted(final long[] buckets) {
+    return !matchAny(buckets, i -> buckets[i] > buckets[i + 1]);
   }
 
-  private boolean hasDuplicate(final long[] buckets) {
-    return checkCondition(buckets, i -> buckets[i] == buckets[i + 1]);
+  private static boolean hasDuplicate(final long[] buckets) {
+    return matchAny(buckets, i -> buckets[i] == buckets[i + 1]);
   }
 
-  private boolean checkCondition(final long[] buckets, Predicate<Integer> predicate) {
+  private static boolean matchAny(final long[] buckets, Predicate<Integer> predicate) {
     for (int i = 0; i < buckets.length - 1; i++) {
-      if (predicate.negate().test(i)) {
-        return false;
+      if (predicate.test(i)) {
+        return true;
       }
     }
-    return true;
+    return false;
   }
 
 }

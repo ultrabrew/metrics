@@ -442,7 +442,7 @@ public class BasicCounterAggregatorTest {
 
   @Test
   public void createWithNegativeSize() {
-    assertThrows(IllegalArgumentException.class, () -> new BasicCounterAggregator("test", -1));
+    assertThrows(AssertionError.class, () -> new BasicCounterAggregator("test", -1));
   }
 
   @Test

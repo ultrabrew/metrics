@@ -4,8 +4,6 @@
 
 package io.ultrabrew.metrics.data;
 
-import static io.ultrabrew.metrics.util.Commons.checkArgument;
-
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -55,11 +53,11 @@ public abstract class ConcurrentIntTable {
   /**
    * Max number of entries allowed in the corresponding table in {@link #tables}.
    */
-  private List<Integer> tableCapacities;
+  private final List<Integer> tableCapacities;
   private final int recordSize;
   private final int maxCapacity;
   private final long[] identity;
-  private int numAggFields;
+  private final int numAggFields;
 
   private volatile int capacity;
   protected volatile String[][] tagSets;
@@ -78,8 +76,8 @@ public abstract class ConcurrentIntTable {
 
   private ConcurrentIntTable(final int numAggFields, final int dataSize, int initialCapacity, final int maxCapacity, final long[] identity){
 
-    checkArgument(initialCapacity >= 0, "Illegal initial capacity");
-    checkArgument(maxCapacity >= initialCapacity, "max capacity should be greater than the initial capacity");
+    assert initialCapacity >= 0 : "Illegal initial capacity";
+    assert maxCapacity >= initialCapacity : "max capacity should be greater than the initial capacity";
 
     if (initialCapacity == 0) {
       initialCapacity = DEFAULT_INITIAL_CAPACITY;
@@ -130,7 +128,7 @@ public abstract class ConcurrentIntTable {
    */
   protected abstract void combine(int[] table, final long baseOffset, final long value);
 
-  protected void apply(final String[] tags, final int latency, final long timestamp) {
+  protected void apply(final String[] tags, final long value, final long timestamp) {
 
     final long index = index(tags, false);
 
@@ -149,7 +147,7 @@ public abstract class ConcurrentIntTable {
     final long base = Unsafe.ARRAY_INT_BASE_OFFSET + slotIndex * Unsafe.ARRAY_INT_INDEX_SCALE;
     unsafe.putLongVolatile(table, base + Unsafe.ARRAY_LONG_INDEX_SCALE, timestamp);
 
-    combine(table, base, latency);
+    combine(table, base, value);
   }
 
   /**

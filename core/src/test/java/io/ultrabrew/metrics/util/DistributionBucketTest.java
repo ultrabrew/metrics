@@ -55,7 +55,7 @@ public class DistributionBucketTest {
   @ParameterizedTest
   @MethodSource("minBucketlength")
   void minimumBucketLength(final long[] invalidBuckets) {
-    assertThrows(IllegalArgumentException.class, () -> new DistributionBucket(invalidBuckets),
+    assertThrows(AssertionError.class, () -> new DistributionBucket(invalidBuckets),
         "Minimum bucket length is 2");
   }
 
@@ -69,7 +69,7 @@ public class DistributionBucketTest {
   @ParameterizedTest
   @MethodSource("bucketsNotSorted")
   void bucketsShouldBeSortedInAscendingOrder(final long[] invalidBuckets) {
-    assertThrows(IllegalArgumentException.class, () -> new DistributionBucket(invalidBuckets),
+    assertThrows(AssertionError.class, () -> new DistributionBucket(invalidBuckets),
         "Bucket should be sorted in ascending order");
   }
 
@@ -85,7 +85,7 @@ public class DistributionBucketTest {
   @ParameterizedTest
   @MethodSource("duplicateEntries")
   void duplicateEntriesNotAllowed(final long[] invalidBuckets) {
-    assertThrows(IllegalArgumentException.class, () -> new DistributionBucket(invalidBuckets),
+    assertThrows(AssertionError.class, () -> new DistributionBucket(invalidBuckets),
         "Bucket should not have duplicate entries");
   }
 }

@@ -4,8 +4,6 @@
 
 package io.ultrabrew.metrics.data;
 
-import static io.ultrabrew.metrics.util.Commons.checkArgument;
-
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -131,9 +129,9 @@ public abstract class ConcurrentMonoidHashTable implements Aggregator {
   protected ConcurrentMonoidHashTable(final String metricId, int initialCapacity,
       final int maxCapacity, final String[] fields, final Type[] types, final long[] identity) {
 
-    checkArgument(fields.length != 0 && fields.length == identity.length, "Fields and Identity must match in length and be non-zero");
-    checkArgument(initialCapacity >= 0, "Illegal initial capacity");
-    checkArgument(initialCapacity <= maxCapacity, "max capacity should be greater than the initial capacity");
+    assert fields.length != 0 && fields.length == identity.length : "Fields and Identity must match in length and be non-zero";
+    assert initialCapacity >= 0 : "Illegal initial capacity";
+    assert initialCapacity <= maxCapacity : "max capacity should be greater than the initial capacity";
     if (initialCapacity == 0) {
       initialCapacity = DEFAULT_INITIAL_CAPACITY;
     }

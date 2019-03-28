@@ -7,7 +7,6 @@ package io.ultrabrew.metrics.data;
 import static io.ultrabrew.metrics.Metric.DEFAULT_CARDINALITY;
 import static io.ultrabrew.metrics.Metric.DEFAULT_MAX_CARDINALITY;
 
-import io.ultrabrew.metrics.Histogram;
 import io.ultrabrew.metrics.util.DistributionBucket;
 import java.util.Arrays;
 import org.slf4j.Logger;
@@ -24,28 +23,33 @@ public class BasicHistogramAggregator extends ConcurrentIntTable implements Aggr
   private final DistributionBucket buckets;
   private final int bucketCount;
 
-  public BasicHistogramAggregator(Histogram histogram) {
-    this(histogram.id, histogram.bucket, histogram.cardinality, histogram.maxCardinality);
-  }
+  private final String[] fields;
+  private final Type[] types;
+  private final long[] identity;
 
   public BasicHistogramAggregator(final String metricId, final DistributionBucket buckets) {
     this(metricId, buckets, DEFAULT_CARDINALITY, DEFAULT_MAX_CARDINALITY);
   }
 
-  public BasicHistogramAggregator(final String metricId, final DistributionBucket buckets, final int capacity) {
+  public BasicHistogramAggregator(final String metricId, final DistributionBucket buckets,
+      final int capacity) {
     this(metricId, buckets, capacity, DEFAULT_MAX_CARDINALITY);
   }
 
-  public BasicHistogramAggregator(final String metricId, final DistributionBucket buckets, final int capacity, final int maxCapacity) {
+  public BasicHistogramAggregator(final String metricId, final DistributionBucket buckets,
+      final int capacity, final int maxCapacity) {
     super(AGG_FIELDS.length + buckets.getCount(), capacity, maxCapacity, IDENTITY);
     this.metricId = metricId;
     this.buckets = buckets;
     this.bucketCount = buckets.getCount();
+    this.fields = buildFields();
+    this.types = buildTypes(fields.length);
+    this.identity = buildIdentity(fields.length);
   }
 
   @Override
-  public void apply(String[] tags, long latency, long timestamp) {
-    apply(tags, (int) latency, timestamp);
+  public void apply(String[] tags, long value, long timestamp) {
+    super.apply(tags, value, timestamp);
   }
 
   @Override
@@ -71,9 +75,6 @@ public class BasicHistogramAggregator extends ConcurrentIntTable implements Aggr
   }
 
   private Cursor newCursor(boolean sorted) {
-    String[] fields = buildFields();
-    Type[] types = buildTypes(fields.length);
-    long[] identity = buildIdentity(fields.length);
     return new CursorImpl(tagSets, fields, types, identity, sorted);
   }
 
@@ -93,18 +94,16 @@ public class BasicHistogramAggregator extends ConcurrentIntTable implements Aggr
 
   private Type[] buildTypes(final int length) {
     Type[] types = new Type[length];
-    for (int i = 0; i < length; i++) {
-      types[i] = Type.LONG;
-    }
+    Arrays.fill(types, Type.LONG);
     return types;
   }
 
   private class CursorImpl implements Cursor {
 
-    final private String[] fields;
-    final private Type[] types;
-    private long[] identity;
-    final private String[][] tagSets;
+    private final String[] fields;
+    private final Type[] types;
+    private final long[] identity;
+    private final String[][] tagSets;
     private int i = -1;
     private long base = 0;
     private int[] table;
