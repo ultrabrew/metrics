@@ -30,12 +30,16 @@ public class BasicTimerAggregator extends ConcurrentMonoidHashTable {
   private static final long[] IDENTITY = {0L, 0L, Long.MAX_VALUE, Long.MIN_VALUE};
 
 
+  /**
+   * Create a monoid for common aggregation functions for a Timer.
+   * @param timer metric
+   */
   public BasicTimerAggregator(final Timer timer) {
     this(timer.id, timer.cardinality, timer.maxCardinality);
   }
 
   /**
-   * Create a monoid for common aggregation functions for a Counter.
+   * Create a monoid for common aggregation functions for a Timer.
    *
    * @param metricId identifier of the metric associated with this aggregator
    */
@@ -44,26 +48,26 @@ public class BasicTimerAggregator extends ConcurrentMonoidHashTable {
   }
 
   /**
-   * Create a monoid for common aggregation functions for a Counter with requested capacity.
+   * Create a monoid for common aggregation functions for a Timer with requested capacity.
    *
    * @param metricId identifier of the metric associated with this aggregator
-   * @param capacity requested capacity of table in records, actual capacity may be higher
+   * @param cardinality requested capacity of table in records, actual capacity may be higher
    */
-  public BasicTimerAggregator(final String metricId, final int capacity) {
-    this(metricId, capacity, DEFAULT_MAX_CARDINALITY);
+  public BasicTimerAggregator(final String metricId, final int cardinality) {
+    this(metricId, cardinality, DEFAULT_MAX_CARDINALITY);
   }
 
   /**
-   * Create a monoid for common aggregation functions for a Counter with requested initial capacity
+   * Create a monoid for common aggregation functions for a Timer with requested initial capacity
    * and max capacity.
    *
    * @param metricId identifier of the metric associated with this aggregator
-   * @param capacity requested capacity of table in records, actual capacity may be higher
-   * @param maxCapacity requested max capacity of table in records. Table doesn't grow beyond this
+   * @param cardinality requested capacity of table in records, actual capacity may be higher
+   * @param maxCardinality requested max capacity of table in records. Table doesn't grow beyond this
    * value
    */
-  public BasicTimerAggregator(final String metricId, final int capacity, final int maxCapacity) {
-    super(metricId, capacity, maxCapacity, FIELDS, TYPES, IDENTITY);
+  public BasicTimerAggregator(final String metricId, final int cardinality, final int maxCardinality) {
+    super(metricId, cardinality, maxCardinality, FIELDS, TYPES, IDENTITY);
   }
 
   @Override

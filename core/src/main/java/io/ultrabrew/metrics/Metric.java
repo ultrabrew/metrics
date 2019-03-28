@@ -10,6 +10,11 @@ package io.ultrabrew.metrics;
  * characteristic, but the end result is a single metric that is reported. Each measurement event is
  * emitted to all subscribers through associated metric registry.
  *
+ * Each metric may have dozens (10+) of tag dimensions, each with hundreds (100+) of tag values and
+ * a few (5+) fields. The combined time-series cardinality in a JVM can be more than a million (1,000,000). The
+ * default max cardinality of a metric is 4k (4096) beyond which, any new dimension will be dropped.
+ * Clients can pass a custom value to create metric with higher cardinality.
+ *
  * @see MetricRegistry
  */
 public abstract class Metric {
@@ -24,6 +29,9 @@ public abstract class Metric {
 
   public final int cardinality;
 
+  /**
+   * Max cardinality for this metric. New dimensions will be dropped beyond this value.
+   */
   public final int maxCardinality;
 
   private final MetricRegistry registry;
@@ -44,7 +52,7 @@ public abstract class Metric {
    *
    * @param registry metric registry the metric is associated with
    * @param id identifier of the metric
-   * @param maxCardinality max cardinality. New dimensions will dropped beyond this.
+   * @param maxCardinality max cardinality. New dimensions will dropped beyond this value.
    */
   protected Metric(final MetricRegistry registry, final String id, final int maxCardinality) {
     this.registry = registry;

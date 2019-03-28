@@ -29,12 +29,16 @@ public class BasicGaugeAggregator extends ConcurrentMonoidHashTable {
   private static final Type[] TYPES = {Type.LONG, Type.LONG, Type.LONG, Type.LONG, Type.LONG};
   private static final long[] IDENTITY = {0L, 0L, Long.MAX_VALUE, Long.MIN_VALUE, 0L};
 
+  /**
+   * Create a monoid for common aggregation functions for a Gauge.
+   * @param gauge metric
+   */
   public BasicGaugeAggregator(final Gauge gauge) {
     this(gauge.id, gauge.cardinality, gauge.maxCardinality);
   }
 
   /**
-   * Create a monoid for common aggregation functions for a Counter.
+   * Create a monoid for common aggregation functions for a Gauge.
    *
    * @param metricId identifier of the metric associated with this aggregator
    */
@@ -43,26 +47,26 @@ public class BasicGaugeAggregator extends ConcurrentMonoidHashTable {
   }
 
   /**
-   * Create a monoid for common aggregation functions for a Counter with requested capacity.
+   * Create a monoid for common aggregation functions for a Gauge with requested capacity.
    *
    * @param metricId identifier of the metric associated with this aggregator
-   * @param capacity requested capacity of table in records, actual capacity may be higher
+   * @param cardinality requested capacity of table in records, actual capacity may be higher
    */
-  public BasicGaugeAggregator(final String metricId, final int capacity) {
-    this(metricId, capacity, DEFAULT_MAX_CARDINALITY);
+  public BasicGaugeAggregator(final String metricId, final int cardinality) {
+    this(metricId, cardinality, DEFAULT_MAX_CARDINALITY);
   }
 
   /**
-   * Create a monoid for common aggregation functions for a Counter with requested initial capacity
+   * Create a monoid for common aggregation functions for a Gauge with requested initial capacity
    * and max capacity.
    *
    * @param metricId identifier of the metric associated with this aggregator
-   * @param capacity requested capacity of table in records, actual capacity may be higher
-   * @param maxCapacity requested max capacity of table in records. Table doesn't grow beyond this
+   * @param cardinality requested capacity of table in records, actual capacity may be higher
+   * @param maxCardinality requested max capacity of table in records. Table doesn't grow beyond this
    * value.
    */
-  public BasicGaugeAggregator(final String metricId, final int capacity, final int maxCapacity) {
-    super(metricId, capacity, maxCapacity, FIELDS, TYPES, IDENTITY);
+  public BasicGaugeAggregator(final String metricId, final int cardinality, final int maxCardinality) {
+    super(metricId, cardinality, maxCardinality, FIELDS, TYPES, IDENTITY);
   }
 
   @Override

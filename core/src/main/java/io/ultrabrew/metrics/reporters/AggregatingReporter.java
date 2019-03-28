@@ -14,6 +14,7 @@ import io.ultrabrew.metrics.data.Aggregator;
 import io.ultrabrew.metrics.data.BasicCounterAggregator;
 import io.ultrabrew.metrics.data.BasicGaugeAggregator;
 import io.ultrabrew.metrics.data.BasicGaugeDoubleAggregator;
+import io.ultrabrew.metrics.data.BasicHistogramAggregator;
 import io.ultrabrew.metrics.data.BasicTimerAggregator;
 import io.ultrabrew.metrics.data.Cursor;
 import io.ultrabrew.metrics.data.Type;
@@ -37,6 +38,8 @@ import java.util.function.Function;
  *
  * <p>All unknown metric classes will get a {@link #NOOP} no-op aggregation that ignores the
  * metric.</p>
+ *
+ * @see BasicHistogramAggregator
  */
 public abstract class AggregatingReporter implements Reporter {
 
@@ -134,13 +137,17 @@ public abstract class AggregatingReporter implements Reporter {
               }});
 
   /**
-   * Concurrent map of aggregators for each metric. The key of the map is the identifier of the
-   * metric and the value is the aggregator to be used for that metric.
+   * Concurrent map of {@link Aggregator}s for each metric. The key of the map is the identifier of
+   * the metric and the value is the aggregator to be used for that metric.
    */
   protected final ConcurrentHashMap<String, Aggregator> aggregators;
 
   private final Map<Class<? extends Metric>, Function<Metric, ? extends Aggregator>> defaultAggregators;
 
+  /**
+   * Overriding {@link Aggregator}s for a specific metric. The key of the map is the identifier of
+   * the metric and the value is a aggregator to be used for that metric.
+   */
   private final Map<String, Function<Metric, ? extends Aggregator>> metricAggregators;
 
   /**

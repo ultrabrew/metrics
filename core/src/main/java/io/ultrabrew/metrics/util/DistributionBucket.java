@@ -4,8 +4,25 @@
 
 package io.ultrabrew.metrics.util;
 
+import io.ultrabrew.metrics.data.BasicHistogramAggregator;
 import java.util.function.Predicate;
 
+/**
+ * A distribution bucket specification used for histograms. A distribution bucket is an sorted array
+ * of unique numeric values. Each bucket represents a distribution range of the measurement.
+ *
+ * <P>For a given distribution array: [0, 10, 100, 500, 1000], the buckets would be like:</P>
+ * <ul>
+ * <li>[0,10) for values 0-9</li>
+ * <li>[10,100) for values 10-99</li>
+ * <li>[100,500) for values 100-499</li>
+ * <li>[500,1000) for values 500-999</li>
+ * <li>overflow  for values >= 1000</li>
+ * <li>underflow for values < 0</li>
+ * </ul>
+ *
+ * @see BasicHistogramAggregator
+ */
 public class DistributionBucket {
 
   private static final String UNDERFLOW = "underflow";
@@ -13,6 +30,11 @@ public class DistributionBucket {
 
   private final long[] buckets;
 
+  /**
+   * Creates a distribution for given bucket spec.
+   *
+   * @param buckets sorted array of unique values
+   */
   public DistributionBucket(final long[] buckets) {
 
     assert buckets.length >= 2 : "Minimum bucket length is 2";
@@ -30,6 +52,21 @@ public class DistributionBucket {
     return binarySearch(value);
   }
 
+  /**
+   * Generates the bucket names for representation purpose.
+   *
+   * <P>For a given spec: [0, 10, 100, 500, 1000], the names would look like:</P>
+   * <ul>
+   * <li>0_10</li>
+   * <li>10_100</li>
+   * <li>100_500</li>
+   * <li>500_1000</li>
+   * <li>overflow</li>
+   * <li>underflow</li>
+   * </ul>
+   *
+   * @return array of bucket names
+   */
   public String[] getBucketNames() {
     int bucketCount = buckets.length;
     String[] names = new String[bucketCount + 1];
@@ -42,6 +79,12 @@ public class DistributionBucket {
     return names;
   }
 
+  /**
+   * retrieves the corresponding bucket index for a given measurement value.
+   *
+   * @param key measurement value
+   * @return bucket index
+   */
   private int binarySearch(final long key) {
 
     int low = 0;

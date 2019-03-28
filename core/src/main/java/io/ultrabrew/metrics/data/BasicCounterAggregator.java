@@ -25,6 +25,10 @@ public class BasicCounterAggregator extends ConcurrentMonoidHashTable {
   private static final Type[] TYPES = {Type.LONG};
   private static final long[] IDENTITY = {0L};
 
+  /**
+   * Create a monoid for common aggregation functions for a Counter.
+   * @param counter metric
+   */
   public BasicCounterAggregator(final Counter counter) {
     this(counter.id, counter.cardinality, counter.maxCardinality);
   }
@@ -42,10 +46,10 @@ public class BasicCounterAggregator extends ConcurrentMonoidHashTable {
    * Create a monoid for common aggregation functions for a Counter with requested capacity.
    *
    * @param metricId identifier of the metric associated with this aggregator
-   * @param capacity requested capacity of table in records, actual capacity may be higher
+   * @param cardinality requested capacity of table in records, actual capacity may be higher
    */
-  public BasicCounterAggregator(final String metricId, final int capacity) {
-    this(metricId, capacity, DEFAULT_MAX_CARDINALITY);
+  public BasicCounterAggregator(final String metricId, final int cardinality) {
+    this(metricId, cardinality, DEFAULT_MAX_CARDINALITY);
   }
 
   /**
@@ -53,12 +57,12 @@ public class BasicCounterAggregator extends ConcurrentMonoidHashTable {
    * and max capacity.
    *
    * @param metricId identifier of the metric associated with this aggregator
-   * @param capacity requested capacity of table in records, actual capacity may be higher
-   * @param maxCapacity requested max capacity of table in records. Table doesn't grow beyond this
+   * @param cardinality requested capacity of table in records, actual capacity may be higher
+   * @param maxCardinality requested max capacity of table in records. Table doesn't grow beyond this
    * value.
    */
-  public BasicCounterAggregator(final String metricId, final int capacity, final int maxCapacity) {
-    super(metricId, capacity, maxCapacity, FIELDS, TYPES, IDENTITY);
+  public BasicCounterAggregator(final String metricId, final int cardinality, final int maxCardinality) {
+    super(metricId, cardinality, maxCardinality, FIELDS, TYPES, IDENTITY);
   }
 
   @Override

@@ -89,8 +89,8 @@ public class MetricRegistry {
    * measurement of given class. The class must have an accessible constructor that takes
    * MetricRegistry and String as parameters.
    *
-   * @param klass custom measurement class extending Metric
    * @param id identifier of the measurement
+   * @param klass custom measurement class extending Metric
    * @param <T> custom measurement class extending Metric
    * @return a new or pre-existing custom measurement
    * @throws IllegalStateException measurement with different type, but same identifier already
