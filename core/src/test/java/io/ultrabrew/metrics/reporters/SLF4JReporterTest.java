@@ -316,9 +316,9 @@ public class SLF4JReporterTest {
 
     gauge.set(15, "tag", "101");
     gauge.set(49, "tag", "101");
-    gauge.set(75, "tag", "101");
     gauge.set(99, "tag", "101");
     gauge.set(100, "tag", "101");
+    gauge.set(75, "tag", "101");
 
     Thread.sleep(calculateDelay(1000, start) + 150);
 
@@ -329,10 +329,10 @@ public class SLF4JReporterTest {
       assertEquals(2, objects.size());
 
       compare(objects.get(0), "tag=100",
-          "count=8 sum=254 min=-13 max=150 0_10=2 10_50=2 50_100=1 overflow=1 underflow=2",
+          "count=8 sum=254 min=-13 max=150 lastValue=150 0_10=2 10_50=2 50_100=1 overflow=1 underflow=2",
           "latency");
       compare(objects.get(1), "tag=101",
-          "count=5 sum=338 min=15 max=100 0_10=0 10_50=2 50_100=2 overflow=1 underflow=0",
+          "count=5 sum=338 min=15 max=100 lastValue=75 0_10=0 10_50=2 50_100=2 overflow=1 underflow=0",
           "latency");
     }};
   }

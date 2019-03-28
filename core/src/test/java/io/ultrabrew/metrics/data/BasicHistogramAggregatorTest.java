@@ -34,13 +34,13 @@ public class BasicHistogramAggregatorTest {
     table.apply(tagset, 10, CURRENT_TIME);
     table.apply(tagset, 50, CURRENT_TIME);
     table.apply(tagset, 100, CURRENT_TIME);
-    table.apply(tagset, 101, CURRENT_TIME);
     table.apply(tagset, 150, CURRENT_TIME);
+    table.apply(tagset, 101, CURRENT_TIME);
 
     Cursor cursor = table.cursor();
     assertTrue(cursor.next());
     assertArrayEquals(
-        new String[]{"count", "sum", "min", "max", "0_10", "10_100", "overflow", "underflow"},
+        new String[]{"count", "sum", "min", "max", "lastValue", "0_10", "10_100", "overflow", "underflow"},
         cursor.getFields());
     assertArrayEquals(tagset, cursor.getTags());
     assertEquals(CURRENT_TIME, cursor.lastUpdated()); // last updated timestamp
@@ -48,10 +48,11 @@ public class BasicHistogramAggregatorTest {
     assertEquals(411, cursor.readLong(1)); // sum
     assertEquals(-1, cursor.readLong(2)); // min
     assertEquals(150, cursor.readLong(3)); // max
-    assertEquals(2, cursor.readLong(4)); // [0,10)
-    assertEquals(2, cursor.readLong(5)); // [10,100)
-    assertEquals(3, cursor.readLong(6)); // overflow
-    assertEquals(1, cursor.readLong(7)); // underflow
+    assertEquals(101, cursor.readLong(4)); // lastValue
+    assertEquals(2, cursor.readLong(5)); // [0,10)
+    assertEquals(2, cursor.readLong(6)); // [10,100)
+    assertEquals(3, cursor.readLong(7)); // overflow
+    assertEquals(1, cursor.readLong(8)); // underflow
 
     assertEquals(1, table.size());
     assertEquals(128, table.capacity());
@@ -94,20 +95,22 @@ public class BasicHistogramAggregatorTest {
     assertEquals(261, cursor.readAndResetLong(1)); // sum
     assertEquals(-1, cursor.readAndResetLong(2)); // min
     assertEquals(101, cursor.readAndResetLong(3)); // max
-    assertEquals(2, cursor.readAndResetLong(4)); // [0,10)
-    assertEquals(2, cursor.readAndResetLong(5)); // [10,100)
-    assertEquals(2, cursor.readAndResetLong(6)); // overflow
-    assertEquals(1, cursor.readAndResetLong(7)); // underflow
+    assertEquals(101, cursor.readAndResetLong(4)); // lastValue
+    assertEquals(2, cursor.readAndResetLong(5)); // [0,10)
+    assertEquals(2, cursor.readAndResetLong(6)); // [10,100)
+    assertEquals(2, cursor.readAndResetLong(7)); // overflow
+    assertEquals(1, cursor.readAndResetLong(8)); // underflow
 
     // Assert that identity is set
     assertEquals(0L, cursor.readLong(0)); // count
     assertEquals(0L, cursor.readLong(1)); // sum
     assertEquals(Long.MAX_VALUE, cursor.readLong(2)); // min
     assertEquals(Long.MIN_VALUE, cursor.readLong(3)); // max
-    assertEquals(0, cursor.readLong(4)); // underflow
-    assertEquals(0, cursor.readLong(5)); // [0,10)
-    assertEquals(0, cursor.readLong(6)); // [10,100)
-    assertEquals(0, cursor.readLong(7)); // overflow
+    assertEquals(0L, cursor.readLong(4)); // lastValue
+    assertEquals(0, cursor.readLong(5)); // underflow
+    assertEquals(0, cursor.readLong(6)); // [0,10)
+    assertEquals(0, cursor.readLong(7)); // [10,100)
+    assertEquals(0, cursor.readLong(8)); // overflow
   }
 
   @Test

@@ -41,8 +41,8 @@ import sun.misc.Unsafe;
 public class BasicHistogramAggregator extends ConcurrentIntTable implements Aggregator {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(BasicHistogramAggregator.class);
-  private static final String[] AGG_FIELDS = {"count", "sum", "min", "max"};
-  private static final long[] IDENTITY = {0L, 0L, Long.MAX_VALUE, Long.MIN_VALUE};
+  private static final String[] AGG_FIELDS = {"count", "sum", "min", "max", "lastValue"};
+  private static final long[] IDENTITY = {0L, 0L, Long.MAX_VALUE, Long.MIN_VALUE, 0L};
 
   private final String metricId;
   private final DistributionBucket buckets;
@@ -105,6 +105,7 @@ public class BasicHistogramAggregator extends ConcurrentIntTable implements Aggr
     addToAggField(table, baseOffset, 1, value);
     minAggField(table, baseOffset, 2, value);
     maxAggField(table, baseOffset, 3, value);
+    setAggField(table, baseOffset, 4, value);
 
     //Increments the bucket counter by 1 responding to the given value
     int bucketIndex = buckets.getBucketIndex(value);

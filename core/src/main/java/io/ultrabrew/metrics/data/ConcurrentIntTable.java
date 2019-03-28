@@ -274,6 +274,19 @@ public abstract class ConcurrentIntTable {
   }
 
   /**
+   * Replaces the existing value in the given agg field index.
+   *
+   * @param table the table containing the values
+   * @param baseOffset base offset of the record in the table containing the left hand value
+   * @param index index of the field
+   * @param value new value
+   */
+  protected void setAggField(final int[] table, final long baseOffset, final int index, final long value) {
+    final long offset = getAggFieldOffset(baseOffset, index);
+    unsafe.putLongVolatile(table, offset, value);
+  }
+
+  /**
    * Set a new value as minimum if its lower than existing value in the given agg field index.
    *
    * @param table the table containing the values
