@@ -8,11 +8,11 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import org.junit.jupiter.api.Test;
 
-public class ConcurrentMonoidHashTableTest {
+public class ConcurrentMonoidLongTableTest {
 
   @Test
   public void testNotMatchingFieldsAndIdentity() {
-    assertThrows(AssertionError.class, () -> new ConcurrentMonoidHashTable(
+    assertThrows(AssertionError.class, () -> new ConcurrentMonoidLongTable(
         "test",
         128,
         4096,

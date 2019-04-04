@@ -39,9 +39,9 @@ import sun.misc.Unsafe;
  *
  * <p>All implementing classes <b>MUST</b> be thread-safe.</p>
  */
-public abstract class ConcurrentMonoidHashTable implements Aggregator {
+public abstract class ConcurrentMonoidLongTable implements Aggregator {
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(ConcurrentMonoidHashTable.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(ConcurrentMonoidLongTable.class);
 
   /**
    * Unsafe class for atomic operations on the hash table.
@@ -70,7 +70,7 @@ public abstract class ConcurrentMonoidHashTable implements Aggregator {
   static {
     try {
       usedOffset = unsafe
-          .objectFieldOffset(ConcurrentMonoidHashTable.class.getDeclaredField("used"));
+          .objectFieldOffset(ConcurrentMonoidLongTable.class.getDeclaredField("used"));
     } catch (NoSuchFieldException e) {
       throw new Error(e);
     }
@@ -126,7 +126,7 @@ public abstract class ConcurrentMonoidHashTable implements Aggregator {
    * @param types type of each corresponding field
    * @param identity monoid's identity, where each value is corresponding to the given fields names
    */
-  protected ConcurrentMonoidHashTable(final String metricId, int initialCapacity,
+  protected ConcurrentMonoidLongTable(final String metricId, int initialCapacity,
       final int maxCapacity, final String[] fields, final Type[] types, final long[] identity) {
 
     assert fields.length != 0 && fields.length == identity.length : "Fields and Identity must match in length and be non-zero";

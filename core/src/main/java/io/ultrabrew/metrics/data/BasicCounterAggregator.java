@@ -19,7 +19,7 @@ import io.ultrabrew.metrics.Counter;
  *
  * @see Counter
  */
-public class BasicCounterAggregator extends ConcurrentMonoidHashTable {
+public class BasicCounterAggregator extends ConcurrentMonoidLongTable {
 
   private static final String[] FIELDS = {"sum"};
   private static final Type[] TYPES = {Type.LONG};

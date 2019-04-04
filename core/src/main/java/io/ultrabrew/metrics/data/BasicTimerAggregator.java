@@ -23,7 +23,7 @@ import io.ultrabrew.metrics.Timer;
  *
  * @see Gauge
  */
-public class BasicTimerAggregator extends ConcurrentMonoidHashTable {
+public class BasicTimerAggregator extends ConcurrentMonoidLongTable {
 
   private static final String[] FIELDS = {"count", "sum", "min", "max"};
   private static final Type[] TYPES = {Type.LONG, Type.LONG, Type.LONG, Type.LONG};

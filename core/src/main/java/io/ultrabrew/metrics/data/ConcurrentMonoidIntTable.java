@@ -13,9 +13,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import sun.misc.Unsafe;
 
-public abstract class ConcurrentIntTable {
+public abstract class ConcurrentMonoidIntTable {
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(ConcurrentIntTable.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(ConcurrentMonoidIntTable.class);
 
   // Certainty required to meet the spec of probablePrime
   private static final int DEFAULT_PRIME_CERTAINTY = 100;
@@ -35,7 +35,7 @@ public abstract class ConcurrentIntTable {
   static {
     try {
       usedOffset = unsafe
-          .objectFieldOffset(ConcurrentIntTable.class.getDeclaredField("used"));
+          .objectFieldOffset(ConcurrentMonoidIntTable.class.getDeclaredField("used"));
     } catch (NoSuchFieldException e) {
       throw new Error(e);
     }
@@ -70,11 +70,11 @@ public abstract class ConcurrentIntTable {
    * @param maxCapacity
    * @param identity monoid's identity for the agg fields
    */
-  public ConcurrentIntTable(final int recordSize, int initialCapacity, final int maxCapacity, final long[] identity) {
+  public ConcurrentMonoidIntTable(final int recordSize, int initialCapacity, final int maxCapacity, final long[] identity) {
     this(identity.length, recordSize - identity.length, initialCapacity, maxCapacity, identity);
   }
 
-  private ConcurrentIntTable(final int numAggFields, final int dataSize, int initialCapacity, final int maxCapacity, final long[] identity){
+  private ConcurrentMonoidIntTable(final int numAggFields, final int dataSize, int initialCapacity, final int maxCapacity, final long[] identity){
 
     assert initialCapacity >= 0 : "Illegal initial capacity";
     assert maxCapacity >= initialCapacity : "max capacity should be greater than the initial capacity";

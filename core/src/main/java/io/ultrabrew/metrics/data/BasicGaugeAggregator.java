@@ -23,7 +23,7 @@ import io.ultrabrew.metrics.Gauge;
  *
  * @see Gauge
  */
-public class BasicGaugeAggregator extends ConcurrentMonoidHashTable {
+public class BasicGaugeAggregator extends ConcurrentMonoidLongTable {
 
   private static final String[] FIELDS = {"count", "sum", "min", "max", "lastValue"};
   private static final Type[] TYPES = {Type.LONG, Type.LONG, Type.LONG, Type.LONG, Type.LONG};

@@ -7,7 +7,6 @@ package io.ultrabrew.metrics.reporters;
 import static io.ultrabrew.metrics.reporters.AggregatingReporter.DEFAULT_AGGREGATORS;
 
 import io.ultrabrew.metrics.Metric;
-import io.ultrabrew.metrics.MetricRegistry;
 import io.ultrabrew.metrics.data.Aggregator;
 import io.ultrabrew.metrics.data.Cursor;
 import io.ultrabrew.metrics.data.CursorEntry;
@@ -39,9 +38,9 @@ import org.slf4j.LoggerFactory;
  */
 public class SLF4JReporter extends TimeWindowReporter {
 
-  private static final String DEFULT_TAG_DELIMITER = " ";
-  private static final String DEFULT_FIELD_DELIMITER = " ";
-  private static final String DEFULT_TAGFIELD_DELIMITER = " ";
+  private static final String DEFAULT_TAG_DELIMITER = " ";
+  private static final String DEFAULT_FIELD_DELIMITER = " ";
+  private static final String DEFAULT_TAGFIELD_DELIMITER = " ";
 
   private Logger reporter;
   private CharSequence tagDelimiter;
@@ -65,7 +64,7 @@ public class SLF4JReporter extends TimeWindowReporter {
    * @param windowSizeSeconds window size in seconds
    */
   public SLF4JReporter(final String name, final int windowSizeSeconds) {
-    this(name, DEFULT_TAG_DELIMITER, DEFULT_FIELD_DELIMITER, DEFULT_TAGFIELD_DELIMITER,
+    this(name, DEFAULT_TAG_DELIMITER, DEFAULT_FIELD_DELIMITER, DEFAULT_TAGFIELD_DELIMITER,
         windowSizeSeconds);
   }
 
@@ -202,9 +201,9 @@ public class SLF4JReporter extends TimeWindowReporter {
 
     private String name;
     private int windowStepSize = DEFAULT_WINDOW_STEP_SIZE_SEC;
-    private CharSequence tagDelimiter = DEFULT_TAG_DELIMITER;
-    private CharSequence fieldDelimiter = DEFULT_FIELD_DELIMITER;
-    private CharSequence tagFieldDelimiter = DEFULT_TAGFIELD_DELIMITER;
+    private CharSequence tagDelimiter = DEFAULT_TAG_DELIMITER;
+    private CharSequence fieldDelimiter = DEFAULT_FIELD_DELIMITER;
+    private CharSequence tagFieldDelimiter = DEFAULT_TAGFIELD_DELIMITER;
 
     private Map<Class<? extends Metric>, Function<Metric, ? extends Aggregator>> defaultAggregators = DEFAULT_AGGREGATORS;
     private Map<String, Function<Metric, ? extends Aggregator>> metricAggregators = new HashMap<>();

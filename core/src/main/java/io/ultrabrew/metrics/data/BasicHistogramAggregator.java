@@ -38,7 +38,7 @@ import sun.misc.Unsafe;
  *
  * @see DistributionBucket
  */
-public class BasicHistogramAggregator extends ConcurrentIntTable implements Aggregator {
+public class BasicHistogramAggregator extends ConcurrentMonoidIntTable implements Aggregator {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(BasicHistogramAggregator.class);
   private static final String[] AGG_FIELDS = {"count", "sum", "min", "max", "lastValue"};
