@@ -65,9 +65,9 @@ public abstract class ConcurrentMonoidIntTable {
 
   /**
    *
-   * @param recordSize
-   * @param initialCapacity
-   * @param maxCapacity
+   * @param recordSize number of fields in a record
+   * @param initialCapacity requested capacity of table in records
+   * @param maxCapacity maximum capacity of table in records. Table doesn't grow beyond this value.
    * @param identity monoid's identity for the agg fields
    */
   public ConcurrentMonoidIntTable(final int recordSize, int initialCapacity, final int maxCapacity, final long[] identity) {

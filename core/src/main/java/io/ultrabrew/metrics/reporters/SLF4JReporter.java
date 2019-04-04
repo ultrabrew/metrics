@@ -112,7 +112,8 @@ public class SLF4JReporter extends TimeWindowReporter {
    * @param fieldDelimiter delimiter to be used to join field name-value pairs
    * @param tagFieldDelimiter delimiter to be used to separate tags and fields
    * @param windowSizeSeconds window size in seconds
-   * @param defaultAggregators window size in seconds
+   * @param defaultAggregators a map of a metric class to a supplier creating a new aggregator
+   * @param metricAggregators a map of a metric identifier to a supplier creating a new aggregator instance
    */
   public SLF4JReporter(final String name, final CharSequence tagDelimiter,
       final CharSequence fieldDelimiter,

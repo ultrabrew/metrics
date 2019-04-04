@@ -172,6 +172,7 @@ public abstract class AggregatingReporter implements Reporter {
    * Create an aggregating reporter with given default aggregators.
    *
    * @param defaultAggregators a map of a metric class to a supplier creating a new aggregator
+   * @param metricAggregators a map of a metric identifier to a supplier creating a new aggregator
    * instance
    */
   protected AggregatingReporter(
