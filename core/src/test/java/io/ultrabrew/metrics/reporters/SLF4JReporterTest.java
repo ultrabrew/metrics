@@ -295,7 +295,7 @@ public class SLF4JReporterTest {
     DistributionBucket bucket = new DistributionBucket(new long[]{0, 10, 50, 100});
 
     reporter = SLF4JReporter.builder().withName("testHistogram").withStepSize(1)
-        .addMetricAggregator(metricId, (metric) -> new BasicHistogramAggregator(metricId, bucket))
+        .addHistogram(metricId, bucket)
         .build();
 
     Deencapsulation.setField(this.reporter, "reporter", logger);

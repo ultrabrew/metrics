@@ -9,8 +9,11 @@ import static io.ultrabrew.metrics.reporters.AggregatingReporter.DEFAULT_AGGREGA
 import io.ultrabrew.metrics.Metric;
 import io.ultrabrew.metrics.Reporter;
 import io.ultrabrew.metrics.data.Aggregator;
+import io.ultrabrew.metrics.data.BasicHistogramAggregator;
+import io.ultrabrew.metrics.util.DistributionBucket;
 import io.ultrabrew.metrics.util.Intervals;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
@@ -153,4 +156,26 @@ public abstract class TimeWindowReporter implements Reporter, AutoCloseable {
   private int getReaderIndex(final long milliseconds) {
     return getWriterIndex(milliseconds) == 0 ? 1 : 0;
   }
+
+  public static abstract class BaseReporterBuilder<B extends BaseReporterBuilder, R extends TimeWindowReporter> {
+
+    protected Map<Class<? extends Metric>, Function<Metric, ? extends Aggregator>> defaultAggregators = DEFAULT_AGGREGATORS;
+    protected Map<String, Function<Metric, ? extends Aggregator>> metricAggregators = new HashMap<>();
+
+    public B withDefaultAggregators(
+        final Map<Class<? extends Metric>, Function<Metric, ? extends Aggregator>> defaultAggregators) {
+      this.defaultAggregators = defaultAggregators;
+      return (B) this;
+    }
+
+    public B addHistogram(final String metricId, final DistributionBucket bucket) {
+      this.metricAggregators
+          .put(metricId, (metric) -> new BasicHistogramAggregator(metricId, bucket));
+      return (B) this;
+    }
+
+    public abstract R build();
+
+  }
+
 }
