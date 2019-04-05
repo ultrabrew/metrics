@@ -198,13 +198,16 @@ public class SLF4JReporter extends TimeWindowReporter {
     return new Builder();
   }
 
-  public static final class Builder extends BaseReporterBuilder<Builder, SLF4JReporter> {
+  public static final class Builder extends TimeWindowReporterBuilder<Builder, SLF4JReporter> {
 
     private String name;
     private int windowStepSize = DEFAULT_WINDOW_STEP_SIZE_SEC;
     private CharSequence tagDelimiter = DEFAULT_TAG_DELIMITER;
     private CharSequence fieldDelimiter = DEFAULT_FIELD_DELIMITER;
     private CharSequence tagFieldDelimiter = DEFAULT_TAGFIELD_DELIMITER;
+
+    private Builder() {
+    }
 
     public Builder withName(String name) {
       this.name = name;

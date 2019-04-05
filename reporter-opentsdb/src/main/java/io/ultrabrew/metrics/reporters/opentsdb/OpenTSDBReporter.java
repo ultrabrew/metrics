@@ -4,6 +4,7 @@
 
 package io.ultrabrew.metrics.reporters.opentsdb;
 
+import io.ultrabrew.metrics.Metric;
 import io.ultrabrew.metrics.data.Aggregator;
 import io.ultrabrew.metrics.data.Cursor;
 import io.ultrabrew.metrics.data.Type;
@@ -11,6 +12,7 @@ import io.ultrabrew.metrics.reporters.TimeWindowReporter;
 import java.io.IOException;
 import java.net.URI;
 import java.util.Map;
+import java.util.function.Function;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,8 +38,11 @@ public class OpenTSDBReporter extends TimeWindowReporter {
   private long lastReportedTimestamp = 0;
 
   private OpenTSDBReporter(final String name, final OpenTSDBHttpClient client,
-      final int windowSeconds) {
-    super(name, windowSeconds);
+      final int windowSeconds,
+      final Map<Class<? extends Metric>, Function<Metric, ? extends Aggregator>> defaultAggregators,
+      final Map<String, Function<Metric, ? extends Aggregator>> metricAggregators) {
+
+    super(name, windowSeconds, defaultAggregators, metricAggregators);
     this.client = client;
     this.start();
   }
@@ -75,7 +80,7 @@ public class OpenTSDBReporter extends TimeWindowReporter {
     }
   }
 
-  public static class Builder {
+  public static class Builder extends TimeWindowReporterBuilder<Builder, OpenTSDBReporter> {
 
     private URI baseUri;
     private String apiEndpoint = DEFAULT_API_ENDPOINT;
@@ -131,6 +136,7 @@ public class OpenTSDBReporter extends TimeWindowReporter {
     /**
      * Create an {@link OpenTSDBReporter} instance.
      */
+    @Override
     public OpenTSDBReporter build() {
       if (baseUri == null) {
         throw new IllegalArgumentException("Invalid baseUri");
@@ -138,7 +144,8 @@ public class OpenTSDBReporter extends TimeWindowReporter {
       URI dbUri = baseUri.resolve(apiEndpoint);
       OpenTSDBHttpClient client = new OpenTSDBHttpClient(dbUri, batchSize,
           timestampsInMilliseconds);
-      return new OpenTSDBReporter(dbUri.toString(), client, windowSeconds);
+      return new OpenTSDBReporter(dbUri.toString(), client, windowSeconds, defaultAggregators,
+          metricAggregators);
     }
   }
 }

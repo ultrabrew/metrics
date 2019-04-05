@@ -4,6 +4,7 @@
 
 package io.ultrabrew.metrics.reporters.influxdb;
 
+import io.ultrabrew.metrics.Metric;
 import io.ultrabrew.metrics.data.Aggregator;
 import io.ultrabrew.metrics.data.Cursor;
 import io.ultrabrew.metrics.data.CursorEntry;
@@ -12,6 +13,7 @@ import io.ultrabrew.metrics.reporters.TimeWindowReporter;
 import java.io.IOException;
 import java.net.URI;
 import java.util.Map;
+import java.util.function.Function;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,8 +27,11 @@ public class InfluxDBReporter extends TimeWindowReporter {
   private final InfluxDBClient dbClient;
   private long lastReportedTimestamp = 0;
 
-  private InfluxDBReporter(final URI dbUri, int windowSeconds, int bufferSize) {
-    super(dbUri.toString(), windowSeconds);
+  private InfluxDBReporter(final URI dbUri, final int windowSeconds, final int bufferSize,
+      final Map<Class<? extends Metric>, Function<Metric, ? extends Aggregator>> defaultAggregators,
+      final Map<String, Function<Metric, ? extends Aggregator>> metricAggregators) {
+
+    super(dbUri.toString(), windowSeconds, defaultAggregators, metricAggregators);
     this.dbClient = new InfluxDBClient(dbUri, bufferSize);
     this.start();
   }
@@ -74,7 +79,7 @@ public class InfluxDBReporter extends TimeWindowReporter {
     return result;
   }
 
-  public static class Builder {
+  public static class Builder extends TimeWindowReporterBuilder<Builder, InfluxDBReporter> {
 
     private URI baseUri = null;
     private String database = null;
@@ -127,6 +132,7 @@ public class InfluxDBReporter extends TimeWindowReporter {
     /**
      * Create an {@link InfluxDBReporter} instance.
      */
+    @Override
     public InfluxDBReporter build() {
       if (baseUri == null) {
         throw new IllegalArgumentException("Invalid baseUri");
@@ -135,7 +141,7 @@ public class InfluxDBReporter extends TimeWindowReporter {
         throw new IllegalArgumentException("Invalid database");
       }
       return new InfluxDBReporter(baseUri.resolve("/write?db=" + database), windowSeconds,
-          bufferSize);
+          bufferSize, defaultAggregators, metricAggregators);
     }
   }
 }

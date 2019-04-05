@@ -20,6 +20,9 @@ import java.util.function.Function;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * A base reporter that tracks the state over two time-intervals to prevent contention between writes and reads
+ */
 public abstract class TimeWindowReporter implements Reporter, AutoCloseable {
 
   private static final Logger logger = LoggerFactory.getLogger(TimeWindowReporter.class);
@@ -157,17 +160,34 @@ public abstract class TimeWindowReporter implements Reporter, AutoCloseable {
     return getWriterIndex(milliseconds) == 0 ? 1 : 0;
   }
 
-  public static abstract class BaseReporterBuilder<B extends BaseReporterBuilder, R extends TimeWindowReporter> {
+  /**
+   * A base class for the reporter builder
+   *
+   * @param <B> builder
+   * @param <R> reporter
+   */
+  public static abstract class TimeWindowReporterBuilder<B extends TimeWindowReporterBuilder, R extends TimeWindowReporter> {
 
     protected Map<Class<? extends Metric>, Function<Metric, ? extends Aggregator>> defaultAggregators = DEFAULT_AGGREGATORS;
     protected Map<String, Function<Metric, ? extends Aggregator>> metricAggregators = new HashMap<>();
 
+    /**
+     * Set the default aggregator for each metric type
+     *
+     * @param defaultAggregators a map of a metric class to a supplier creating a new aggregator
+     */
     public B withDefaultAggregators(
         final Map<Class<? extends Metric>, Function<Metric, ? extends Aggregator>> defaultAggregators) {
       this.defaultAggregators = defaultAggregators;
       return (B) this;
     }
 
+    /**
+     * Add histograms to a specific metric
+     *
+     * @param metricId identifier of the metric
+     * @param bucket distribution bucket
+     */
     public B addHistogram(final String metricId, final DistributionBucket bucket) {
       this.metricAggregators
           .put(metricId, (metric) -> new BasicHistogramAggregator(metricId, bucket));
