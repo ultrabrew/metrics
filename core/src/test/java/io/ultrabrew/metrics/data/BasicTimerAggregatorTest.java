@@ -4,6 +4,7 @@
 
 package io.ultrabrew.metrics.data;
 
+import static io.ultrabrew.metrics.Metric.DEFAULT_MAX_CARDINALITY;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -19,7 +20,7 @@ public class BasicTimerAggregatorTest {
 
   @Test
   public void testAggregation() {
-    final BasicTimerAggregator table = new BasicTimerAggregator("test", 10);
+    final BasicTimerAggregator table = new BasicTimerAggregator("test", DEFAULT_MAX_CARDINALITY, 10);
 
     table.apply(new String[]{"testTag", "value"}, 100L, CURRENT_TIME);
     table.apply(new String[]{"testTag", "value"}, 10L, CURRENT_TIME);
@@ -96,12 +97,12 @@ public class BasicTimerAggregatorTest {
 
   @Test
   public void testInvalidMaxCapacity() {
-    assertThrows(AssertionError.class, () -> new BasicTimerAggregator("test", 10, 9));
+    assertThrows(AssertionError.class, () -> new BasicTimerAggregator("test", 9, 10));
   }
 
   @Test
   public void testGrowTableWithMaxCapacity() {
-    final BasicTimerAggregator aggregator = new BasicTimerAggregator("test", 1, 3);
+    final BasicTimerAggregator aggregator = new BasicTimerAggregator("test", 3, 1);
     aggregator.apply(new String[]{}, 1L, CURRENT_TIME);
     aggregator.apply(new String[]{"testTag", "value"}, 1L, CURRENT_TIME);
     aggregator.apply(new String[]{"testTag", "value2"}, 1L, CURRENT_TIME);

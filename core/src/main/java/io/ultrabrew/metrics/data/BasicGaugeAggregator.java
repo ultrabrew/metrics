@@ -31,10 +31,11 @@ public class BasicGaugeAggregator extends ConcurrentMonoidLongTable {
 
   /**
    * Create a monoid for common aggregation functions for a Gauge.
+   *
    * @param gauge metric
    */
   public BasicGaugeAggregator(final Gauge gauge) {
-    this(gauge.id, gauge.cardinality, gauge.maxCardinality);
+    this(gauge.id, gauge.maxCardinality, gauge.cardinality);
   }
 
   /**
@@ -43,17 +44,18 @@ public class BasicGaugeAggregator extends ConcurrentMonoidLongTable {
    * @param metricId identifier of the metric associated with this aggregator
    */
   public BasicGaugeAggregator(final String metricId) {
-    this(metricId, DEFAULT_CARDINALITY);
+    this(metricId, DEFAULT_MAX_CARDINALITY);
   }
 
   /**
    * Create a monoid for common aggregation functions for a Gauge with requested capacity.
    *
    * @param metricId identifier of the metric associated with this aggregator
-   * @param cardinality requested capacity of table in records, actual capacity may be higher
+   * @param maxCardinality requested max capacity of table in records. Table doesn't grow beyond
+   * this
    */
-  public BasicGaugeAggregator(final String metricId, final int cardinality) {
-    this(metricId, cardinality, DEFAULT_MAX_CARDINALITY);
+  public BasicGaugeAggregator(final String metricId, final int maxCardinality) {
+    this(metricId, maxCardinality, DEFAULT_CARDINALITY);
   }
 
   /**
@@ -61,12 +63,13 @@ public class BasicGaugeAggregator extends ConcurrentMonoidLongTable {
    * and max capacity.
    *
    * @param metricId identifier of the metric associated with this aggregator
+   * @param maxCardinality requested max capacity of table in records. Table doesn't grow beyond
+   * this
    * @param cardinality requested capacity of table in records, actual capacity may be higher
-   * @param maxCardinality requested max capacity of table in records. Table doesn't grow beyond this
-   * value.
    */
-  public BasicGaugeAggregator(final String metricId, final int cardinality, final int maxCardinality) {
-    super(metricId, cardinality, maxCardinality, FIELDS, TYPES, IDENTITY);
+  public BasicGaugeAggregator(final String metricId, final int maxCardinality,
+      final int cardinality) {
+    super(metricId, maxCardinality, cardinality, FIELDS, TYPES, IDENTITY);
   }
 
   @Override

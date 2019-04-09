@@ -27,10 +27,11 @@ public class BasicCounterAggregator extends ConcurrentMonoidLongTable {
 
   /**
    * Create a monoid for common aggregation functions for a Counter.
+   *
    * @param counter metric
    */
   public BasicCounterAggregator(final Counter counter) {
-    this(counter.id, counter.cardinality, counter.maxCardinality);
+    this(counter.id, counter.maxCardinality, counter.cardinality);
   }
 
   /**
@@ -39,17 +40,18 @@ public class BasicCounterAggregator extends ConcurrentMonoidLongTable {
    * @param metricId identifier of the metric associated with this aggregator
    */
   public BasicCounterAggregator(final String metricId) {
-    this(metricId, DEFAULT_CARDINALITY);
+    this(metricId, DEFAULT_MAX_CARDINALITY);
   }
 
   /**
    * Create a monoid for common aggregation functions for a Counter with requested capacity.
    *
    * @param metricId identifier of the metric associated with this aggregator
-   * @param cardinality requested capacity of table in records, actual capacity may be higher
+   * @param maxCardinality requested max capacity of table in records. Table doesn't grow beyond
+   * this
    */
-  public BasicCounterAggregator(final String metricId, final int cardinality) {
-    this(metricId, cardinality, DEFAULT_MAX_CARDINALITY);
+  public BasicCounterAggregator(final String metricId, final int maxCardinality) {
+    this(metricId, maxCardinality, DEFAULT_CARDINALITY);
   }
 
   /**
@@ -57,12 +59,13 @@ public class BasicCounterAggregator extends ConcurrentMonoidLongTable {
    * and max capacity.
    *
    * @param metricId identifier of the metric associated with this aggregator
+   * @param maxCardinality requested max capacity of table in records. Table doesn't grow beyond
+   * this
    * @param cardinality requested capacity of table in records, actual capacity may be higher
-   * @param maxCardinality requested max capacity of table in records. Table doesn't grow beyond this
-   * value.
    */
-  public BasicCounterAggregator(final String metricId, final int cardinality, final int maxCardinality) {
-    super(metricId, cardinality, maxCardinality, FIELDS, TYPES, IDENTITY);
+  public BasicCounterAggregator(final String metricId, final int maxCardinality,
+      final int cardinality) {
+    super(metricId, maxCardinality, cardinality, FIELDS, TYPES, IDENTITY);
   }
 
   @Override

@@ -4,6 +4,7 @@
 
 package io.ultrabrew.metrics.data;
 
+import static io.ultrabrew.metrics.Metric.DEFAULT_MAX_CARDINALITY;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -29,7 +30,7 @@ public class BasicGaugeDoubleAggregatorTest {
     long l3 = Double.doubleToRawLongBits(d3);
     long l4 = Double.doubleToRawLongBits(d4);
 
-    final BasicGaugeDoubleAggregator aggregator = new BasicGaugeDoubleAggregator("test", 10);
+    final BasicGaugeDoubleAggregator aggregator = new BasicGaugeDoubleAggregator("test", DEFAULT_MAX_CARDINALITY, 10);
 
     aggregator.apply(new String[]{"testTag", "value"}, l1, CURRENT_TIME);
     aggregator.apply(new String[]{"testTag", "value"}, l2, CURRENT_TIME);
@@ -140,7 +141,7 @@ public class BasicGaugeDoubleAggregatorTest {
 
   @Test
   public void testGrowTableWithMaxCapacity() {
-    final BasicGaugeDoubleAggregator aggregator = new BasicGaugeDoubleAggregator("test", 1, 3);
+    final BasicGaugeDoubleAggregator aggregator = new BasicGaugeDoubleAggregator("test", 3, 1);
     aggregator.apply(new String[]{}, 1L, CURRENT_TIME);
     aggregator.apply(new String[]{"testTag", "value"}, 1L, CURRENT_TIME);
     aggregator.apply(new String[]{"testTag", "value2"}, 1L, CURRENT_TIME);

@@ -4,6 +4,7 @@
 
 package io.ultrabrew.metrics.data;
 
+import static io.ultrabrew.metrics.Metric.DEFAULT_MAX_CARDINALITY;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -26,9 +27,9 @@ public class MultiCursorTest {
 
   @Test
   public void testMultiCursor() {
-    final BasicGaugeAggregator gaugeAggregator = new BasicGaugeAggregator("gauge", 10);
-    final BasicTimerAggregator timerAggregator = new BasicTimerAggregator("timer", 10);
-    final BasicCounterAggregator counterAggregator = new BasicCounterAggregator("counter", 10);
+    final BasicGaugeAggregator gaugeAggregator = new BasicGaugeAggregator("gauge", DEFAULT_MAX_CARDINALITY, 10);
+    final BasicTimerAggregator timerAggregator = new BasicTimerAggregator("timer", DEFAULT_MAX_CARDINALITY, 10);
+    final BasicCounterAggregator counterAggregator = new BasicCounterAggregator("counter", DEFAULT_MAX_CARDINALITY, 10);
 
     final String[] tagSet1 = new String[]{"testTag", "value"};
     final String[] tagSet2 = new String[]{"testTag", "value", "testTag2", "value2"};

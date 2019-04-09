@@ -64,17 +64,18 @@ public abstract class ConcurrentMonoidIntTable {
   private volatile int used = 0;
 
   /**
-   *
-   * @param recordSize number of fields in a record
-   * @param initialCapacity requested capacity of table in records
+   *  @param recordSize number of fields in a record
    * @param maxCapacity maximum capacity of table in records. Table doesn't grow beyond this value.
+   * @param initialCapacity requested capacity of table in records
    * @param identity monoid's identity for the agg fields
    */
-  public ConcurrentMonoidIntTable(final int recordSize, int initialCapacity, final int maxCapacity, final long[] identity) {
-    this(identity.length, recordSize - identity.length, initialCapacity, maxCapacity, identity);
+  protected ConcurrentMonoidIntTable(final int recordSize, final int maxCapacity, int initialCapacity,
+      final long[] identity) {
+    this(identity.length, recordSize - identity.length, maxCapacity, initialCapacity, identity);
   }
 
-  private ConcurrentMonoidIntTable(final int numAggFields, final int dataSize, int initialCapacity, final int maxCapacity, final long[] identity){
+  private ConcurrentMonoidIntTable(final int numAggFields, final int dataSize,
+      final int maxCapacity, int initialCapacity, final long[] identity) {
 
     assert initialCapacity >= 0 : "Illegal initial capacity";
     assert maxCapacity >= initialCapacity : "max capacity should be greater than the initial capacity";

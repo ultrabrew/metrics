@@ -2,7 +2,7 @@
 // Licensed under the terms of the Apache License 2.0 license. See LICENSE file in Ultrabrew Metrics
 // for terms.
 
-package io.ultrabrew.metrics.util;
+package io.ultrabrew.metrics.data;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;

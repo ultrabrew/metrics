@@ -2,9 +2,8 @@
 // Licensed under the terms of the Apache License 2.0 license. See LICENSE file in Ultrabrew Metrics
 // for terms.
 
-package io.ultrabrew.metrics.util;
+package io.ultrabrew.metrics.data;
 
-import io.ultrabrew.metrics.data.BasicHistogramAggregator;
 import java.util.function.Predicate;
 
 /**
@@ -123,6 +122,10 @@ public class DistributionBucket {
     return matchAny(buckets, i -> buckets[i] == buckets[i + 1]);
   }
 
+  /**
+   * It creates garbage because of box and unbox of the integers. It's fine as long as only used in
+   * the constructor.
+   */
   private static boolean matchAny(final long[] buckets, Predicate<Integer> predicate) {
     for (int i = 0; i < buckets.length - 1; i++) {
       if (predicate.test(i)) {

@@ -14,8 +14,7 @@ public class ConcurrentMonoidLongTableTest {
   public void testNotMatchingFieldsAndIdentity() {
     assertThrows(AssertionError.class, () -> new ConcurrentMonoidLongTable(
         "test",
-        128,
-        4096,
+        4096, 128,
         new String[]{"test"},
         new Type[]{Type.LONG},
         new long[]{0L, 1L}) {

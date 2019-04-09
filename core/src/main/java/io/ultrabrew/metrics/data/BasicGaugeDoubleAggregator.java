@@ -26,16 +26,18 @@ import io.ultrabrew.metrics.GaugeDouble;
 public class BasicGaugeDoubleAggregator extends ConcurrentMonoidLongTable {
 
   private static final String[] FIELDS = {"count", "sum", "min", "max", "lastValue"};
-  private static final Type[] TYPES = {Type.LONG, Type.DOUBLE, Type.DOUBLE, Type.DOUBLE, Type.DOUBLE};
+  private static final Type[] TYPES = {Type.LONG, Type.DOUBLE, Type.DOUBLE, Type.DOUBLE,
+      Type.DOUBLE};
   private static final long[] IDENTITY = {0L, 0L, Long.MAX_VALUE, Long.MIN_VALUE, 0L};
 
 
   /**
    * Create a monoid for common aggregation functions for a GaugeDouble.
+   *
    * @param gaugeDouble metric
    */
-  public BasicGaugeDoubleAggregator(final GaugeDouble  gaugeDouble) {
-    this(gaugeDouble.id, gaugeDouble.cardinality, gaugeDouble.maxCardinality);
+  public BasicGaugeDoubleAggregator(final GaugeDouble gaugeDouble) {
+    this(gaugeDouble.id, gaugeDouble.maxCardinality, gaugeDouble.cardinality);
   }
 
   /**
@@ -44,30 +46,32 @@ public class BasicGaugeDoubleAggregator extends ConcurrentMonoidLongTable {
    * @param metricId identifier of the metric associated with this aggregator
    */
   public BasicGaugeDoubleAggregator(final String metricId) {
-    this(metricId, DEFAULT_CARDINALITY);
+    this(metricId, DEFAULT_MAX_CARDINALITY);
   }
 
   /**
    * Create a monoid for common aggregation functions for a GaugeDouble with requested capacity.
    *
    * @param metricId identifier of the metric associated with this aggregator
-   * @param cardinality requested capacity of table in records, actual capacity may be higher
+   * @param maxCardinality requested max capacity of table in records. Table doesn't grow beyond
+   * this
    */
-  public BasicGaugeDoubleAggregator(final String metricId, final int cardinality) {
-    this(metricId, cardinality, DEFAULT_MAX_CARDINALITY);
+  public BasicGaugeDoubleAggregator(final String metricId, final int maxCardinality) {
+    this(metricId, maxCardinality, DEFAULT_CARDINALITY);
   }
 
   /**
-   * Create a monoid for common aggregation functions for a GaugeDouble with requested initial capacity
-   * and max capacity.
+   * Create a monoid for common aggregation functions for a GaugeDouble with requested initial
+   * capacity and max capacity.
    *
    * @param metricId identifier of the metric associated with this aggregator
+   * @param maxCardinality requested max capacity of table in records. Table doesn't grow beyond
+   * this
    * @param cardinality requested capacity of table in records, actual capacity may be higher
-   * @param maxCardinality requested max capacity of table in records. Table doesn't grow beyond this
-   * value.
    */
-  public BasicGaugeDoubleAggregator(final String metricId, final int cardinality, final int maxCardinality) {
-    super(metricId, cardinality, maxCardinality, FIELDS, TYPES, IDENTITY);
+  public BasicGaugeDoubleAggregator(final String metricId, final int maxCardinality,
+      final int cardinality) {
+    super(metricId, maxCardinality, cardinality, FIELDS, TYPES, IDENTITY);
   }
 
   @Override

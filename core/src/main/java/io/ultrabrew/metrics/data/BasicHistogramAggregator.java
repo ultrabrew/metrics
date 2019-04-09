@@ -7,7 +7,6 @@ package io.ultrabrew.metrics.data;
 import static io.ultrabrew.metrics.Metric.DEFAULT_CARDINALITY;
 import static io.ultrabrew.metrics.Metric.DEFAULT_MAX_CARDINALITY;
 
-import io.ultrabrew.metrics.util.DistributionBucket;
 import java.util.Arrays;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,7 +58,7 @@ public class BasicHistogramAggregator extends ConcurrentMonoidIntTable implement
    * @param buckets distribution bucket spec
    */
   public BasicHistogramAggregator(final String metricId, final DistributionBucket buckets) {
-    this(metricId, buckets, DEFAULT_CARDINALITY, DEFAULT_MAX_CARDINALITY);
+    this(metricId, buckets, DEFAULT_MAX_CARDINALITY, DEFAULT_CARDINALITY);
   }
 
   /**
@@ -67,25 +66,24 @@ public class BasicHistogramAggregator extends ConcurrentMonoidIntTable implement
    *
    * @param metricId identifier of the metric associated with this aggregator
    * @param buckets distribution bucket spec
-   * @param cardinality requested capacity of table in records, actual capacity may be higher
-   */
-  public BasicHistogramAggregator(final String metricId, final DistributionBucket buckets,
-      final int cardinality) {
-    this(metricId, buckets, cardinality, DEFAULT_MAX_CARDINALITY);
-  }
-
-  /**
-   * Creates a monoid for the histogram buckets for a metric.
-   *
-   * @param metricId identifier of the metric associated with this aggregator
-   * @param buckets distribution bucket spec
-   * @param cardinality requested capacity of table in records, actual capacity may be higher
    * @param maxCardinality requested max capacity of table in records. Table doesn't grow beyond
-   * this value.
    */
   public BasicHistogramAggregator(final String metricId, final DistributionBucket buckets,
-      final int cardinality, final int maxCardinality) {
-    super(AGG_FIELDS.length + buckets.getCount(), cardinality, maxCardinality, IDENTITY);
+      final int maxCardinality) {
+    this(metricId, buckets, maxCardinality, DEFAULT_CARDINALITY);
+  }
+
+  /**
+   * Creates a monoid for the histogram buckets for a metric.
+   *
+   * @param metricId identifier of the metric associated with this aggregator
+   * @param buckets distribution bucket spec
+   * @param maxCardinality requested max capacity of table in records. Table doesn't grow beyond
+   * @param cardinality requested capacity of table in records, actual capacity may be higher
+   */
+  public BasicHistogramAggregator(final String metricId, final DistributionBucket buckets,
+      final int maxCardinality, final int cardinality) {
+    super(AGG_FIELDS.length + buckets.getCount(), maxCardinality, cardinality, IDENTITY);
     this.metricId = metricId;
     this.buckets = buckets;
     this.bucketCount = buckets.getCount();
@@ -126,12 +124,19 @@ public class BasicHistogramAggregator extends ConcurrentMonoidIntTable implement
     return new CursorImpl(tagSets, fields, types, identity, sorted);
   }
 
+  /**
+   * Creates an array of identity values of the aggregation field and histogram buckets. These
+   * values are used to initialize and reset the field after reading.
+   */
   private long[] buildIdentity(int length) {
     long[] identity = new long[length];
     System.arraycopy(IDENTITY, 0, identity, 0, IDENTITY.length);
     return identity;
   }
 
+  /**
+   * Creates an array of names of the aggregation field and histogram buckets.
+   */
   private String[] buildFields() {
     String[] fields = new String[AGG_FIELDS.length + bucketCount];
     String[] buckets = this.buckets.getBucketNames();

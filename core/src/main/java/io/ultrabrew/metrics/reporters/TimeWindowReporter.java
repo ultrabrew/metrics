@@ -10,7 +10,7 @@ import io.ultrabrew.metrics.Metric;
 import io.ultrabrew.metrics.Reporter;
 import io.ultrabrew.metrics.data.Aggregator;
 import io.ultrabrew.metrics.data.BasicHistogramAggregator;
-import io.ultrabrew.metrics.util.DistributionBucket;
+import io.ultrabrew.metrics.data.DistributionBucket;
 import io.ultrabrew.metrics.util.Intervals;
 import java.util.Collections;
 import java.util.HashMap;

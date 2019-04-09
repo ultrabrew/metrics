@@ -4,6 +4,7 @@
 
 package io.ultrabrew.metrics.data;
 
+import static io.ultrabrew.metrics.Metric.DEFAULT_MAX_CARDINALITY;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -11,7 +12,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import io.ultrabrew.metrics.util.DistributionBucket;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import mockit.Deencapsulation;
@@ -116,7 +116,7 @@ public class BasicHistogramAggregatorTest {
   @Test
   public void testGrowTable() {
     DistributionBucket bucket = new DistributionBucket(new long[]{0, 10, 100});
-    final BasicHistogramAggregator table = new BasicHistogramAggregator("test", bucket, 2);
+    final BasicHistogramAggregator table = new BasicHistogramAggregator("test", bucket, DEFAULT_MAX_CARDINALITY, 2);
     table.apply(new String[]{}, 1, CURRENT_TIME);
     table.apply(new String[]{"testTag", "value"}, 29, CURRENT_TIME);
     table.apply(new String[]{"testTag", "value2"}, 300, CURRENT_TIME);
@@ -133,7 +133,7 @@ public class BasicHistogramAggregatorTest {
   @Test
   public void testGrowTableWithMaxCapacity() {
     DistributionBucket bucket = new DistributionBucket(new long[]{0, 10, 100});
-    final BasicHistogramAggregator table = new BasicHistogramAggregator("test", bucket, 1, 3);
+    final BasicHistogramAggregator table = new BasicHistogramAggregator("test", bucket, 3, 1);
     table.apply(new String[]{}, 1, CURRENT_TIME);
     table.apply(new String[]{"testTag", "value"}, 1, CURRENT_TIME);
     table.apply(new String[]{"testTag", "value2"}, 1, CURRENT_TIME);
@@ -148,7 +148,7 @@ public class BasicHistogramAggregatorTest {
   @Test
   public void mathAbsReturnsNegative() {
     DistributionBucket bucket = new DistributionBucket(new long[]{0, 10, 100});
-    final BasicHistogramAggregator aggregator = new BasicHistogramAggregator("test", bucket, 3);
+    final BasicHistogramAggregator aggregator = new BasicHistogramAggregator("test", bucket, DEFAULT_MAX_CARDINALITY, 3);
     Deencapsulation.setField(aggregator, "capacity", Integer.MAX_VALUE);
     new Expectations(aggregator) {{
       aggregator.hashCode((String[]) any);
@@ -164,7 +164,7 @@ public class BasicHistogramAggregatorTest {
     int capacity = maxCapacity - 1;
 
     DistributionBucket bucket = new DistributionBucket(new long[]{0, 10, 100});
-    final BasicHistogramAggregator table = new BasicHistogramAggregator("test", bucket, capacity);
+    final BasicHistogramAggregator table = new BasicHistogramAggregator("test", bucket, DEFAULT_MAX_CARDINALITY, capacity);
     String[][] tagSets = Deencapsulation.getField(table, "tagSets");
 
     assertEquals(capacity, table.capacity());
@@ -182,7 +182,7 @@ public class BasicHistogramAggregatorTest {
   public void growDataTable() {
     final int requestedCapacity = 128 * 2;
     DistributionBucket bucket = new DistributionBucket(new long[]{0, 10, 100});
-    final BasicHistogramAggregator table = new BasicHistogramAggregator("test", bucket,
+    final BasicHistogramAggregator table = new BasicHistogramAggregator("test", bucket, DEFAULT_MAX_CARDINALITY,
         requestedCapacity);
 
     int capacity = table.capacity();
@@ -201,7 +201,7 @@ public class BasicHistogramAggregatorTest {
   public void growTagTable() {
     final int requestedCapacity = 128;
     DistributionBucket bucket = new DistributionBucket(new long[]{0, 10, 100});
-    final BasicHistogramAggregator table = new BasicHistogramAggregator("test", bucket,
+    final BasicHistogramAggregator table = new BasicHistogramAggregator("test", bucket, DEFAULT_MAX_CARDINALITY,
         requestedCapacity);
 
     String[][] tagSets = Deencapsulation.getField(table, "tagSets");
@@ -221,8 +221,9 @@ public class BasicHistogramAggregatorTest {
 
     final int maxCapacity = 4096;
     DistributionBucket bucket = new DistributionBucket(new long[]{0, 10, 100});
-    final BasicHistogramAggregator table = new BasicHistogramAggregator("test", bucket, 128,
-        maxCapacity);
+    final BasicHistogramAggregator table = new BasicHistogramAggregator("test", bucket, maxCapacity,
+        128
+    );
 
     for (int i = 0; i < maxCapacity + 2; i++) {
       table.apply(new String[]{"testTag", String.valueOf(i)}, 1, CURRENT_TIME);
@@ -263,7 +264,7 @@ public class BasicHistogramAggregatorTest {
   @Test
   public void testReadLongInvalidFieldIndex() {
     DistributionBucket bucket = new DistributionBucket(new long[]{0, 10, 100});
-    final BasicHistogramAggregator table = new BasicHistogramAggregator("test", bucket, 2);
+    final BasicHistogramAggregator table = new BasicHistogramAggregator("test", bucket, DEFAULT_MAX_CARDINALITY, 2);
     table.apply(new String[]{}, 1, CURRENT_TIME);
     final Cursor cursor = table.cursor();
     assertTrue(cursor.next());
@@ -273,7 +274,7 @@ public class BasicHistogramAggregatorTest {
   @Test
   public void testReadLongInvalidCursorIndex() {
     DistributionBucket bucket = new DistributionBucket(new long[]{0, 10, 100});
-    final BasicHistogramAggregator table = new BasicHistogramAggregator("test", bucket, 2);
+    final BasicHistogramAggregator table = new BasicHistogramAggregator("test", bucket, DEFAULT_MAX_CARDINALITY, 2);
     table.apply(new String[]{}, 1, CURRENT_TIME);
     final Cursor cursor = table.cursor();
     assertThrows(IndexOutOfBoundsException.class, () -> cursor.readLong(0));
@@ -282,7 +283,7 @@ public class BasicHistogramAggregatorTest {
   @Test
   public void testReadAndResetLongInvalidFieldIndex() {
     DistributionBucket bucket = new DistributionBucket(new long[]{0, 10, 100});
-    final BasicHistogramAggregator table = new BasicHistogramAggregator("test", bucket, 2);
+    final BasicHistogramAggregator table = new BasicHistogramAggregator("test", bucket, DEFAULT_MAX_CARDINALITY, 2);
     table.apply(new String[]{}, 1, CURRENT_TIME);
     final Cursor cursor = table.cursor();
     assertTrue(cursor.next());
@@ -293,7 +294,7 @@ public class BasicHistogramAggregatorTest {
   @Test
   public void testReadAndResetLongInvalidCursorIndex() {
     DistributionBucket bucket = new DistributionBucket(new long[]{0, 10, 100});
-    final BasicHistogramAggregator table = new BasicHistogramAggregator("test", bucket, 2);
+    final BasicHistogramAggregator table = new BasicHistogramAggregator("test", bucket, DEFAULT_MAX_CARDINALITY, 2);
     table.apply(new String[]{}, 1, CURRENT_TIME);
     final Cursor cursor = table.cursor();
     assertThrows(IndexOutOfBoundsException.class, () -> cursor.readAndResetLong(0));
@@ -302,7 +303,7 @@ public class BasicHistogramAggregatorTest {
   @Test
   public void testGetTagsInvalidCursorIndex() {
     DistributionBucket bucket = new DistributionBucket(new long[]{0, 10, 100});
-    final BasicHistogramAggregator table = new BasicHistogramAggregator("test", bucket, 2);
+    final BasicHistogramAggregator table = new BasicHistogramAggregator("test", bucket, DEFAULT_MAX_CARDINALITY, 2);
     table.apply(new String[]{}, 1, CURRENT_TIME);
     final Cursor cursor = table.cursor();
     assertThrows(IndexOutOfBoundsException.class, cursor::getTags);
@@ -311,7 +312,7 @@ public class BasicHistogramAggregatorTest {
   @Test
   public void testLastUpdatedInvalidCursorIndex() {
     DistributionBucket bucket = new DistributionBucket(new long[]{0, 10, 100});
-    final BasicHistogramAggregator table = new BasicHistogramAggregator("test", bucket, 2);
+    final BasicHistogramAggregator table = new BasicHistogramAggregator("test", bucket, DEFAULT_MAX_CARDINALITY, 2);
     table.apply(new String[]{}, 1, CURRENT_TIME);
     final Cursor cursor = table.cursor();
     assertThrows(IndexOutOfBoundsException.class, cursor::lastUpdated);
@@ -321,7 +322,7 @@ public class BasicHistogramAggregatorTest {
   public void tableGrowthIsSynchronized() throws InterruptedException {
 
     DistributionBucket bucket = new DistributionBucket(new long[]{0, 10, 100});
-    final BasicHistogramAggregator table = new BasicHistogramAggregator("test", bucket, 2);
+    final BasicHistogramAggregator table = new BasicHistogramAggregator("test", bucket, DEFAULT_MAX_CARDINALITY, 2);
     table.apply(new String[]{}, 1, CURRENT_TIME);
     table.apply(new String[]{"testTag", "value"}, 1, CURRENT_TIME);
 
@@ -364,7 +365,7 @@ public class BasicHistogramAggregatorTest {
     int maxCapacity = requestedCapacity * 2;
     DistributionBucket bucket = new DistributionBucket(new long[]{0, 10, 100});
     final BasicHistogramAggregator table = new BasicHistogramAggregator("test", bucket,
-        requestedCapacity, maxCapacity);
+        maxCapacity, requestedCapacity);
 
     for (int i = 0; i < requestedCapacity; i++) {
       table.apply(new String[]{"testTag", String.valueOf(i)}, 1, CURRENT_TIME);
@@ -409,7 +410,7 @@ public class BasicHistogramAggregatorTest {
     int requestedCapacity = 131072;
     DistributionBucket bucket = new DistributionBucket(new long[]{0, 10, 100});
     final BasicHistogramAggregator table = new BasicHistogramAggregator("test", bucket,
-        requestedCapacity, 1_048_576);
+        1_048_576, requestedCapacity);
 
     for (int i = 0; i < requestedCapacity * 2; i++) {
       table.apply(new String[]{"testTag", String.valueOf(i)}, 1, CURRENT_TIME);
@@ -449,7 +450,7 @@ public class BasicHistogramAggregatorTest {
   public void testConcurrentSlotReservation() throws InterruptedException {
 
     DistributionBucket bucket = new DistributionBucket(new long[]{0, 10, 100});
-    final BasicHistogramAggregator table = new BasicHistogramAggregator("test", bucket, 5);
+    final BasicHistogramAggregator table = new BasicHistogramAggregator("test", bucket, DEFAULT_MAX_CARDINALITY, 5);
 
     Thread t1 = new Thread(() -> {
 
@@ -486,7 +487,7 @@ public class BasicHistogramAggregatorTest {
   public void createWithSizeZero() {
 
     DistributionBucket bucket = new DistributionBucket(new long[]{0, 10, 100});
-    final BasicHistogramAggregator table = new BasicHistogramAggregator("test", bucket, 0);
+    final BasicHistogramAggregator table = new BasicHistogramAggregator("test", bucket, DEFAULT_MAX_CARDINALITY, 0);
     assertNotNull(table);
     assertEquals(16, table.capacity());
 
@@ -500,20 +501,20 @@ public class BasicHistogramAggregatorTest {
   public void createWithNegativeSize() {
     DistributionBucket bucket = new DistributionBucket(new long[]{0, 10, 100});
     assertThrows(AssertionError.class,
-        () -> new BasicHistogramAggregator("test", bucket, -1));
+        () -> new BasicHistogramAggregator("test", bucket, DEFAULT_MAX_CARDINALITY, -1));
   }
 
   @Test
   public void testInvalidMaxCapacity() {
     DistributionBucket bucket = new DistributionBucket(new long[]{0, 10, 100});
     assertThrows(AssertionError.class,
-        () -> new BasicHistogramAggregator("test", bucket, 10, 9));
+        () -> new BasicHistogramAggregator("test", bucket, 9, 10));
   }
 
   @Test
   public void readsFromNextTableWhenCurrentSlotIsEmpty() {
     DistributionBucket bucket = new DistributionBucket(new long[]{0, 10, 100});
-    final BasicHistogramAggregator table = new BasicHistogramAggregator("test", bucket, 3);
+    final BasicHistogramAggregator table = new BasicHistogramAggregator("test", bucket, DEFAULT_MAX_CARDINALITY, 3);
     String[] tagSet1 = new String[]{"key1", "value1"};
     String[] tagSet2 = new String[]{"key2", "value2"};
     String[] tagSet3 = new String[]{"key3", "value3"};
@@ -546,7 +547,7 @@ public class BasicHistogramAggregatorTest {
   @Test
   public void readingByInvalidTagSets() {
     DistributionBucket bucket = new DistributionBucket(new long[]{0, 10, 100});
-    final BasicHistogramAggregator table = new BasicHistogramAggregator("test", bucket, 3);
+    final BasicHistogramAggregator table = new BasicHistogramAggregator("test", bucket, DEFAULT_MAX_CARDINALITY, 3);
     String[] tagSet1 = new String[]{"key1", "value1"};
     String[] tagSet2 = new String[]{"key2", "value2"};
 
@@ -561,7 +562,7 @@ public class BasicHistogramAggregatorTest {
   @Test
   void doubleValuesAreNotSupported() {
     DistributionBucket bucket = new DistributionBucket(new long[]{0, 10, 100});
-    final BasicHistogramAggregator table = new BasicHistogramAggregator("test", bucket, 3);
+    final BasicHistogramAggregator table = new BasicHistogramAggregator("test", bucket, DEFAULT_MAX_CARDINALITY, 3);
     String[] tagSet1 = new String[]{"key1", "value1"};
     String[] tagSet2 = new String[]{"key2", "value2"};
 

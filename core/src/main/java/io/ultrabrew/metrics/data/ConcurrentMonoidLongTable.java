@@ -118,16 +118,15 @@ public abstract class ConcurrentMonoidLongTable implements Aggregator {
 
   /**
    * Create a simple linear probing hash table for a monoid operation.
-   *
-   * @param metricId identifier of the metric
-   * @param initialCapacity requested capacity of table in records
+   *  @param metricId identifier of the metric
    * @param maxCapacity maximum capacity of table in records.
+   * @param initialCapacity requested capacity of table in records
    * @param fields sorted array of field names used in reporting
    * @param types type of each corresponding field
    * @param identity monoid's identity, where each value is corresponding to the given fields names
    */
-  protected ConcurrentMonoidLongTable(final String metricId, int initialCapacity,
-      final int maxCapacity, final String[] fields, final Type[] types, final long[] identity) {
+  protected ConcurrentMonoidLongTable(final String metricId, final int maxCapacity,
+      int initialCapacity, final String[] fields, final Type[] types, final long[] identity) {
 
     assert fields.length != 0 && fields.length == identity.length : "Fields and Identity must match in length and be non-zero";
     assert initialCapacity >= 0 : "Illegal initial capacity";

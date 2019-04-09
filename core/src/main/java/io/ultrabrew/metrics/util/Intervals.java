@@ -8,6 +8,5 @@ public class Intervals {
 
   public static long calculateDelay(final long interval, final long currentTime) {
     return interval - (currentTime % interval);
-
   }
 }
