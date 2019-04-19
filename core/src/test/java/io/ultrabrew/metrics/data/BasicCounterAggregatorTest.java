@@ -445,7 +445,7 @@ public class BasicCounterAggregatorTest {
 
   @Test
   public void createWithNegativeSize() {
-    assertThrows(AssertionError.class, () -> new BasicCounterAggregator("test", DEFAULT_MAX_CARDINALITY, -1));
+    assertThrows(IllegalArgumentException.class, () -> new BasicCounterAggregator("test", DEFAULT_MAX_CARDINALITY, -1));
   }
 
   @Test

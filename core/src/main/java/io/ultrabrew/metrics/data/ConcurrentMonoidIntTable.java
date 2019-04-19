@@ -77,8 +77,14 @@ public abstract class ConcurrentMonoidIntTable {
   private ConcurrentMonoidIntTable(final int numAggFields, final int dataSize,
       final int maxCapacity, int initialCapacity, final long[] identity) {
 
-    assert initialCapacity >= 0 : "Illegal initial capacity";
-    assert maxCapacity >= initialCapacity : "max capacity should be greater than the initial capacity";
+    if (initialCapacity < 0) {
+      throw new IllegalArgumentException("Illegal initial capacity");
+    }
+
+    if (maxCapacity < initialCapacity) {
+      throw new IllegalArgumentException(
+          "max capacity should be greater than the initial capacity");
+    }
 
     if (initialCapacity == 0) {
       initialCapacity = DEFAULT_INITIAL_CAPACITY;

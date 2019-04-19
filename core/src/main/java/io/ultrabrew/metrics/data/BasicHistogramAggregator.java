@@ -40,12 +40,11 @@ import sun.misc.Unsafe;
 public class BasicHistogramAggregator extends ConcurrentMonoidIntTable implements Aggregator {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(BasicHistogramAggregator.class);
-  private static final String[] AGG_FIELDS = {"count", "sum", "min", "max", "lastValue"};
+  private static final String[] AGGREGATION_FIELDS = {"count", "sum", "min", "max", "lastValue"};
   private static final long[] IDENTITY = {0L, 0L, Long.MAX_VALUE, Long.MIN_VALUE, 0L};
 
   private final String metricId;
   private final DistributionBucket buckets;
-  private final int bucketCount;
 
   private final String[] fields;
   private final Type[] types;
@@ -83,13 +82,12 @@ public class BasicHistogramAggregator extends ConcurrentMonoidIntTable implement
    */
   public BasicHistogramAggregator(final String metricId, final DistributionBucket buckets,
       final int maxCardinality, final int cardinality) {
-    super(AGG_FIELDS.length + buckets.getCount(), maxCardinality, cardinality, IDENTITY);
+    super(AGGREGATION_FIELDS.length + buckets.getCount(), maxCardinality, cardinality, IDENTITY);
     this.metricId = metricId;
     this.buckets = buckets;
-    this.bucketCount = buckets.getCount();
     this.fields = buildFields();
-    this.types = buildTypes(fields.length);
-    this.identity = buildIdentity(fields.length);
+    this.types = buildTypes();
+    this.identity = buildIdentity();
   }
 
   @Override
@@ -107,7 +105,7 @@ public class BasicHistogramAggregator extends ConcurrentMonoidIntTable implement
 
     //Increments the bucket counter by 1 responding to the given value
     int bucketIndex = buckets.getBucketIndex(value);
-    addToDataField(table, baseOffset, AGG_FIELDS.length + bucketIndex, 1);
+    addToDataField(table, baseOffset, AGGREGATION_FIELDS.length + bucketIndex, 1);
   }
 
   @Override
@@ -121,51 +119,50 @@ public class BasicHistogramAggregator extends ConcurrentMonoidIntTable implement
   }
 
   private Cursor newCursor(boolean sorted) {
-    return new CursorImpl(tagSets, fields, types, identity, sorted);
+    return new CursorImpl(tagSets, sorted);
   }
 
   /**
-   * Creates an array of identity values of the aggregation field and histogram buckets. These
-   * values are used to initialize and reset the field after reading.
+   * Creates an array containing the identity values of the aggregation field followed by zeros for
+   * the histogram buckets. These values are used to initialize and reset the field after reading.
+   *
+   * @see #AGGREGATION_FIELDS
+   * @see #IDENTITY
    */
-  private long[] buildIdentity(int length) {
-    long[] identity = new long[length];
+  private long[] buildIdentity() {
+    long[] identity = new long[IDENTITY.length + buckets.getCount()];
     System.arraycopy(IDENTITY, 0, identity, 0, IDENTITY.length);
+    Arrays.fill(identity, IDENTITY.length, identity.length, 0L);
     return identity;
   }
 
   /**
    * Creates an array of names of the aggregation field and histogram buckets.
+   *
+   * @see #AGGREGATION_FIELDS
    */
   private String[] buildFields() {
-    String[] fields = new String[AGG_FIELDS.length + bucketCount];
-    String[] buckets = this.buckets.getBucketNames();
-    System.arraycopy(AGG_FIELDS, 0, fields, 0, AGG_FIELDS.length);
-    System.arraycopy(buckets, 0, fields, AGG_FIELDS.length, buckets.length);
+    String[] fields = new String[AGGREGATION_FIELDS.length + buckets.getCount()];
+    String[] bucketNames = buckets.getBucketNames();
+    System.arraycopy(AGGREGATION_FIELDS, 0, fields, 0, AGGREGATION_FIELDS.length);
+    System.arraycopy(bucketNames, 0, fields, AGGREGATION_FIELDS.length, bucketNames.length);
     return fields;
   }
 
-  private Type[] buildTypes(final int length) {
-    Type[] types = new Type[length];
+  private Type[] buildTypes() {
+    Type[] types = new Type[AGGREGATION_FIELDS.length + buckets.getCount()];
     Arrays.fill(types, Type.LONG);
     return types;
   }
 
   private class CursorImpl implements Cursor {
 
-    private final String[] fields;
-    private final Type[] types;
-    private final long[] identity;
     private final String[][] tagSets;
     private int i = -1;
     private long base = 0;
     private int[] table;
 
-    private CursorImpl(final String[][] tagSets, final String[] fields, final Type[] types,
-        long[] identity, final boolean sorted) {
-      this.fields = fields;
-      this.types = types;
-      this.identity = identity;
+    private CursorImpl(final String[][] tagSets, final boolean sorted) {
       if (sorted) {
         this.tagSets = tagSets.clone();
         Arrays.sort(this.tagSets, TagSetsHelper::compare);

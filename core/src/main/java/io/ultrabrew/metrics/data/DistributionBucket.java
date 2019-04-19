@@ -36,9 +36,15 @@ public class DistributionBucket {
    */
   public DistributionBucket(final long[] buckets) {
 
-    assert buckets.length >= 2 : "Minimum bucket length is 2";
-    assert isSorted(buckets) : "Bucket should be sorted in ascending order";
-    assert !hasDuplicate(buckets) : "Bucket should not have duplicate entries";
+    if (buckets.length < 2) {
+      throw new IllegalArgumentException("Minimum bucket length is 2");
+    }
+    if (!isSorted(buckets)) {
+      throw new IllegalArgumentException("Bucket should be sorted in ascending order");
+    }
+    if (hasDuplicate(buckets)) {
+      throw new IllegalArgumentException("Bucket should not have duplicate entries");
+    }
 
     this.buckets = buckets.clone();
   }

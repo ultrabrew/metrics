@@ -128,9 +128,17 @@ public abstract class ConcurrentMonoidLongTable implements Aggregator {
   protected ConcurrentMonoidLongTable(final String metricId, final int maxCapacity,
       int initialCapacity, final String[] fields, final Type[] types, final long[] identity) {
 
-    assert fields.length != 0 && fields.length == identity.length : "Fields and Identity must match in length and be non-zero";
-    assert initialCapacity >= 0 : "Illegal initial capacity";
-    assert initialCapacity <= maxCapacity : "max capacity should be greater than the initial capacity";
+    if (fields.length == 0 || fields.length != identity.length) {
+      throw new IllegalArgumentException(
+          "Fields and Identity must match in length and be non-zero");
+    }
+    if (initialCapacity < 0) {
+      throw new IllegalArgumentException("Illegal initial capacity");
+    }
+    if (maxCapacity < initialCapacity) {
+      throw new IllegalArgumentException(
+          "max capacity should be greater than the initial capacity");
+    }
     if (initialCapacity == 0) {
       initialCapacity = DEFAULT_INITIAL_CAPACITY;
     }

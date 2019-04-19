@@ -21,7 +21,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * A base reporter that tracks the state over two time-intervals to prevent contention between writes and reads
+ * A base reporter that tracks the state over two time-intervals to prevent contention between
+ * writes and reads
  */
 public abstract class TimeWindowReporter implements Reporter, AutoCloseable {
 
@@ -166,10 +167,13 @@ public abstract class TimeWindowReporter implements Reporter, AutoCloseable {
    * @param <B> builder
    * @param <R> reporter
    */
-  public static abstract class TimeWindowReporterBuilder<B extends TimeWindowReporterBuilder, R extends TimeWindowReporter> {
+  public abstract static class TimeWindowReporterBuilder<
+      B extends TimeWindowReporterBuilder, R extends TimeWindowReporter> {
 
-    protected Map<Class<? extends Metric>, Function<Metric, ? extends Aggregator>> defaultAggregators = DEFAULT_AGGREGATORS;
-    protected Map<String, Function<Metric, ? extends Aggregator>> metricAggregators = new HashMap<>();
+    protected Map<Class<? extends Metric>, Function<Metric, ? extends Aggregator>>
+        defaultAggregators = DEFAULT_AGGREGATORS;
+    protected Map<String, Function<Metric, ? extends Aggregator>> metricAggregators =
+        new HashMap<>();
 
     /**
      * Set the default aggregator for each metric type

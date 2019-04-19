@@ -12,7 +12,7 @@ public class ConcurrentMonoidLongTableTest {
 
   @Test
   public void testNotMatchingFieldsAndIdentity() {
-    assertThrows(AssertionError.class, () -> new ConcurrentMonoidLongTable(
+    assertThrows(IllegalArgumentException.class, () -> new ConcurrentMonoidLongTable(
         "test",
         4096, 128,
         new String[]{"test"},

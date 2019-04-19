@@ -500,14 +500,14 @@ public class BasicHistogramAggregatorTest {
   @Test
   public void createWithNegativeSize() {
     DistributionBucket bucket = new DistributionBucket(new long[]{0, 10, 100});
-    assertThrows(AssertionError.class,
+    assertThrows(IllegalArgumentException.class,
         () -> new BasicHistogramAggregator("test", bucket, DEFAULT_MAX_CARDINALITY, -1));
   }
 
   @Test
   public void testInvalidMaxCapacity() {
     DistributionBucket bucket = new DistributionBucket(new long[]{0, 10, 100});
-    assertThrows(AssertionError.class,
+    assertThrows(IllegalArgumentException.class,
         () -> new BasicHistogramAggregator("test", bucket, 9, 10));
   }
 

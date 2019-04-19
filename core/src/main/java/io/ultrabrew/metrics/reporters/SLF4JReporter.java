@@ -198,6 +198,9 @@ public class SLF4JReporter extends TimeWindowReporter {
     return new Builder();
   }
 
+  /**
+   * Slf4J reporter builder.
+   */
   public static final class Builder extends TimeWindowReporterBuilder<Builder, SLF4JReporter> {
 
     private String name;
@@ -209,26 +212,51 @@ public class SLF4JReporter extends TimeWindowReporter {
     private Builder() {
     }
 
+    /**
+     * Sets the name of the reporter.
+     * @param name reporter name
+     * @return builder
+     */
     public Builder withName(String name) {
       this.name = name;
       return this;
     }
 
+    /**
+     * Sets the reporting frequency
+     * @param windowStepSize defaults to 60 seconds
+     * @return builder
+     */
     public Builder withStepSize(int windowStepSize) {
       this.windowStepSize = windowStepSize;
       return this;
     }
 
+    /**
+     * Sets the tag delimiter.
+     * @param tagDelimiter defaults to " "
+     * @return builder
+     */
     public Builder withTagDelimiter(CharSequence tagDelimiter) {
       this.tagDelimiter = tagDelimiter;
       return this;
     }
 
+    /**
+     * Sets the field delimiter.
+     * @param fieldDelimiter defaults to " "
+     * @return builder
+     */
     public Builder withFieldDelimiter(CharSequence fieldDelimiter) {
       this.fieldDelimiter = fieldDelimiter;
       return this;
     }
 
+    /**
+     * Sets the tag field delimiter
+     * @param tagFieldDelimiter defaults to " "
+     * @return builder
+     */
     public Builder withTagFieldDelimiter(CharSequence tagFieldDelimiter) {
       this.tagFieldDelimiter = tagFieldDelimiter;
       return this;
