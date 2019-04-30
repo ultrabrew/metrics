@@ -4,6 +4,9 @@
 
 package io.ultrabrew.metrics.data;
 
+import static io.ultrabrew.metrics.Metric.DEFAULT_CARDINALITY;
+import static io.ultrabrew.metrics.Metric.DEFAULT_MAX_CARDINALITY;
+
 import io.ultrabrew.metrics.Gauge;
 
 /**
@@ -20,43 +23,53 @@ import io.ultrabrew.metrics.Gauge;
  *
  * @see Gauge
  */
-public class BasicGaugeAggregator extends ConcurrentMonoidHashTable {
+public class BasicGaugeAggregator extends ConcurrentMonoidLongTable {
 
   private static final String[] FIELDS = {"count", "sum", "min", "max", "lastValue"};
   private static final Type[] TYPES = {Type.LONG, Type.LONG, Type.LONG, Type.LONG, Type.LONG};
   private static final long[] IDENTITY = {0L, 0L, Long.MAX_VALUE, Long.MIN_VALUE, 0L};
-  private static final int DEFAULT_CAPACITY = 128;
 
   /**
-   * Create a monoid for common aggregation functions for a Counter.
+   * Create a monoid for common aggregation functions for a Gauge.
+   *
+   * @param gauge metric
+   */
+  public BasicGaugeAggregator(final Gauge gauge) {
+    this(gauge.id, gauge.maxCardinality, gauge.cardinality);
+  }
+
+  /**
+   * Create a monoid for common aggregation functions for a Gauge.
    *
    * @param metricId identifier of the metric associated with this aggregator
    */
   public BasicGaugeAggregator(final String metricId) {
-    this(metricId, DEFAULT_CAPACITY);
+    this(metricId, DEFAULT_MAX_CARDINALITY);
   }
 
   /**
-   * Create a monoid for common aggregation functions for a Counter with requested capacity.
+   * Create a monoid for common aggregation functions for a Gauge with requested capacity.
    *
    * @param metricId identifier of the metric associated with this aggregator
-   * @param capacity requested capacity of table in records, actual capacity may be higher
+   * @param maxCardinality requested max capacity of table in records. Table doesn't grow beyond
+   * this
    */
-  public BasicGaugeAggregator(final String metricId, final int capacity) {
-    super(metricId, capacity, FIELDS, TYPES, IDENTITY);
+  public BasicGaugeAggregator(final String metricId, final int maxCardinality) {
+    this(metricId, maxCardinality, DEFAULT_CARDINALITY);
   }
 
   /**
-   * Create a monoid for common aggregation functions for a Counter with requested initial capacity
+   * Create a monoid for common aggregation functions for a Gauge with requested initial capacity
    * and max capacity.
    *
    * @param metricId identifier of the metric associated with this aggregator
-   * @param capacity requested capacity of table in records, actual capacity may be higher
-   * @param maxCapacity requested max capacity of table in records. Table doesn't grow beyond this
-   * value.
+   * @param maxCardinality requested max capacity of table in records. Table doesn't grow beyond
+   * this
+   * @param cardinality requested capacity of table in records, actual capacity may be higher
    */
-  public BasicGaugeAggregator(final String metricId, final int capacity, final int maxCapacity) {
-    super(metricId, capacity, FIELDS, TYPES, IDENTITY, maxCapacity);
+  public BasicGaugeAggregator(final String metricId, final int maxCardinality,
+      final int cardinality) {
+    super(metricId, maxCardinality, cardinality, FIELDS, TYPES, IDENTITY);
   }
 
   @Override

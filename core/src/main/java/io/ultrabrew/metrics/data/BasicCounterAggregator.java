@@ -4,6 +4,9 @@
 
 package io.ultrabrew.metrics.data;
 
+import static io.ultrabrew.metrics.Metric.DEFAULT_CARDINALITY;
+import static io.ultrabrew.metrics.Metric.DEFAULT_MAX_CARDINALITY;
+
 import io.ultrabrew.metrics.Counter;
 
 /**
@@ -16,12 +19,20 @@ import io.ultrabrew.metrics.Counter;
  *
  * @see Counter
  */
-public class BasicCounterAggregator extends ConcurrentMonoidHashTable {
+public class BasicCounterAggregator extends ConcurrentMonoidLongTable {
 
   private static final String[] FIELDS = {"sum"};
   private static final Type[] TYPES = {Type.LONG};
   private static final long[] IDENTITY = {0L};
-  private static final int DEFAULT_CAPACITY = 128;
+
+  /**
+   * Create a monoid for common aggregation functions for a Counter.
+   *
+   * @param counter metric
+   */
+  public BasicCounterAggregator(final Counter counter) {
+    this(counter.id, counter.maxCardinality, counter.cardinality);
+  }
 
   /**
    * Create a monoid for common aggregation functions for a Counter.
@@ -29,17 +40,18 @@ public class BasicCounterAggregator extends ConcurrentMonoidHashTable {
    * @param metricId identifier of the metric associated with this aggregator
    */
   public BasicCounterAggregator(final String metricId) {
-    this(metricId, DEFAULT_CAPACITY);
+    this(metricId, DEFAULT_MAX_CARDINALITY);
   }
 
   /**
    * Create a monoid for common aggregation functions for a Counter with requested capacity.
    *
    * @param metricId identifier of the metric associated with this aggregator
-   * @param capacity requested capacity of table in records, actual capacity may be higher
+   * @param maxCardinality requested max capacity of table in records. Table doesn't grow beyond
+   * this
    */
-  public BasicCounterAggregator(final String metricId, final int capacity) {
-    super(metricId, capacity, FIELDS, TYPES, IDENTITY);
+  public BasicCounterAggregator(final String metricId, final int maxCardinality) {
+    this(metricId, maxCardinality, DEFAULT_CARDINALITY);
   }
 
   /**
@@ -47,12 +59,13 @@ public class BasicCounterAggregator extends ConcurrentMonoidHashTable {
    * and max capacity.
    *
    * @param metricId identifier of the metric associated with this aggregator
-   * @param capacity requested capacity of table in records, actual capacity may be higher
-   * @param maxCapacity requested max capacity of table in records. Table doesn't grow beyond this
-   * value.
+   * @param maxCardinality requested max capacity of table in records. Table doesn't grow beyond
+   * this
+   * @param cardinality requested capacity of table in records, actual capacity may be higher
    */
-  public BasicCounterAggregator(final String metricId, final int capacity, final int maxCapacity) {
-    super(metricId, capacity, FIELDS, TYPES, IDENTITY, maxCapacity);
+  public BasicCounterAggregator(final String metricId, final int maxCardinality,
+      final int cardinality) {
+    super(metricId, maxCardinality, cardinality, FIELDS, TYPES, IDENTITY);
   }
 
   @Override

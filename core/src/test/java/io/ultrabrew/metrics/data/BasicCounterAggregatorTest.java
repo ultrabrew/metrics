@@ -4,6 +4,7 @@
 
 package io.ultrabrew.metrics.data;
 
+import static io.ultrabrew.metrics.Metric.DEFAULT_MAX_CARDINALITY;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -25,7 +26,7 @@ public class BasicCounterAggregatorTest {
 
   @Test
   public void testAggregation() {
-    final BasicCounterAggregator table = new BasicCounterAggregator("test", 10);
+    final BasicCounterAggregator table = new BasicCounterAggregator("test", DEFAULT_MAX_CARDINALITY, 10);
 
     table.apply(new String[]{"testTag", "value"}, 100L, CURRENT_TIME);
     table.apply(new String[]{"testTag", "value"}, 10L, CURRENT_TIME);
@@ -69,7 +70,7 @@ public class BasicCounterAggregatorTest {
 
   @Test
   public void testReadAndReset() {
-    final BasicCounterAggregator table = new BasicCounterAggregator("test", 10);
+    final BasicCounterAggregator table = new BasicCounterAggregator("test", DEFAULT_MAX_CARDINALITY, 10);
 
     table.apply(new String[]{"testTag", "value"}, 100L, CURRENT_TIME);
     table.apply(new String[]{"testTag", "value"}, 10L, CURRENT_TIME);
@@ -84,7 +85,7 @@ public class BasicCounterAggregatorTest {
 
   @Test
   public void testGrowTable() {
-    final BasicCounterAggregator aggregator = new BasicCounterAggregator("test", 2);
+    final BasicCounterAggregator aggregator = new BasicCounterAggregator("test", DEFAULT_MAX_CARDINALITY, 2);
     aggregator.apply(new String[]{}, 1L, CURRENT_TIME);
     aggregator.apply(new String[]{"testTag", "value"}, 1L, CURRENT_TIME);
     aggregator.apply(new String[]{"testTag", "value2"}, 1L, CURRENT_TIME);
@@ -100,7 +101,7 @@ public class BasicCounterAggregatorTest {
 
   @Test
   public void testGrowTableWithMaxCapacity() {
-    final BasicCounterAggregator aggregator = new BasicCounterAggregator("test", 1, 3);
+    final BasicCounterAggregator aggregator = new BasicCounterAggregator("test", 3, 1);
     aggregator.apply(new String[]{}, 1L, CURRENT_TIME);
     aggregator.apply(new String[]{"testTag", "value"}, 1L, CURRENT_TIME);
     aggregator.apply(new String[]{"testTag", "value2"}, 1L, CURRENT_TIME);
@@ -114,7 +115,7 @@ public class BasicCounterAggregatorTest {
 
   @Test
   public void mathAbsReturnsNegative() {
-    final BasicCounterAggregator aggregator = new BasicCounterAggregator("test", 3);
+    final BasicCounterAggregator aggregator = new BasicCounterAggregator("test", DEFAULT_MAX_CARDINALITY, 3);
     Deencapsulation.setField(aggregator, "capacity", Integer.MAX_VALUE);
     new Expectations(aggregator) {{
       aggregator.hashCode((String[]) any);
@@ -129,7 +130,7 @@ public class BasicCounterAggregatorTest {
     final int maxCapacity = 4096;
     int capacity = maxCapacity - 1;
 
-    final BasicCounterAggregator table = new BasicCounterAggregator("test", capacity);
+    final BasicCounterAggregator table = new BasicCounterAggregator("test", DEFAULT_MAX_CARDINALITY, capacity);
     String[][] tagSets = Deencapsulation.getField(table, "tagSets");
 
     assertEquals(capacity, table.capacity());
@@ -146,7 +147,7 @@ public class BasicCounterAggregatorTest {
   @Test
   public void growDataTable() {
     final int requestedCapacity = 128 * 2;
-    final BasicCounterAggregator table = new BasicCounterAggregator("test", requestedCapacity);
+    final BasicCounterAggregator table = new BasicCounterAggregator("test", DEFAULT_MAX_CARDINALITY, requestedCapacity);
 
     int capacity = table.capacity();
     assertEquals(requestedCapacity, capacity);
@@ -163,7 +164,7 @@ public class BasicCounterAggregatorTest {
   @Test
   public void growTagTable() {
     final int requestedCapacity = 128;
-    final BasicCounterAggregator table = new BasicCounterAggregator("test", requestedCapacity);
+    final BasicCounterAggregator table = new BasicCounterAggregator("test", DEFAULT_MAX_CARDINALITY, requestedCapacity);
 
     String[][] tagSets = Deencapsulation.getField(table, "tagSets");
     assertEquals(requestedCapacity, tagSets.length);
@@ -181,7 +182,7 @@ public class BasicCounterAggregatorTest {
   public void testTagsetsMaxSize() {
 
     final int maxCapacity = 4096;
-    final BasicCounterAggregator table = new BasicCounterAggregator("test", 128, maxCapacity);
+    final BasicCounterAggregator table = new BasicCounterAggregator("test", maxCapacity, 128);
 
     for (int i = 0; i < maxCapacity + 2; i++) {
       table.apply(new String[]{"testTag", String.valueOf(i)}, 1L, CURRENT_TIME);
@@ -220,7 +221,7 @@ public class BasicCounterAggregatorTest {
 
   @Test
   public void testReadLongInvalidFieldIndex() {
-    final BasicCounterAggregator table = new BasicCounterAggregator("test", 2);
+    final BasicCounterAggregator table = new BasicCounterAggregator("test", DEFAULT_MAX_CARDINALITY, 2);
     table.apply(new String[]{}, 1L, CURRENT_TIME);
     final Cursor cursor = table.cursor();
     assertTrue(cursor.next());
@@ -229,7 +230,7 @@ public class BasicCounterAggregatorTest {
 
   @Test
   public void testReadLongInvalidCursorIndex() {
-    final BasicCounterAggregator table = new BasicCounterAggregator("test", 2);
+    final BasicCounterAggregator table = new BasicCounterAggregator("test", DEFAULT_MAX_CARDINALITY, 2);
     table.apply(new String[]{}, 1L, CURRENT_TIME);
     final Cursor cursor = table.cursor();
     assertThrows(IndexOutOfBoundsException.class, () -> cursor.readLong(0));
@@ -237,7 +238,7 @@ public class BasicCounterAggregatorTest {
 
   @Test
   public void testReadAndResetLongInvalidFieldIndex() {
-    final BasicCounterAggregator table = new BasicCounterAggregator("test", 2);
+    final BasicCounterAggregator table = new BasicCounterAggregator("test", DEFAULT_MAX_CARDINALITY, 2);
     table.apply(new String[]{}, 1L, CURRENT_TIME);
     final Cursor cursor = table.cursor();
     assertTrue(cursor.next());
@@ -247,7 +248,7 @@ public class BasicCounterAggregatorTest {
 
   @Test
   public void testReadAndResetLongInvalidCursorIndex() {
-    final BasicCounterAggregator table = new BasicCounterAggregator("test", 2);
+    final BasicCounterAggregator table = new BasicCounterAggregator("test", DEFAULT_MAX_CARDINALITY,2);
     table.apply(new String[]{}, 1L, CURRENT_TIME);
     final Cursor cursor = table.cursor();
     assertThrows(IndexOutOfBoundsException.class, () -> cursor.readAndResetLong(0));
@@ -255,7 +256,7 @@ public class BasicCounterAggregatorTest {
 
   @Test
   public void testGetTagsInvalidCursorIndex() {
-    final BasicCounterAggregator table = new BasicCounterAggregator("test", 2);
+    final BasicCounterAggregator table = new BasicCounterAggregator("test", DEFAULT_MAX_CARDINALITY, 2);
     table.apply(new String[]{}, 1L, CURRENT_TIME);
     final Cursor cursor = table.cursor();
     assertThrows(IndexOutOfBoundsException.class, cursor::getTags);
@@ -263,7 +264,7 @@ public class BasicCounterAggregatorTest {
 
   @Test
   public void testLastUpdatedInvalidCursorIndex() {
-    final BasicCounterAggregator table = new BasicCounterAggregator("test", 2);
+    final BasicCounterAggregator table = new BasicCounterAggregator("test", DEFAULT_MAX_CARDINALITY, 2);
     table.apply(new String[]{}, 1L, CURRENT_TIME);
     final Cursor cursor = table.cursor();
     assertThrows(IndexOutOfBoundsException.class, cursor::lastUpdated);
@@ -272,7 +273,7 @@ public class BasicCounterAggregatorTest {
   @Test
   public void tableGrowthIsSynchronized() throws InterruptedException {
 
-    final BasicCounterAggregator aggregator = new BasicCounterAggregator("test", 2);
+    final BasicCounterAggregator aggregator = new BasicCounterAggregator("test", DEFAULT_MAX_CARDINALITY, 2);
     aggregator.apply(new String[]{}, 1L, CURRENT_TIME);
     aggregator.apply(new String[]{"testTag", "value"}, 1L, CURRENT_TIME);
 
@@ -313,7 +314,8 @@ public class BasicCounterAggregatorTest {
 
     int requestedCapacity = 128;
     int maxCapacity = requestedCapacity * 2;
-    final BasicCounterAggregator aggregator = new BasicCounterAggregator("test", requestedCapacity, maxCapacity);
+    final BasicCounterAggregator aggregator = new BasicCounterAggregator("test", maxCapacity,
+        requestedCapacity);
 
     for (int i = 0; i < requestedCapacity; i++) {
       aggregator.apply(new String[]{"testTag", String.valueOf(i)}, 1L, CURRENT_TIME);
@@ -355,7 +357,8 @@ public class BasicCounterAggregatorTest {
   public void tagTableGrowthIsSynchronized() throws InterruptedException {
 
     int requestedCapacity = 131072;
-    final BasicCounterAggregator aggregator = new BasicCounterAggregator("test", requestedCapacity, 1_048_576);
+    final BasicCounterAggregator aggregator = new BasicCounterAggregator("test", 1_048_576,
+        requestedCapacity);
 
     for (int i = 0; i < requestedCapacity * 2; i++) {
       aggregator.apply(new String[]{"testTag", String.valueOf(i)}, 1L, CURRENT_TIME);
@@ -394,7 +397,7 @@ public class BasicCounterAggregatorTest {
   @Test
   public void testConcurrentSlotReservation() throws InterruptedException {
 
-    final BasicCounterAggregator table = new BasicCounterAggregator("test", 5);
+    final BasicCounterAggregator table = new BasicCounterAggregator("test", DEFAULT_MAX_CARDINALITY, 5);
 
     Thread t1 = new Thread(() -> {
 
@@ -430,7 +433,7 @@ public class BasicCounterAggregatorTest {
   @Test
   public void createWithSizeZero() {
 
-    final BasicCounterAggregator table = new BasicCounterAggregator("test", 0);
+    final BasicCounterAggregator table = new BasicCounterAggregator("test", DEFAULT_MAX_CARDINALITY, 0);
     assertNotNull(table);
     assertEquals(16, table.capacity());
 
@@ -442,13 +445,13 @@ public class BasicCounterAggregatorTest {
 
   @Test
   public void createWithNegativeSize() {
-    assertThrows(IllegalArgumentException.class, () -> new BasicCounterAggregator("test", -1));
+    assertThrows(IllegalArgumentException.class, () -> new BasicCounterAggregator("test", DEFAULT_MAX_CARDINALITY, -1));
   }
 
   @Test
   public void readsFromNextTableWhenCurrentSlotIsEmpty() {
 
-    final BasicCounterAggregator table = new BasicCounterAggregator("test", 3);
+    final BasicCounterAggregator table = new BasicCounterAggregator("test", DEFAULT_MAX_CARDINALITY, 3);
     String[] tagSet1 = new String[]{"key1", "value1"};
     String[] tagSet2 = new String[]{"key2", "value2"};
     String[] tagSet3 = new String[]{"key3", "value3"};
@@ -480,7 +483,7 @@ public class BasicCounterAggregatorTest {
 
   @Test
   public void readingByInvalidTagSets() {
-    final BasicCounterAggregator table = new BasicCounterAggregator("test", 3);
+    final BasicCounterAggregator table = new BasicCounterAggregator("test", DEFAULT_MAX_CARDINALITY, 3);
     String[] tagSet1 = new String[]{"key1", "value1"};
     String[] tagSet2 = new String[]{"key2", "value2"};
 
@@ -490,5 +493,13 @@ public class BasicCounterAggregatorTest {
     Deencapsulation.setField(cursor, "tagSets", new String[][]{tagSet2});
 
     assertFalse(cursor.next());
+  }
+
+  @Test
+  void testDefaultCardinality() {
+    BasicCounterAggregator aggregator = new BasicCounterAggregator("test");
+    int maxCapacity = Deencapsulation.getField(aggregator, "maxCapacity");
+    assertEquals(128, aggregator.capacity());
+    assertEquals(4096, maxCapacity);
   }
 }

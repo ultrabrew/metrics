@@ -4,6 +4,7 @@
 
 package io.ultrabrew.metrics.data;
 
+import static io.ultrabrew.metrics.Metric.DEFAULT_MAX_CARDINALITY;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.junit.jupiter.api.Test;
@@ -15,7 +16,7 @@ public class TypeTest {
   @Test
   public void readAndResetLong() {
 
-    final BasicCounterAggregator table = new BasicCounterAggregator("test", 10);
+    final BasicCounterAggregator table = new BasicCounterAggregator("test", DEFAULT_MAX_CARDINALITY, 10);
 
     table.apply(new String[]{"testTag", "value"}, 100L, CURRENT_TIME);
     table.apply(new String[]{"testTag", "value"}, 10L, CURRENT_TIME);

@@ -39,16 +39,14 @@ import sun.misc.Unsafe;
  *
  * <p>All implementing classes <b>MUST</b> be thread-safe.</p>
  */
-public abstract class ConcurrentMonoidHashTable implements Aggregator {
+public abstract class ConcurrentMonoidLongTable implements Aggregator {
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(ConcurrentMonoidHashTable.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(ConcurrentMonoidLongTable.class);
 
   /**
    * Unsafe class for atomic operations on the hash table.
    */
   private static final Unsafe unsafe = UnsafeHelper.unsafe;
-
-  private static final int DEFAULT_MAX_CAPACITY = 4096; //4k
 
   private static final int TAGSETS_MAX_INCREMENT = 131072; // 128k
 
@@ -72,7 +70,7 @@ public abstract class ConcurrentMonoidHashTable implements Aggregator {
   static {
     try {
       usedOffset = unsafe
-          .objectFieldOffset(ConcurrentMonoidHashTable.class.getDeclaredField("used"));
+          .objectFieldOffset(ConcurrentMonoidLongTable.class.getDeclaredField("used"));
     } catch (NoSuchFieldException e) {
       throw new Error(e);
     }
@@ -120,30 +118,17 @@ public abstract class ConcurrentMonoidHashTable implements Aggregator {
 
   /**
    * Create a simple linear probing hash table for a monoid operation.
-   *
-   * @param metricId identifier of the metric
-   * @param initialCapacity requested capacity of table in records, actual capacity may be higher
-   * @param fields sorted array of field names used in reporting
-   * @param types type of each corresponding field
-   * @param identity monoid's identity, where each value is corresponding to the given fields names
-   */
-  protected ConcurrentMonoidHashTable(final String metricId, final int initialCapacity,
-      final String[] fields, final Type[] types, final long[] identity) {
-    this(metricId, initialCapacity, fields, types, identity, DEFAULT_MAX_CAPACITY);
-  }
-
-  /**
-   * @param metricId identifier of the metric
+   *  @param metricId identifier of the metric
+   * @param maxCapacity maximum capacity of table in records.
    * @param initialCapacity requested capacity of table in records
    * @param fields sorted array of field names used in reporting
    * @param types type of each corresponding field
    * @param identity monoid's identity, where each value is corresponding to the given fields names
-   * @param maxCapacity maximum capacity of table in records.
    */
-  protected ConcurrentMonoidHashTable(final String metricId, int initialCapacity,
-      final String[] fields, final Type[] types, final long[] identity, final int maxCapacity) {
+  protected ConcurrentMonoidLongTable(final String metricId, final int maxCapacity,
+      int initialCapacity, final String[] fields, final Type[] types, final long[] identity) {
 
-    if (fields.length != identity.length || fields.length == 0) {
+    if (fields.length == 0 || fields.length != identity.length) {
       throw new IllegalArgumentException(
           "Fields and Identity must match in length and be non-zero");
     }

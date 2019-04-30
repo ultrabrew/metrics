@@ -4,12 +4,14 @@
 
 package io.ultrabrew.metrics.data;
 
+import static io.ultrabrew.metrics.Metric.DEFAULT_MAX_CARDINALITY;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 import java.util.Arrays;
+import mockit.Deencapsulation;
 import org.junit.jupiter.api.Test;
 
 public class BasicGaugeAggregatorTest {
@@ -18,7 +20,7 @@ public class BasicGaugeAggregatorTest {
 
   @Test
   public void testAggregation() {
-    final BasicGaugeAggregator table = new BasicGaugeAggregator("test", 10);
+    final BasicGaugeAggregator table = new BasicGaugeAggregator("test", DEFAULT_MAX_CARDINALITY, 10);
 
     table.apply(new String[]{"testTag", "value"}, 100L, CURRENT_TIME);
     table.apply(new String[]{"testTag", "value"}, 10L, CURRENT_TIME);
@@ -78,7 +80,7 @@ public class BasicGaugeAggregatorTest {
 
   @Test
   public void testReadAndReset() {
-    final BasicGaugeAggregator table = new BasicGaugeAggregator("test", 10);
+    final BasicGaugeAggregator table = new BasicGaugeAggregator("test", DEFAULT_MAX_CARDINALITY, 10);
 
     table.apply(new String[]{"testTag", "value"}, 100L, CURRENT_TIME);
     table.apply(new String[]{"testTag", "value"}, 10L, CURRENT_TIME);
@@ -101,7 +103,7 @@ public class BasicGaugeAggregatorTest {
 
   @Test
   public void testGrowTableWithMaxCapacity() {
-    final BasicGaugeAggregator aggregator = new BasicGaugeAggregator("test", 1, 3);
+    final BasicGaugeAggregator aggregator = new BasicGaugeAggregator("test", 3, 1);
     aggregator.apply(new String[]{}, 1L, CURRENT_TIME);
     aggregator.apply(new String[]{"testTag", "value"}, 1L, CURRENT_TIME);
     aggregator.apply(new String[]{"testTag", "value2"}, 1L, CURRENT_TIME);
@@ -111,5 +113,13 @@ public class BasicGaugeAggregatorTest {
 
     assertEquals(3, aggregator.size());
     assertEquals(3, aggregator.capacity()); // caped at the max capacity.
+  }
+
+  @Test
+  void testDefaultCardinality() {
+    BasicGaugeAggregator aggregator = new BasicGaugeAggregator("test");
+    int maxCapacity = Deencapsulation.getField(aggregator, "maxCapacity");
+    assertEquals(128, aggregator.capacity());
+    assertEquals(4096, maxCapacity);
   }
 }

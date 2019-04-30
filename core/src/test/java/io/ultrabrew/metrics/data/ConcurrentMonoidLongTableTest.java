@@ -8,13 +8,13 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import org.junit.jupiter.api.Test;
 
-public class ConcurrentMonoidHashTableTest {
+public class ConcurrentMonoidLongTableTest {
 
   @Test
   public void testNotMatchingFieldsAndIdentity() {
-    assertThrows(IllegalArgumentException.class, () -> new ConcurrentMonoidHashTable(
+    assertThrows(IllegalArgumentException.class, () -> new ConcurrentMonoidLongTable(
         "test",
-        128,
+        4096, 128,
         new String[]{"test"},
         new Type[]{Type.LONG},
         new long[]{0L, 1L}) {
