@@ -116,7 +116,7 @@ repositories {
 }
 
 dependencies {
-  compile group: 'io.ultrabrew.metrics', name: 'metrics-{your reporter}', version: '0.1.0'
+  compile group: 'io.ultrabrew.metrics', name: 'metrics-{your reporter}', version: '0.3.0'
 }
 ```
 
@@ -135,7 +135,7 @@ dependencies {
    <dependency>
      <groupId>io.ultrabrew.metrics</groupId>
      <artifactId>metrics-{your reporter}</artifactId>
-     <version>0.1.0</version>
+     <version>0.3.0</version>
    </dependency>
 </dependencies>
 ```
@@ -284,7 +284,7 @@ An example how to attach a SLF4JReporter to the metric registry, and configure i
 SLF4J Logger.
 
 ```java
-  SLF4JReporter reporter = new SLF4JReporter("metrics");
+  SLF4JReporter reporter = SLF4JReporter.builder().withName("metrics").build();
   metricRegistry.addReporter(reporter);
 ```
 
