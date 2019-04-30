@@ -5,6 +5,7 @@
 package io.ultrabrew.metrics.data;
 
 import java.util.function.Predicate;
+import java.util.Arrays;
 
 /**
  * A distribution bucket specification used for histograms. A distribution bucket is an sorted array
@@ -53,8 +54,45 @@ public class DistributionBucket {
     return buckets.length + 1; // includes the underflow and overflow buckets
   }
 
+  /**
+   * retrieves the corresponding bucket index for a given measurement value.
+   *
+   * <p>It searches the array of buckets for a specified value using the binary search
+   * algorithm. The implementation of the algorithm is slightly different from {@link Arrays#binarySearch(long[],
+   * long)} as each element in the array represents a range of values. So, it has to do a range
+   * check instead of the equality check.
+   *
+   * @param value measurement value
+   * @return bucket index
+   */
   public int getBucketIndex(long value) {
-    return binarySearch(value);
+
+    int low = 0;
+    int high = buckets.length - 1;
+
+    long minVal = buckets[low];
+    long maxVal = buckets[high];
+
+    if (value >= maxVal) {
+      return high; // overflow
+    }
+    if (value < minVal) {
+      return high + 1; // underflow
+    }
+
+    while (low < high) {
+      int mid = (low + high) >>> 1;
+      long midVal = buckets[mid];
+      long nextToMidVal = buckets[mid + 1];
+      if (midVal <= value && value < nextToMidVal) {
+        return mid;
+      } else if (value < midVal) {
+        high = mid - 1;
+      } else {
+        low = mid + 1;
+      }
+    }
+    return low;
   }
 
   /**
@@ -82,42 +120,6 @@ public class DistributionBucket {
     names[i++] = OVERFLOW;
     names[i++] = UNDERFLOW;
     return names;
-  }
-
-  /**
-   * retrieves the corresponding bucket index for a given measurement value.
-   *
-   * @param key measurement value
-   * @return bucket index
-   */
-  private int binarySearch(final long key) {
-
-    int low = 0;
-    int high = buckets.length - 1;
-
-    long minVal = buckets[low];
-    long maxVal = buckets[high];
-
-    if (key >= maxVal) {
-      return high; // overflow
-    }
-    if (key < minVal) {
-      return high + 1; // underflow
-    }
-
-    while (low < high) {
-      int mid = (low + high) >>> 1;
-      long midVal = buckets[mid];
-      long nextToMidVal = buckets[mid + 1];
-      if (midVal <= key && key < nextToMidVal) {
-        return mid;
-      } else if (key < midVal) {
-        high = mid - 1;
-      } else {
-        low = mid + 1;
-      }
-    }
-    return low;
   }
 
   private static boolean isSorted(final long[] buckets) {

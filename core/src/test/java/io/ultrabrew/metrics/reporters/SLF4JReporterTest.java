@@ -8,6 +8,7 @@ import static io.ultrabrew.metrics.reporters.AggregatingReporter.DEFAULT_AGGREGA
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import io.ultrabrew.metrics.Counter;
 import io.ultrabrew.metrics.Gauge;
@@ -54,7 +55,7 @@ public class SLF4JReporterTest {
   @Test
   public void testReport(@Injectable Logger logger) throws InterruptedException {
 
-    reporter = new SLF4JReporter("testReport", 1);
+    reporter = SLF4JReporter.builder().withName("testReport").withStepSize(1).build();
     Deencapsulation.setField(reporter, "reporter", logger);
     MetricRegistry metricRegistry = new MetricRegistry();
     metricRegistry.addReporter(reporter);
@@ -155,9 +156,16 @@ public class SLF4JReporterTest {
   }
 
   @Test
+  void testInvalidName() {
+    assertThrows(IllegalArgumentException.class, () -> SLF4JReporter.builder().build());
+    assertThrows(
+        IllegalArgumentException.class, () -> SLF4JReporter.builder().withName("").build());
+  }
+
+  @Test
   public void testUnknownMetric(@Injectable Logger logger) throws InterruptedException {
 
-    reporter = new SLF4JReporter("testUnknownMetric");
+    reporter = SLF4JReporter.builder().withName("testUnknownMetric").build();
     Deencapsulation.setField(reporter, "reporter", logger);
     MetricRegistry metricRegistry = new MetricRegistry();
     metricRegistry.addReporter(reporter);
@@ -184,8 +192,7 @@ public class SLF4JReporterTest {
       cursor.lastUpdated();
       returns(System.currentTimeMillis() + 2000L, 0L);
     }};
-
-    reporter = new SLF4JReporter("testNoFields", 1);
+    reporter = SLF4JReporter.builder().withName("testNoFields").withStepSize(1).build();
     Deencapsulation.setField(reporter, "reporter", logger);
     MetricRegistry metricRegistry = new MetricRegistry();
     metricRegistry.addReporter(reporter);
@@ -208,7 +215,7 @@ public class SLF4JReporterTest {
   @Test
   public void testUnchangedNotReported(@Injectable final Logger logger)
       throws InterruptedException {
-    reporter = new SLF4JReporter("testNoInstrumentation", 1);
+    reporter = SLF4JReporter.builder().withName("testNoInstrumentation").withStepSize(1).build();
     Deencapsulation.setField(reporter, "reporter", logger);
     MetricRegistry metricRegistry = new MetricRegistry();
     metricRegistry.addReporter(reporter);
@@ -230,7 +237,7 @@ public class SLF4JReporterTest {
   @Test
   public void testNullTags(@Injectable Logger logger) throws InterruptedException {
 
-    reporter = new SLF4JReporter("testNullTags", 1);
+    reporter = SLF4JReporter.builder().withName("testNullTags").withStepSize(1).build();
     Deencapsulation.setField(reporter, "reporter", logger);
     MetricRegistry metricRegistry = new MetricRegistry();
     metricRegistry.addReporter(reporter);
@@ -257,8 +264,7 @@ public class SLF4JReporterTest {
 
   @Test
   public void testGaugeDouble(@Injectable Logger logger) throws InterruptedException {
-
-    reporter = new SLF4JReporter("testGaugeDouble", 1);
+    reporter = SLF4JReporter.builder().withName("testGaugeDouble").withStepSize(1).build();
     Deencapsulation.setField(reporter, "reporter", logger);
     MetricRegistry metricRegistry = new MetricRegistry();
     metricRegistry.addReporter(reporter);

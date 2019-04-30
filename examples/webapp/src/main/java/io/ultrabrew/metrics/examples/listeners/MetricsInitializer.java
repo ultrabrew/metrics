@@ -1,5 +1,6 @@
 package io.ultrabrew.metrics.examples.listeners;
 
+import io.ultrabrew.metrics.Reporter;
 import io.ultrabrew.metrics.examples.MyApp;
 import io.ultrabrew.metrics.reporters.SLF4JReporter;
 import javax.servlet.ServletContextEvent;
@@ -18,7 +19,7 @@ public class MetricsInitializer implements ServletContextListener {
   public void contextInitialized(ServletContextEvent sce) {
     // Create a reporter and add it to the registry.
     // For demo purposes we use SLF4JReporter which should not be used for production systems
-    SLF4JReporter reporter = new SLF4JReporter("example", 10);
+    SLF4JReporter reporter = SLF4JReporter.builder().withName("example").withStepSize(10).build();
     MyApp.metricRegistry.addReporter(reporter);
     sce.getServletContext().setAttribute(REPORTER_ATTRIBUTE, reporter);
   }

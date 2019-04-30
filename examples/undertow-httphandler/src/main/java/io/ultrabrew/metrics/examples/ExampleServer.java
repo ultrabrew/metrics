@@ -6,12 +6,8 @@ import io.ultrabrew.metrics.examples.handlers.HelloWorldHandler;
 import io.ultrabrew.metrics.examples.handlers.MetricsHandler;
 import io.ultrabrew.metrics.reporters.SLF4JReporter;
 import io.undertow.Undertow;
-import io.undertow.predicate.Predicates;
 import io.undertow.server.HttpHandler;
 import io.undertow.server.handlers.PathHandler;
-import io.undertow.server.handlers.PredicateHandler;
-import io.undertow.server.handlers.ResponseCodeHandler;
-import io.undertow.server.handlers.error.SimpleErrorPageHandler;
 
 public class ExampleServer {
 
@@ -20,7 +16,7 @@ public class ExampleServer {
   public static void main(String... args) {
     // Create a reporter and add it to the registry.
     // For demo purposes we use SLF4JReporter which should not be used for production systems
-    Reporter reporter = new SLF4JReporter("example", 10);
+    Reporter reporter = SLF4JReporter.builder().withName("example").withStepSize(10).build();
     metricRegistry.addReporter(reporter);
 
     // Create the handler chain

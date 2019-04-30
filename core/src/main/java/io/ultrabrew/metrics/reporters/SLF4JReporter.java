@@ -47,61 +47,6 @@ public class SLF4JReporter extends TimeWindowReporter {
   private CharSequence tagFieldDelimiter;
   private long lastSeenTimestamp;
 
-  /**
-   * Create a SLF4J Logger reporter.
-   *
-   * @param name name of the logger
-   */
-  public SLF4JReporter(final String name) {
-    this(name, DEFAULT_WINDOW_STEP_SIZE_SEC);
-  }
-
-  /**
-   * Create a SLF4J Logger reporter with a custom window size
-   *
-   * @param name name of the logger.
-   * @param windowSizeSeconds window size in seconds
-   */
-  public SLF4JReporter(final String name, final int windowSizeSeconds) {
-    this(name, DEFAULT_TAG_DELIMITER, DEFAULT_FIELD_DELIMITER, DEFAULT_TAGFIELD_DELIMITER,
-        windowSizeSeconds);
-  }
-
-  /**
-   * Create a SLF4J Logger reporter with given delimiters.
-   *
-   * @param name name of the logger
-   * @param tagDelimiter delimiter to be used to join tag key-value pairs
-   * @param fieldDelimiter delimiter to be used to join field name-value pairs
-   * @param tagFieldDelimiter delimiter to be used to separate tags and fields
-   * @param windowSizeSeconds window size in seconds
-   */
-  public SLF4JReporter(final String name, final CharSequence tagDelimiter,
-      final CharSequence fieldDelimiter,
-      final CharSequence tagFieldDelimiter, final int windowSizeSeconds) {
-
-    this(name, tagDelimiter, fieldDelimiter, tagFieldDelimiter, windowSizeSeconds,
-        DEFAULT_AGGREGATORS);
-  }
-
-  /**
-   * Create a SLF4J Logger reporter with given delimiters.
-   *
-   * @param name name of the logger
-   * @param tagDelimiter delimiter to be used to join tag key-value pairs
-   * @param fieldDelimiter delimiter to be used to join field name-value pairs
-   * @param tagFieldDelimiter delimiter to be used to separate tags and fields
-   * @param windowSizeSeconds window size in seconds
-   * @param defaultAggregators a map of a metric class to a supplier creating a new aggregator
-   */
-  public SLF4JReporter(final String name, final CharSequence tagDelimiter,
-      final CharSequence fieldDelimiter,
-      final CharSequence tagFieldDelimiter, final int windowSizeSeconds,
-      final Map<Class<? extends Metric>, Function<Metric, ? extends Aggregator>> defaultAggregators) {
-
-    this(name, tagDelimiter, fieldDelimiter, tagFieldDelimiter, windowSizeSeconds,
-        defaultAggregators, Collections.EMPTY_MAP);
-  }
 
   /**
    * Create a SLF4J Logger reporter with given delimiters.
@@ -115,7 +60,7 @@ public class SLF4JReporter extends TimeWindowReporter {
    * @param metricAggregators a map of a metric identifier to a supplier creating a new aggregator
    * instance
    */
-  public SLF4JReporter(final String name, final CharSequence tagDelimiter,
+  private SLF4JReporter(final String name, final CharSequence tagDelimiter,
       final CharSequence fieldDelimiter,
       final CharSequence tagFieldDelimiter, final int windowSizeSeconds,
       final Map<Class<? extends Metric>, Function<Metric, ? extends Aggregator>> defaultAggregators,
@@ -264,6 +209,9 @@ public class SLF4JReporter extends TimeWindowReporter {
 
     @Override
     public SLF4JReporter build() {
+      if (name == null || name.isEmpty()) {
+        throw new IllegalArgumentException("Logger name is required");
+      }
       return new SLF4JReporter(name, tagDelimiter, fieldDelimiter, tagFieldDelimiter,
           windowStepSize, defaultAggregators, metricAggregators);
     }
