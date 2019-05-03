@@ -4,6 +4,8 @@
 
 package io.ultrabrew.metrics;
 
+import static io.ultrabrew.metrics.Metric.DEFAULT_MAX_CARDINALITY;
+
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 import java.util.Map;
@@ -44,7 +46,21 @@ public class MetricRegistry {
    * exists
    */
   public Counter counter(final String id) {
-    return getOrCreate(id, Counter.class);
+    return counter(id, DEFAULT_MAX_CARDINALITY);
+  }
+
+  /**
+   * Return the {@link Counter} registered under this id; or create and register a new {@link
+   * Counter}.
+   *
+   * @param id identifier of the measurement
+   * @param maxCardinality new dimensions will dropped beyond this value
+   * @return a new or pre-existing {@link Counter}
+   * @throws IllegalStateException measurement with different type, but same identifier already
+   * exists
+   */
+  public Counter counter(final String id, final int maxCardinality) {
+    return getOrCreate(id, Counter.class, maxCardinality);
   }
 
   /**
@@ -56,7 +72,20 @@ public class MetricRegistry {
    * exists
    */
   public Gauge gauge(final String id) {
-    return getOrCreate(id, Gauge.class);
+    return gauge(id, DEFAULT_MAX_CARDINALITY);
+  }
+
+  /**
+   * Return the {@link Gauge} registered under this id; or create and register a new {@link Gauge}.
+   *
+   * @param id identifier of the measurement
+   * @param maxCardinality new dimensions will dropped beyond this value
+   * @return a new or pre-existing {@link Gauge}
+   * @throws IllegalStateException measurement with different type, but same identifier already
+   * exists
+   */
+  public Gauge gauge(final String id, final int maxCardinality) {
+    return getOrCreate(id, Gauge.class, maxCardinality);
   }
 
   /**
@@ -69,7 +98,21 @@ public class MetricRegistry {
    * exists
    */
   public GaugeDouble gaugeDouble(final String id) {
-    return getOrCreate(id, GaugeDouble.class);
+    return gaugeDouble(id, DEFAULT_MAX_CARDINALITY);
+  }
+
+  /**
+   * Return the {@link GaugeDouble} registered under this id; or create and register a new {@link
+   * GaugeDouble}.
+   *
+   * @param id identifier of the measurement
+   * @param maxCardinality new dimensions will dropped beyond this value
+   * @return a new or pre-existing {@link GaugeDouble}
+   * @throws IllegalStateException measurement with different type, but same identifier already
+   * exists
+   */
+  public GaugeDouble gaugeDouble(final String id, final int maxCardinality) {
+    return getOrCreate(id, GaugeDouble.class, maxCardinality);
   }
 
   /**
@@ -81,7 +124,20 @@ public class MetricRegistry {
    * exists
    */
   public Timer timer(final String id) {
-    return getOrCreate(id, Timer.class);
+    return timer(id, DEFAULT_MAX_CARDINALITY);
+  }
+
+  /**
+   * Return the {@link Timer} registered under this id; or create and register a new {@link Timer}.
+   *
+   * @param id identifier of the measurement
+   * @param maxCardinality new dimensions will dropped beyond this value
+   * @return a new or pre-existing {@link Timer}
+   * @throws IllegalStateException measurement with different type, but same identifier already
+   * exists
+   */
+  public Timer timer(final String id, final int maxCardinality) {
+    return getOrCreate(id, Timer.class, maxCardinality);
   }
 
   /**
@@ -97,7 +153,24 @@ public class MetricRegistry {
    * exists
    */
   public <T extends Metric> T custom(final String id, final Class<T> klass) {
-    return getOrCreate(id, klass);
+    return custom(id, klass, DEFAULT_MAX_CARDINALITY);
+  }
+
+  /**
+   * Return a custom measurement registered under this id; or create and register a new custom
+   * measurement of given class. The class must have an accessible constructor that takes
+   * MetricRegistry and String as parameters.
+   *
+   * @param id identifier of the measurement
+   * @param klass custom measurement class extending Metric
+   * @param maxCardinality new dimensions will dropped beyond this value
+   * @param <T> custom measurement class extending Metric
+   * @return a new or pre-existing custom measurement
+   * @throws IllegalStateException measurement with different type, but same identifier already
+   * exists
+   */
+  public <T extends Metric> T custom(final String id, final Class<T> klass, final int maxCardinality) {
+    return getOrCreate(id, klass, maxCardinality);
   }
 
   /**
@@ -109,7 +182,7 @@ public class MetricRegistry {
     reporters.add(reporter);
   }
 
-  private <T extends Metric> T getOrCreate(final String id, final Class<T> klass) {
+  private <T extends Metric> T getOrCreate(final String id, final Class<T> klass, final int maxCardinality) {
     Metric m = measurements.get(id);
     if (m != null) {
       return tryCast(klass, m);
@@ -120,8 +193,8 @@ public class MetricRegistry {
         return tryCast(klass, m);
       }
       try {
-        T instance = klass.getDeclaredConstructor(MetricRegistry.class, String.class)
-            .newInstance(this, id);
+        T instance = klass.getDeclaredConstructor(MetricRegistry.class, String.class, int.class)
+            .newInstance(this, id, maxCardinality);
         measurements.put(id, instance);
         return instance;
       } catch (InstantiationException | IllegalAccessException | InvocationTargetException |

@@ -41,8 +41,8 @@ package io.ultrabrew.metrics;
  */
 public class Timer extends Metric {
 
-  Timer(final MetricRegistry registry, final String id) {
-    super(registry, id);
+  Timer(final MetricRegistry registry, final String id, final int maxCardinality) {
+    super(registry, id, maxCardinality);
   }
 
   /**
