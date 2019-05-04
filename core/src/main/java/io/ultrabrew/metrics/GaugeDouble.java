@@ -31,8 +31,8 @@ package io.ultrabrew.metrics;
  */
 public class GaugeDouble extends Metric {
 
-  GaugeDouble(final MetricRegistry registry, final String id) {
-    super(registry, id);
+  GaugeDouble(final MetricRegistry registry, final String id, final int maxCardinality) {
+    super(registry, id, maxCardinality);
   }
 
   /**

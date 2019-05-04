@@ -34,8 +34,8 @@ package io.ultrabrew.metrics;
  */
 public class Counter extends Metric {
 
-  Counter(final MetricRegistry registry, final String id) {
-    super(registry, id);
+  Counter(final MetricRegistry registry, final String id, final int maxCardinality) {
+    super(registry, id, maxCardinality);
   }
 
   /**

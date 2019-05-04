@@ -43,8 +43,8 @@ public class SLF4JReporterTest {
 
   public static class TestMetric extends Metric {
 
-    public TestMetric(final MetricRegistry metricRegistry, final String name) {
-      super(metricRegistry, name);
+    public TestMetric(final MetricRegistry metricRegistry, final String name, final int maxCardinality) {
+      super(metricRegistry, name, maxCardinality);
     }
 
     public void send(final long value, final String... tags) {

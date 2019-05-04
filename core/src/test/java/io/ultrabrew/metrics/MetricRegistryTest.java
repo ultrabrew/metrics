@@ -72,7 +72,7 @@ public class MetricRegistryTest {
         Thread.sleep(10);
       }
 
-      measurements.put("test", new Counter(metricRegistry, "test"));
+      measurements.put("test", new Counter(metricRegistry, "test", Metric.DEFAULT_MAX_CARDINALITY));
     }
 
     synchronized (completed) {
