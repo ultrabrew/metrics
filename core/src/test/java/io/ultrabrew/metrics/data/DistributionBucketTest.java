@@ -4,11 +4,14 @@
 
 package io.ultrabrew.metrics.data;
 
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.NANOSECONDS;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -88,4 +91,21 @@ public class DistributionBucketTest {
     assertThrows(IllegalArgumentException.class, () -> new DistributionBucket(invalidBuckets),
         "Bucket should not have duplicate entries");
   }
+
+  @Test
+  void testBucketNamesInMillieAndValuesInNanoSeconds() {
+    DistributionBucket bucket =
+        new DistributionBucket(
+            new long[] {
+              MILLISECONDS.toNanos(0),
+              MILLISECONDS.toNanos(10),
+              MILLISECONDS.toNanos(50),
+              MILLISECONDS.toNanos(100),
+              MILLISECONDS.toNanos(1000)
+            },
+            (v) -> Long.toString(NANOSECONDS.toMillis(v)));
+    String[] expected = {"0_10", "10_50", "50_100", "100_1000", "overflow", "underflow"};
+    assertArrayEquals(expected, bucket.getBucketNames());
+  }
+
 }
