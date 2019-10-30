@@ -99,12 +99,6 @@ public class ComparativeTagsBenchmark {
         "opencensus/gauge",
         "A gauge for benchmarking purposes",
         "1");
-    opencensusCounterSum = io.opencensus.stats.View.create(
-        io.opencensus.stats.View.Name.create("opencensus/counter/sum"),
-        "A gauge sum for benchmarking purposes",
-        opencensusCounterMeasure,
-        opencensusSumAggregator,
-        Collections.singletonList(opencensusKey));
     opencensusGaugeSum = io.opencensus.stats.View.create(
         io.opencensus.stats.View.Name.create("opencensus/gauge/sum"),
         "A gauge sum for benchmarking purposes",
