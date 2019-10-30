@@ -4,8 +4,8 @@
 
 package io.ultrabrew.metrics.data;
 
-import java.util.function.Predicate;
 import java.util.Arrays;
+import java.util.function.Predicate;
 
 /**
  * A distribution bucket specification used for histograms. A distribution bucket is an sorted array
@@ -22,6 +22,7 @@ import java.util.Arrays;
  * </ul>
  *
  * @see BasicHistogramAggregator
+ * @see NameSpec
  */
 public class DistributionBucket {
 
@@ -29,6 +30,7 @@ public class DistributionBucket {
   private static final String OVERFLOW = "overflow";
 
   private final long[] buckets;
+  private final NameSpec nameSpec;
 
   /**
    * Creates a distribution for given bucket spec.
@@ -36,7 +38,10 @@ public class DistributionBucket {
    * @param buckets sorted array of unique values
    */
   public DistributionBucket(final long[] buckets) {
+    this(buckets, new DefaultNameSpec());
+  }
 
+  public DistributionBucket(final long[] buckets, final NameSpec nameSpec) {
     if (buckets.length < 2) {
       throw new IllegalArgumentException("Minimum bucket length is 2");
     }
@@ -48,6 +53,7 @@ public class DistributionBucket {
     }
 
     this.buckets = buckets.clone();
+    this.nameSpec = nameSpec;
   }
 
   public int getCount() {
@@ -98,14 +104,15 @@ public class DistributionBucket {
   /**
    * Generates the bucket names for representation purpose.
    *
-   * <P>For a given spec: [0, 10, 100, 500, 1000], the names would look like:</P>
+   * <p>For a given spec: [0, 10, 100, 500, 1000], the names would look like:
+   *
    * <ul>
-   * <li>0_10</li>
-   * <li>10_100</li>
-   * <li>100_500</li>
-   * <li>500_1000</li>
-   * <li>overflow</li>
-   * <li>underflow</li>
+   *   <li>0_10
+   *   <li>10_100
+   *   <li>100_500
+   *   <li>500_1000
+   *   <li>overflow
+   *   <li>underflow
    * </ul>
    *
    * @return array of bucket names
@@ -115,7 +122,7 @@ public class DistributionBucket {
     String[] names = new String[bucketCount + 1];
     int i = 0;
     for (; i < bucketCount - 1; i++) {
-      names[i] = Long.toString(buckets[i]) + '_' + buckets[i + 1];
+      names[i] = nameSpec.getBucketName(buckets[i]) + '_' + nameSpec.getBucketName(buckets[i + 1]);
     }
     names[i++] = OVERFLOW;
     names[i++] = UNDERFLOW;
@@ -143,4 +150,36 @@ public class DistributionBucket {
     return false;
   }
 
+  /**
+   * The bucket name spec. The default spec uses the String representation fo the bucket value as
+   * the name.
+   *
+   * <p>For a given spec: [0, 10, 100, 500, 1000], the names would look like:
+   *
+   * <ul>
+   *   <li>0_10
+   *   <li>10_100
+   *   <li>100_500
+   *   <li>500_1000
+   *   <li>overflow
+   *   <li>underflow
+   * </ul>
+   *
+   * For a measurement unit of nano seconds, the default naming scheme would look ugly. User can use
+   * a custom spec to prettify the bucket names. For example the bucket the names can milliseconds
+   * even though internally it tracks the values in nanoseconds.
+   */
+  public interface NameSpec {
+    String getBucketName(long bucket);
+  }
+
+  /**
+   * Uses the String representation fo the bucket value as the name.
+   */
+  public static class DefaultNameSpec implements NameSpec {
+    @Override
+    public String getBucketName(long bucket) {
+      return Long.toString(bucket);
+    }
+  }
 }

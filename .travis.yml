@@ -1,7 +1,7 @@
 language: java
 
 jdk:
-- oraclejdk8
+- openjdk8
 - oraclejdk11
 
 before_cache:
@@ -20,11 +20,11 @@ deploy:
     script: ./gradlew publish
     on:
       branch: master
-      jdk: oraclejdk8
+      jdk: openjdk8
   # releases from tags
   - provider: script
     skip_cleanup: true
     script: ./gradlew publish
     on:
       tags: true
-      jdk: oraclejdk8
+      jdk: openjdk8
