@@ -43,6 +43,7 @@ public class ComparativeTagsBenchmark {
   private com.codahale.metrics.MetricRegistry dropwizardRegistry;
   private com.codahale.metrics.Slf4jReporter dropwizardReporter;
 
+  // You will not see this again. It is the old way.
   private io.opencensus.tags.Tagger opencensusTagger;
   private io.opencensus.tags.TagKey opencensusKey;
   private io.opencensus.stats.StatsRecorder opencensusRecorder;
@@ -54,6 +55,13 @@ public class ComparativeTagsBenchmark {
   private io.opencensus.stats.View opencensusGaugeSum;
   private io.opencensus.stats.View opencensusGaugeCount;
   private io.opencensus.stats.ViewManager opencensusViewManager;
+
+  // Warning! Experimental!
+  private io.opencensus.metrics.MetricRegistry opencensusRegistry;
+  private io.opencensus.metrics.LabelKey opencensusLabelKey;
+  private io.opencensus.metrics.MetricOptions opencensusOptions;
+  private io.opencensus.metrics.LongCumulative opencensusCounter;
+  private io.opencensus.metrics.LongGauge opencensusGauge;
 
   private volatile long value = 0L;
   private volatile long tagValue = 0L;
@@ -84,7 +92,6 @@ public class ComparativeTagsBenchmark {
     opencensusRecorder = io.opencensus.stats.Stats.getStatsRecorder();
     opencensusSumAggregator = io.opencensus.stats.Aggregation.Sum.create();
     opencensusCountAggregator = io.opencensus.stats.Aggregation.Count.create();
-    // TODO: OpenCensus-Java lacks min and max aggregations (???)
     opencensusCounterMeasure = io.opencensus.stats.Measure.MeasureLong.create(
         "opencensus/counter",
         "A counter for benchmarking purposes",
@@ -115,6 +122,23 @@ public class ComparativeTagsBenchmark {
     opencensusViewManager.registerView(opencensusCounterSum);
     opencensusViewManager.registerView(opencensusGaugeSum);
     opencensusViewManager.registerView(opencensusGaugeCount);
+
+    opencensusRegistry = io.opencensus.metrics.Metrics.getMetricRegistry();
+    opencensusLabelKey = io.opencensus.metrics.LabelKey.create(TAGNAME,
+        "A label key for benchmarking purposes");
+    opencensusOptions = io.opencensus.metrics.MetricOptions.builder().
+        setLabelKeys(Collections.singletonList(opencensusLabelKey)).
+        build();
+    opencensusCounter = opencensusRegistry.addLongCumulative("counter",
+        opencensusOptions);
+    opencensusGauge = opencensusRegistry.addLongGauge("gauge",
+        opencensusOptions);
+
+    // This is not hooked up to an agent.
+    io.opencensus.exporter.metrics.ocagent.OcAgentMetricsExporter.createAndRegister(
+        io.opencensus.exporter.metrics.ocagent.OcAgentMetricsExporterConfiguration.builder().
+            setExportInterval(io.opencensus.common.Duration.create(60L /*sec*/, 0 /*nanosec*/)).
+            build());
   }
 
   @Benchmark
@@ -133,13 +157,23 @@ public class ComparativeTagsBenchmark {
   }
 
   @Benchmark
-  public void counterOpenCensus() {
+  public void counterOpenCensusStats() {
     final io.opencensus.tags.TagContext tagContext = opencensusTagger.emptyBuilder()
         .put(opencensusKey, io.opencensus.tags.TagValue.create(String.valueOf(tagValue++ % cardinality)))
         .build();
     try (io.opencensus.common.Scope ss = opencensusTagger.withTagContext(tagContext)) {
         opencensusRecorder.newMeasureMap().put(opencensusCounterMeasure, 1L).record();
     }
+    Blackhole.consumeCPU(CONSUME_CPU);
+  }
+
+  @Benchmark
+  public void counterOpenCensusMetrics() {
+    final io.opencensus.metrics.LabelValue labelValue =
+        io.opencensus.metrics.LabelValue.create(String.valueOf(tagValue++ % cardinality));
+    final io.opencensus.metrics.LongCumulative.LongPoint point =
+        opencensusCounter.getOrCreateTimeSeries(Collections.singletonList(labelValue));
+    point.add(1L);
     Blackhole.consumeCPU(CONSUME_CPU);
   }
 
@@ -160,13 +194,6 @@ public class ComparativeTagsBenchmark {
     context.stop();
   }
 
-  /*
-  @Benchmark
-  public void timerOpenCensus() {
-    // TODO: this is pointless; it's identical to gaugeOpenCensus()
-  }
-  */
-
   @Benchmark
   public void gaugeUltrabrew() {
     ultrabrewGauge.set(value++ % 100L, TAGNAME, String.valueOf(tagValue++ % cardinality));
@@ -184,13 +211,23 @@ public class ComparativeTagsBenchmark {
   }
 
   @Benchmark
-  public void gaugeOpenCensus() {
+  public void gaugeOpenCensusStats() {
     final io.opencensus.tags.TagContext tagContext = opencensusTagger.emptyBuilder()
         .put(opencensusKey, io.opencensus.tags.TagValue.create(String.valueOf(tagValue++ % cardinality)))
         .build();
     try (io.opencensus.common.Scope ss = opencensusTagger.withTagContext(tagContext)) {
         opencensusRecorder.newMeasureMap().put(opencensusGaugeMeasure, value++ % 100L).record();
     }
+    Blackhole.consumeCPU(CONSUME_CPU);
+  }
+
+  @Benchmark
+  public void gaugeOpenCensusMetrics() {
+    final io.opencensus.metrics.LabelValue labelValue =
+        io.opencensus.metrics.LabelValue.create(String.valueOf(tagValue++ % cardinality));
+    final io.opencensus.metrics.LongGauge.LongPoint point =
+        opencensusGauge.getOrCreateTimeSeries(Collections.singletonList(labelValue));
+    point.set(value++ % 100L);
     Blackhole.consumeCPU(CONSUME_CPU);
   }
 }
