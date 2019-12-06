@@ -67,7 +67,7 @@ public class BasicCounterAggregator extends ConcurrentMonoidLongTable {
       final int cardinality) {
     super(metricId, maxCardinality, cardinality, FIELDS, TYPES, IDENTITY);
   }
-
+  
   @Override
   public void combine(final long[] table, final long baseOffset, final long value) {
     add(table, baseOffset, 0, value);

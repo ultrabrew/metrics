@@ -26,6 +26,13 @@ public interface CursorEntry {
    * @return last updated time, measured in milliseconds since midnight, January 1, 1970 UTC.
    */
   long lastUpdated();
+  
+  /**
+   * 
+   * Resets the current row to default value (0) so it can be reused for a different field
+   * 
+   */
+  void freeCurrentRow();
 
   /**
    * Retrieves a long value for a field value at given index.

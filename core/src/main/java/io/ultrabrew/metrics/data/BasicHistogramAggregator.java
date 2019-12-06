@@ -209,6 +209,12 @@ public class BasicHistogramAggregator extends ConcurrentMonoidIntTable implement
       }
       return tagSets[i];
     }
+    
+    @Override
+    public void freeCurrentRow() {
+      // TODO Auto-generated method stub
+      
+    }
 
     @Override
     public long lastUpdated() {
@@ -259,5 +265,6 @@ public class BasicHistogramAggregator extends ConcurrentMonoidIntTable implement
     public Type[] getTypes() {
       return types;
     }
+
   }
 }
