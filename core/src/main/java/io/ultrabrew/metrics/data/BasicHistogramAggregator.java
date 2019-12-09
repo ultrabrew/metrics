@@ -209,13 +209,12 @@ public class BasicHistogramAggregator extends ConcurrentMonoidIntTable implement
       }
       return tagSets[i];
     }
-    
+ ///CLOVER:OFF
     @Override
-    public void freeCurrentRow() {
-      // TODO Auto-generated method stub
-      
+    public String[] freeCurrentRow() {
+      return null;
     }
-
+ ///CLOVER:ON
     @Override
     public long lastUpdated() {
       if (i < 0 || i >= tagSets.length || tagSets[i] == null) {

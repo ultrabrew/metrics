@@ -166,6 +166,11 @@ public class BasicCounterAggregatorTest {
       } else {
         fail("Unknown hashcode");
       }
+      
+      cursor = table.sortedCursor();
+      while(cursor.next()) {
+        cursor.freeCurrentRow();
+      }
     }
   }
   

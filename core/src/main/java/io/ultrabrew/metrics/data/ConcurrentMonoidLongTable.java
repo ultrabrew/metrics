@@ -312,7 +312,6 @@ public abstract class ConcurrentMonoidLongTable implements Aggregator {
                           || (tagSets[i].length == 0)) {
                         String[] newTag = tagSets[i];
                         newTagSet[cnt++] = newTag;
-                      } else {
                       }
                     }
                     tagSets = newTagSet;
@@ -619,6 +618,7 @@ public abstract class ConcurrentMonoidLongTable implements Aggregator {
 
     @Override
     public boolean next() {
+     
       i++;
       if (i >= tagSets.length || tagSets[i] == null) {
         return false;
@@ -655,14 +655,14 @@ public abstract class ConcurrentMonoidLongTable implements Aggregator {
       }
       return tagSets[i];
     }
-    
+
     @Override
-    public void freeCurrentRow() {
+    public String[] freeCurrentRow() {
       if(isSorted) {
         // Cursor iteration works on a copy of tagSets incase of sorted flag
         // So there's no easy way of freeing up the current row and let the reader and writer know
         // about it with out additional space 
-        return;
+        return null;
       }
       if (i < 0 || i >= tagSets.length || tagSets[i] == null) {
         throw new IndexOutOfBoundsException("Not a valid row index: " + i);
@@ -670,18 +670,23 @@ public abstract class ConcurrentMonoidLongTable implements Aggregator {
       
       if (tagSets[i].length == 0) {
         // Empty tags can be ignored since they won't be the cause of cardinality burst.
-        return;
+        return null;
       }
       
       unsafe.putLongVolatile(table, base, 0L);
+      
+      String[] tagSet = Arrays.copyOf(tagSets[i], tagSets[i].length);
+      
       // Using the first element in the tagsSets[i] to track whether the current row was freed up
       // Saves an additional variable 
       tagSets[i][0] = null;
       // Decrement the record counts for the relevant table
       recordCounts.get(tableIndex).decrementAndGet();
+      
+      return tagSet;
 
     }
-    
+
     @Override
     public long lastUpdated() {
       if (i < 0 || i >= tagSets.length || tagSets[i] == null) {

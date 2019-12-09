@@ -31,8 +31,10 @@ public interface CursorEntry {
    * 
    * Resets the current row to default value (0) so it can be reused for a different field
    * 
+   * @return the tag set that's marked for release, null if the current row can not be released
+   * 
    */
-  void freeCurrentRow();
+  String[] freeCurrentRow();
 
   /**
    * Retrieves a long value for a field value at given index.

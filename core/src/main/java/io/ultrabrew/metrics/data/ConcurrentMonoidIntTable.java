@@ -367,31 +367,10 @@ public abstract class ConcurrentMonoidIntTable {
                 // grow tag set
                 synchronized (this) {
                   if (tagIndex >= tagSets.length) {
-                    boolean isEqual = false;
-                    if(tagIndex == tagSets.length) {
-                      isEqual = true;
-                    }
                     final int oldLength = tagSets.length;
                     final int newLength =
                         oldLength > TAGSETS_MAX_INCREMENT ? oldLength + TAGSETS_MAX_INCREMENT
                             : oldLength * 2;
-                    String[][] newTagSet = new String[newLength][];
-                    int cnt = 0;
-                    for (int i = 0; i < tagSets.length; i++) {
-                      // Skip the entries that would have been freed up (stale)
-                      // System.arraycopy would be faster, but can't use it here due to 
-                      // the conditional inclusion 
-                      if ((tagSets[i].length > 0 && tagSets[i][0] != null)
-                          || (tagSets[i].length == 0)) {
-                        String[] newTag = tagSets[i];
-                        newTagSet[cnt++] = newTag;
-                      } else {
-                      }
-                    }
-                    tagSets = newTagSet;
-                    // reset the usedOffset length;
-                    unsafe.putIntVolatile(this, usedOffset, isEqual ? cnt + 1 : cnt + 2);
-                    tagIndex = isEqual ? cnt : cnt + 1;
                     tagSets = Arrays.copyOf(tagSets, newLength);
                   }
                 }

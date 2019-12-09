@@ -217,7 +217,6 @@ public class BasicGaugeAggregatorTest {
     assertEquals(5, table.size());
     table.apply(new String[]{"testTag", "value3"}, 3L, CURRENT_TIME - 2*60*1000l);
     assertEquals(6, table.size());
-    
     cursor = table.cursor();
     while (cursor.next()) {
       final int hash = Arrays.hashCode(cursor.getTags());

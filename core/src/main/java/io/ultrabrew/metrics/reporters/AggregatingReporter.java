@@ -96,12 +96,12 @@ public abstract class AggregatingReporter implements Reporter {
     public Type[] getTypes() {
       throw new IllegalStateException("Cursor has no valid data");
     }
-    // CLOVER:ON
 
     @Override
-    public void freeCurrentRow() {
-      throw new IllegalStateException("Cursor has no valid data");
+    public String[] freeCurrentRow() {
+      throw new IllegalStateException("Cursor can not free the current row");
     }
+    // CLOVER:ON
   };
 
   /**
