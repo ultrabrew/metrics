@@ -20,6 +20,8 @@ import mockit.Deencapsulation;
 import mockit.Expectations;
 import org.junit.jupiter.api.Test;
 
+import io.ultrabrew.metrics.data.ConcurrentMonoidLongTable.CursorImpl;
+
 public class BasicCounterAggregatorTest {
 
   private long CURRENT_TIME = System.currentTimeMillis();
@@ -116,7 +118,7 @@ public class BasicCounterAggregatorTest {
   @Test
   public void testFreeCurrentRowAndPurge() {
     final BasicCounterAggregator table = new BasicCounterAggregator("test", DEFAULT_MAX_CARDINALITY, 3);
-
+    
     table.apply(new String[]{"testTag", "value"}, 100L, CURRENT_TIME);
     table.apply(new String[]{"testTag", "value"}, 10L, CURRENT_TIME);
     Cursor cursor = table.cursor();
@@ -148,12 +150,13 @@ public class BasicCounterAggregatorTest {
 
     table.apply(new String[]{"testTag", "value3"}, 3L, CURRENT_TIME - 2*60*1000l);
     assertEquals(3, table.size());
-    
     cursor = table.cursor();
+    int ctr = 0;
     while (cursor.next()) {
       final int hash = Arrays.hashCode(cursor.getTags());
       if(cursor.lastUpdated() < CURRENT_TIME) {
-        cursor.freeCurrentRow();
+        String[] freeCurrentRow = cursor.freeCurrentRow();
+        assertTrue(Arrays.equals(freeCurrentRow, tagSet3));
       } else {
         assertEquals(CURRENT_TIME, cursor.lastUpdated());
       }
@@ -166,11 +169,13 @@ public class BasicCounterAggregatorTest {
       } else {
         fail("Unknown hashcode");
       }
-      
-      cursor = table.sortedCursor();
-      while(cursor.next()) {
-        cursor.freeCurrentRow();
-      }
+      ctr++;
+    }
+    assertEquals(3, ctr);
+    table.apply(new String[]{}, 1L, CURRENT_TIME - 2*60*1000l);
+    cursor = table.sortedCursor();
+    while(cursor.next()) {
+      cursor.freeCurrentRow();
     }
   }
   
@@ -232,7 +237,134 @@ public class BasicCounterAggregatorTest {
       }
     }
   }
+  
+  @Test
+  public void testGetTagsInvalidCursorFreeRowIndex() {
+    final BasicCounterAggregator table =
+        new BasicCounterAggregator("test", DEFAULT_MAX_CARDINALITY, 2);
+    table.apply(new String[] {}, 1L, CURRENT_TIME);
+    final Cursor cursor = table.cursor();
+    assertThrows(IndexOutOfBoundsException.class, cursor::freeCurrentRow);
+  }
+  
+  @Test
+  public void testSortedCursorArray() {
+    final BasicCounterAggregator table = new BasicCounterAggregator("test", DEFAULT_MAX_CARDINALITY, 3);
+    
+    table.apply(new String[]{"testTag", "value"}, 100L, CURRENT_TIME);
+    table.apply(new String[]{"testTag", "value"}, 10L, CURRENT_TIME);
+    Cursor cursor = table.sortedCursor();
+    assertTrue(cursor.next());
+    assertArrayEquals(new String[]{"sum"}, cursor.getFields());
+    assertArrayEquals(new String[]{"testTag", "value"}, cursor.getTags());
+    assertEquals(110L, cursor.readLong(0));
+    assertEquals(1, table.size());
 
+    table.apply(new String[]{"testTag", "value", "testTag2", "value2"}, 10L, CURRENT_TIME);
+    table.apply(new String[]{"testTag", "value"}, 1L, CURRENT_TIME);
+    table.apply(new String[]{"testTag", "value", "testTag2", "value2"}, 99L, CURRENT_TIME);
+    assertEquals(2, table.size());
+    table.apply(new String[]{"testTag", "value2"}, 2L, CURRENT_TIME - 2*60*1000l);
+    assertEquals(3, table.size());
+
+    String[] tagSet1 = new String[]{"testTag", "value"};
+    String[] tagSet2 = new String[]{"testTag", "value", "testTag2", "value2"};
+    String[] tagSet3 = new String[]{"testTag", "value3"};
+
+    assertEquals(3, table.capacity());
+    assertEquals(3, table.size());
+    cursor = table.sortedCursor();
+    while (cursor.next()) {
+      if(cursor.lastUpdated() < CURRENT_TIME) {
+        cursor.freeCurrentRow();
+      }
+    }
+    table.apply(new String[]{"testTag", "value3"}, 3L, CURRENT_TIME - 2*60*1000l);
+    assertEquals(3, table.size());
+    cursor = table.sortedCursor();
+    int ctr = 0;
+    while (cursor.next()) {
+      final int hash = Arrays.hashCode(cursor.getTags());
+      if(cursor.lastUpdated() < CURRENT_TIME) {
+        String[] freeCurrentRow = cursor.freeCurrentRow();
+        assertTrue(Arrays.equals(freeCurrentRow, tagSet3));
+      } else {
+        assertEquals(CURRENT_TIME, cursor.lastUpdated());
+      }
+      if (hash == Arrays.hashCode(tagSet1)) {
+        assertEquals(111L, cursor.readLong(0));
+      } else if (hash == Arrays.hashCode(tagSet2)) {
+        assertEquals(109L, cursor.readLong(0));
+      } else if (hash == Arrays.hashCode(tagSet3)) {
+        assertEquals(3L, cursor.readLong(0));
+      } else {
+        fail("Unknown hashcode");
+      }
+      ctr++;
+    }
+    assertEquals(3, ctr);
+    
+  }
+  
+  @Test
+  public void testSortedAndUnsortedCursorArray() {
+    final BasicCounterAggregator table = new BasicCounterAggregator("test", DEFAULT_MAX_CARDINALITY, 3);
+    
+    table.apply(new String[]{"testTag", "value"}, 100L, CURRENT_TIME);
+    table.apply(new String[]{"testTag", "value"}, 10L, CURRENT_TIME);
+    Cursor cursor = table.cursor();
+    assertTrue(cursor.next());
+    assertArrayEquals(new String[]{"sum"}, cursor.getFields());
+    assertArrayEquals(new String[]{"testTag", "value"}, cursor.getTags());
+    assertEquals(110L, cursor.readLong(0));
+    assertEquals(1, table.size());
+    
+    table.apply(new String[]{"testTag", "value", "testTag2", "value2"}, 10L, CURRENT_TIME);
+    table.apply(new String[]{"testTag", "value"}, 1L, CURRENT_TIME);
+    table.apply(new String[]{"testTag", "value", "testTag2", "value2"}, 99L, CURRENT_TIME);
+    assertEquals(2, table.size());
+    table.apply(new String[]{"testTag", "value2"}, 2L, CURRENT_TIME - 2*60*1000l);
+    assertEquals(3, table.size());
+    
+    String[] tagSet1 = new String[]{"testTag", "value"};
+    String[] tagSet2 = new String[]{"testTag", "value", "testTag2", "value2"};
+    String[] tagSet3 = new String[]{"testTag", "value3"};
+    
+    assertEquals(3, table.capacity());
+    assertEquals(3, table.size());
+    cursor = table.cursor();
+    while (cursor.next()) {
+      if(cursor.lastUpdated() < CURRENT_TIME) {
+        cursor.freeCurrentRow();
+      }
+    }
+    table.apply(new String[]{"testTag", "value3"}, 3L, CURRENT_TIME - 2*60*1000l);
+    assertEquals(3, table.size());
+    cursor = table.sortedCursor();
+    int ctr = 0;
+    while (cursor.next()) {
+      final int hash = Arrays.hashCode(cursor.getTags());
+      if(cursor.lastUpdated() < CURRENT_TIME) {
+        String[] freeCurrentRow = cursor.freeCurrentRow();
+        assertTrue(Arrays.equals(freeCurrentRow, tagSet3));
+      } else {
+        assertEquals(CURRENT_TIME, cursor.lastUpdated());
+      }
+      if (hash == Arrays.hashCode(tagSet1)) {
+        assertEquals(111L, cursor.readLong(0));
+      } else if (hash == Arrays.hashCode(tagSet2)) {
+        assertEquals(109L, cursor.readLong(0));
+      } else if (hash == Arrays.hashCode(tagSet3)) {
+        assertEquals(3L, cursor.readLong(0));
+      } else {
+        fail("Unknown hashcode");
+      }
+      ctr++;
+    }
+    assertEquals(3, ctr);
+    
+  }
+  
   @Test
   public void mathAbsReturnsNegative() {
     final BasicCounterAggregator aggregator = new BasicCounterAggregator("test", DEFAULT_MAX_CARDINALITY, 3);

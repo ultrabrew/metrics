@@ -587,7 +587,7 @@ public abstract class ConcurrentMonoidLongTable implements Aggregator {
     return Arrays.hashCode(tags);
   }
 
-  private class CursorImpl implements Cursor {
+  public class CursorImpl implements Cursor {
 
     final private String[] fields;
     final private Type[] types;
@@ -596,21 +596,24 @@ public abstract class ConcurrentMonoidLongTable implements Aggregator {
     private long base = 0;
     private long[] table;
     private int tableIndex;
-    private boolean isSorted;
+    private final Integer[] ref;
 
-    private CursorImpl(final String[][] tagSets, final String[] fields, final Type[] types,
+    public CursorImpl(final String[][] tagSets, final String[] fields, final Type[] types,
         final boolean sorted) {
       this.fields = fields;
       this.types = types;
-      if (sorted) {
-        this.tagSets = tagSets.clone();
-        Arrays.sort(this.tagSets, TagSetsHelper::compare);
-      } else {
-        this.tagSets = tagSets;
+      // Holds the indexes of tagSets in the case of sorted iteration
+      ref = new Integer[tagSets.length];
+      for (int i = 0; i < tagSets.length; i++) {
+        ref[i] = i;
       }
-      this.isSorted = sorted;
+      this.tagSets = tagSets;
+      if (sorted) {
+        TagSetsHelper comparator = new TagSetsHelper(tagSets); 
+        Arrays.sort(ref, comparator);
+      }
     }
-
+    
     @Override
     public String getMetricId() {
       return metricId;
@@ -618,22 +621,23 @@ public abstract class ConcurrentMonoidLongTable implements Aggregator {
 
     @Override
     public boolean next() {
-     
       i++;
-      if (i >= tagSets.length || tagSets[i] == null) {
+      if (i >= tagSets.length || tagSets[ref[i]] == null) {
         return false;
       }
-      while (tagSets[i].length > 0 && tagSets[i][0] == null) {
+      
+      while (tagSets[ref[i]].length > 0 && tagSets[ref[i]][0] == null) {
         i++;
-        if (i >= tagSets.length || tagSets[i] == null) {
+        if (i >= tagSets.length || tagSets[ref[i]] == null) {
           return false;
         }
       }
-      long index = index(tagSets[i], true);
+
+      long index = index(tagSets[ref[i]], true);
 
       if (NOT_FOUND == index) {
         LOGGER.error("Missing index on Read. Tags: {}. Concurrency error or bug",
-            Arrays.asList(tagSets[i]));
+            Arrays.asList(tagSets[ref[i]]));
         return false;
       }
 
@@ -650,55 +654,50 @@ public abstract class ConcurrentMonoidLongTable implements Aggregator {
 
     @Override
     public String[] getTags() {
-      if (i < 0 || i >= tagSets.length || tagSets[i] == null) {
-        throw new IndexOutOfBoundsException("Not a valid row index: " + i);
+      if (i < 0 || i >= tagSets.length || tagSets[ref[i]] == null) {
+        throw new IndexOutOfBoundsException("Not a valid row index: " + ref[i]);
       }
-      return tagSets[i];
+      return tagSets[ref[i]];
     }
 
+   
     @Override
     public String[] freeCurrentRow() {
-      if(isSorted) {
-        // Cursor iteration works on a copy of tagSets incase of sorted flag
-        // So there's no easy way of freeing up the current row and let the reader and writer know
-        // about it with out additional space 
-        return null;
-      }
-      if (i < 0 || i >= tagSets.length || tagSets[i] == null) {
-        throw new IndexOutOfBoundsException("Not a valid row index: " + i);
+      
+      if (i < 0 || i >= tagSets.length || tagSets[ref[i]] == null) {
+        throw new IndexOutOfBoundsException("Not a valid row index: " + ref[i]);
       }
       
-      if (tagSets[i].length == 0) {
+      if (tagSets[ref[i]].length == 0) {
         // Empty tags can be ignored since they won't be the cause of cardinality burst.
         return null;
       }
       
       unsafe.putLongVolatile(table, base, 0L);
       
-      String[] tagSet = Arrays.copyOf(tagSets[i], tagSets[i].length);
+      String[] tagSet = Arrays.copyOf(tagSets[ref[i]], tagSets[ref[i]].length);
       
-      // Using the first element in the tagsSets[i] to track whether the current row was freed up
+      // Using the first element in the tagsSets[ref[i]] to track whether the current row was freed up
       // Saves an additional variable 
-      tagSets[i][0] = null;
+      tagSets[ref[i]][0] = null;
       // Decrement the record counts for the relevant table
       recordCounts.get(tableIndex).decrementAndGet();
       
       return tagSet;
-
     }
-
+    
     @Override
     public long lastUpdated() {
-      if (i < 0 || i >= tagSets.length || tagSets[i] == null) {
-        throw new IndexOutOfBoundsException("Not a valid row index: " + i);
+      if (i < 0 || i >= tagSets.length || tagSets[ref[i]] == null) {
+        throw new IndexOutOfBoundsException("Not a valid row index: " + ref[i]);
       }
       return unsafe.getLongVolatile(table, base + Unsafe.ARRAY_LONG_INDEX_SCALE);
     }
 
     @Override
     public long readLong(final int index) {
-      if (i < 0 || i >= tagSets.length || tagSets[i] == null) {
-        throw new IndexOutOfBoundsException("Not a valid row index: " + i);
+      if (i < 0 || i >= tagSets.length || tagSets[ref[i]] == null) {
+        throw new IndexOutOfBoundsException("Not a valid row index: " + ref[i]);
       }
       if (index < 0 || index >= fields.length) {
         throw new IndexOutOfBoundsException("Not a valid field index: " + index);
@@ -714,8 +713,8 @@ public abstract class ConcurrentMonoidLongTable implements Aggregator {
 
     @Override
     public long readAndResetLong(final int index) {
-      if (i < 0 || i >= tagSets.length || tagSets[i] == null) {
-        throw new IndexOutOfBoundsException("Not a valid row index: " + i);
+      if (i < 0 || i >= tagSets.length || tagSets[ref[i]] == null) {
+        throw new IndexOutOfBoundsException("Not a valid row index: " + ref[i]);
       }
       if (index < 0 || index >= fields.length) {
         throw new IndexOutOfBoundsException("Not a valid field index: " + index);

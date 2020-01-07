@@ -9,6 +9,7 @@ import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.lessThan;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 public class TagSetsHelperTest {
@@ -71,5 +72,97 @@ public class TagSetsHelperTest {
     assertThat(TagSetsHelper.compare(tagSet1, tagSet2), greaterThan(0));
     assertThat(TagSetsHelper.compare(tagSet3, tagSet1), greaterThan(0));
     assertThat(TagSetsHelper.compare(tagSet3, tagSet2), greaterThan(0));
+  }
+  
+  @Test
+  public void testComparator() {
+    final String[] tagSet1 = new String[] {"testTag", null};
+    final String[] tagSet2 = new String[] {"testTag", "value"};
+    final String[] tagSet3 = new String[] {null, "value"};
+    final String[] tagSet4 = new String[] {null, null};
+    String[][] tagSet = new String[5][2];
+    tagSet[0] = tagSet1;
+    tagSet[1] = tagSet2;
+    tagSet[2] = tagSet3;
+    tagSet[3] = tagSet4;
+    tagSet[4] = null;
+    TagSetsHelper comparator = new TagSetsHelper(tagSet);
+    Integer first = null;
+    Integer second = null;
+
+    int compare = comparator.compare(first, second);
+    assertEquals(compare, 0);
+
+    first = null;
+    second = 0;
+    compare = comparator.compare(first, second);
+    assertEquals(compare, 1);
+    first = 0;
+    second = null;
+    compare = comparator.compare(first, second);
+    assertEquals(compare, -1);
+
+    first = 1;
+    second = 1;
+    compare = comparator.compare(first, second);
+    assertEquals(compare, 0);
+
+    first = 4;
+    compare = comparator.compare(first, second);
+    
+    first = 1;
+    second = 4;
+    compare = comparator.compare(first, second);
+    
+    first = 5;
+    try {
+      compare = comparator.compare(first, second);
+      Assertions.fail("Index is out of bounds, should have been caught");
+    } catch (Exception e) {
+    }
+    first = 1;
+    second = 5;
+    try {
+      compare = comparator.compare(first, second);
+      Assertions.fail("Index is out of bounds, should have been caught");
+    } catch (Exception e) {
+    }
+  }
+  
+  @Test
+  public void testNullComparator() {
+    final String[] tagSet1 = new String[]{"testTag", null};
+    final String[] tagSet2 = new String[]{"testTag", "value"};
+    final String[] tagSet3 = new String[]{null, "value"};
+    
+    String[][] tagSet = new String[3][2];
+    tagSet[0] = tagSet1;
+    tagSet[1] = tagSet2;
+    tagSet[2] = tagSet3;
+    TagSetsHelper comparator = new TagSetsHelper(tagSet);
+    Integer first = 0;
+    Integer second = 1;
+    assertEquals(1, comparator.compare(first, second));
+    
+    first = 1;
+    second = 0;
+    assertEquals(-1, comparator.compare(first, second));
+    
+    first = 0;
+    second = 2;
+    assertEquals(-1, comparator.compare(first, second));
+    
+    first = 0;
+    second = 0;
+    assertEquals(0, comparator.compare(first, second));
+    
+    first = 2;
+    second = 0;
+    assertEquals(1, comparator.compare(first, second));
+    
+    first = 2;
+    second = 2;
+    assertEquals(0, comparator.compare(first, second));
+    
   }
 }

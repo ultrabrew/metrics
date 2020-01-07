@@ -72,7 +72,6 @@ public class MultiCursorTest {
       assertNull(multiCursor.nextCursorEntry());
     }
     assertFalse(multiCursor.next());
-
     assertEquals(4, records.size());
     assertThat(records.get(tagSet1), containsInAnyOrder("gauge", "counter"));
     // Because timerAggregator is first in the list, its tagset2b is used for both
