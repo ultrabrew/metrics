@@ -20,8 +20,6 @@ import mockit.Deencapsulation;
 import mockit.Expectations;
 import org.junit.jupiter.api.Test;
 
-import io.ultrabrew.metrics.data.ConcurrentMonoidLongTable.CursorImpl;
-
 public class BasicCounterAggregatorTest {
 
   private long CURRENT_TIME = System.currentTimeMillis();

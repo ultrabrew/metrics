@@ -11,6 +11,8 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import sun.misc.Unsafe;
 
 /**
@@ -587,7 +589,7 @@ public abstract class ConcurrentMonoidLongTable implements Aggregator {
     return Arrays.hashCode(tags);
   }
 
-  public class CursorImpl implements Cursor {
+  private class CursorImpl implements Cursor {
 
     final private String[] fields;
     final private Type[] types;
@@ -598,7 +600,10 @@ public abstract class ConcurrentMonoidLongTable implements Aggregator {
     private int tableIndex;
     private final Integer[] ref;
 
-    public CursorImpl(final String[][] tagSets, final String[] fields, final Type[] types,
+    @SuppressFBWarnings(
+        value = {"EI_EXPOSE_REP2"},
+        justification = "Avoid creating copies for performance reasons.")
+    private CursorImpl(final String[][] tagSets, final String[] fields, final Type[] types,
         final boolean sorted) {
       this.fields = fields;
       this.types = types;
@@ -729,11 +734,17 @@ public abstract class ConcurrentMonoidLongTable implements Aggregator {
       return Double.longBitsToDouble(readAndResetLong(index));
     }
 
+    @SuppressFBWarnings(
+        value = {"EI_EXPOSE_REP"},
+        justification = "Avoid creating copies for performance reasons.")
     @Override
     public String[] getFields() {
       return fields;
     }
 
+    @SuppressFBWarnings(
+        value = {"EI_EXPOSE_REP"},
+        justification = "Avoid creating copies for performance reasons.")
     @Override
     public Type[] getTypes() {
       return types;
