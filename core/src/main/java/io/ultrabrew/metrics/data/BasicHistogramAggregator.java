@@ -161,18 +161,18 @@ public class BasicHistogramAggregator extends ConcurrentMonoidIntTable implement
     private int i = -1;
     private long base = 0;
     private int[] table;
-    private final Integer[] ref;
+    private final Integer[] sortedRef;
 
     private CursorImpl(final String[][] tagSets, final boolean sorted) {
       // Holds the indexes of tagSets in the case of sorted iteration
-      ref = new Integer[tagSets.length];
+      sortedRef = new Integer[tagSets.length];
       for (int i = 0; i < tagSets.length; i++) {
-        ref[i] = i;
+        sortedRef[i] = i;
       }
       this.tagSets = tagSets;
       if (sorted) {
         TagSetsHelper comparator = new TagSetsHelper(tagSets); 
-        Arrays.sort(ref, comparator);
+        Arrays.sort(sortedRef, comparator);
       }
     }
 
@@ -184,15 +184,15 @@ public class BasicHistogramAggregator extends ConcurrentMonoidIntTable implement
     @Override
     public boolean next() {
       i++;
-      if (i >= tagSets.length || tagSets[ref[i]] == null) {
+      if (i >= tagSets.length || tagSets[sortedRef[i]] == null) {
         return false;
       }
 
-      long index = index(tagSets[ref[i]], true);
+      long index = index(tagSets[sortedRef[i]], true);
 
       if (NOT_FOUND == index) {
         LOGGER.error("Missing index on Read. Tags: {}. Concurrency error or bug",
-            Arrays.asList(tagSets[ref[i]]));
+            Arrays.asList(tagSets[sortedRef[i]]));
         return false;
       }
 
@@ -209,12 +209,13 @@ public class BasicHistogramAggregator extends ConcurrentMonoidIntTable implement
 
     @Override
     public String[] getTags() {
-      if (i < 0 || i >= tagSets.length || tagSets[ref[i]] == null) {
-        throw new IndexOutOfBoundsException("Not a valid row index: " + ref[i]);
+      if (i < 0 || i >= tagSets.length || tagSets[sortedRef[i]] == null) {
+        throw new IndexOutOfBoundsException("Not a valid row index: " + sortedRef[i]);
       }
-      return tagSets[ref[i]];
+      return tagSets[sortedRef[i]];
     }
  ///CLOVER:OFF
+    // Will turn on Clover once this method is implemented.
     @Override
     public String[] freeCurrentRow() {
       return null;
@@ -222,16 +223,16 @@ public class BasicHistogramAggregator extends ConcurrentMonoidIntTable implement
  ///CLOVER:ON
     @Override
     public long lastUpdated() {
-      if (i < 0 || i >= tagSets.length || tagSets[ref[i]] == null) {
-        throw new IndexOutOfBoundsException("Not a valid row index: " + ref[i]);
+      if (i < 0 || i >= tagSets.length || tagSets[sortedRef[i]] == null) {
+        throw new IndexOutOfBoundsException("Not a valid row index: " + sortedRef[i]);
       }
       return readTime(table, base);
     }
 
     @Override
     public long readLong(final int index) {
-      if (i < 0 || i >= tagSets.length || tagSets[ref[i]] == null) {
-        throw new IndexOutOfBoundsException("Not a valid row index: " + ref[i]);
+      if (i < 0 || i >= tagSets.length || tagSets[sortedRef[i]] == null) {
+        throw new IndexOutOfBoundsException("Not a valid row index: " + sortedRef[i]);
       }
       if (index < 0 || index >= fields.length) {
         throw new IndexOutOfBoundsException("Not a valid field index: " + index);
@@ -246,8 +247,8 @@ public class BasicHistogramAggregator extends ConcurrentMonoidIntTable implement
 
     @Override
     public long readAndResetLong(final int index) {
-      if (i < 0 || i >= tagSets.length || tagSets[ref[i]] == null) {
-        throw new IndexOutOfBoundsException("Not a valid row index: " + ref[i]);
+      if (i < 0 || i >= tagSets.length || tagSets[sortedRef[i]] == null) {
+        throw new IndexOutOfBoundsException("Not a valid row index: " + sortedRef[i]);
       }
       if (index < 0 || index >= fields.length) {
         throw new IndexOutOfBoundsException("Not a valid field index: " + index);
