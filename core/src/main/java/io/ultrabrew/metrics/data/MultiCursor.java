@@ -25,7 +25,7 @@ public class MultiCursor {
     // Update cursors
     if (next != null) {
       for (int i = 0, l = cursors.length; i < l; i++) {
-        if (nextTagSets[i] != null && TagSetsHelper.compare(next, nextTagSets[i]) == 0) {
+        if (nextTagSets[i] != null && TagSetsComparator.compare(next, nextTagSets[i]) == 0) {
           nextTagSets[i] = cursors[i].next() ? cursors[i].getTags() : null;
         }
       }
@@ -38,7 +38,7 @@ public class MultiCursor {
     // Find the next lexical tag set
     for (int i = 0, l = cursors.length; i < l; i++) {
       if (nextTagSets[i] != null) {
-        if (next == null || TagSetsHelper.compare(nextTagSets[i], next) < 0) {
+        if (next == null || TagSetsComparator.compare(nextTagSets[i], next) < 0) {
           next = nextTagSets[i];
         }
       }
@@ -60,7 +60,7 @@ public class MultiCursor {
     }
     cursorIndex++;
     for (int l = cursors.length; cursorIndex < l; cursorIndex++) {
-      if (TagSetsHelper.compare(next, nextTagSets[cursorIndex]) == 0) {
+      if (TagSetsComparator.compare(next, nextTagSets[cursorIndex]) == 0) {
         return cursors[cursorIndex];
       }
     }

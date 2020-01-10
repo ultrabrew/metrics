@@ -7,7 +7,7 @@ package io.ultrabrew.metrics.data;
 import java.io.Serializable;
 import java.util.Comparator;
 
-class TagSetsHelper implements Comparator<Integer>, Serializable {
+class TagSetsComparator implements Comparator<Integer>, Serializable {
 
   /**
    * Compares its two arguments for order. Returns a negative integer, zero, or a positive integer
@@ -19,7 +19,7 @@ class TagSetsHelper implements Comparator<Integer>, Serializable {
    * equal to, or greater than the second.
    */
   private final String[][] set;
-  public TagSetsHelper(String[][] set) {
+  public TagSetsComparator(String[][] set) {
     this.set = set;
   }
   

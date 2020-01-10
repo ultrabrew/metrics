@@ -171,7 +171,7 @@ public class BasicHistogramAggregator extends ConcurrentMonoidIntTable implement
       }
       this.tagSets = tagSets;
       if (sorted) {
-        TagSetsHelper comparator = new TagSetsHelper(tagSets); 
+        TagSetsComparator comparator = new TagSetsComparator(tagSets); 
         Arrays.sort(sortedRef, comparator);
       }
     }

@@ -315,9 +315,9 @@ public abstract class ConcurrentMonoidLongTable implements Aggregator {
                         newTagSet[cnt++] = newTag;
                       }
                     }
-                    tagSets = newTagSet;
                     // reset the usedOffset length;
                     unsafe.putIntVolatile(this, usedOffset, isEqual ? cnt + 1 : cnt + 2);
+                    tagSets = newTagSet;
                     tagIndex = isEqual ? cnt : cnt + 1;
                   }
                 }
@@ -613,7 +613,7 @@ public abstract class ConcurrentMonoidLongTable implements Aggregator {
       }
       this.tagSets = tagSets;
       if (sorted) {
-        TagSetsHelper comparator = new TagSetsHelper(tagSets); 
+        TagSetsComparator comparator = new TagSetsComparator(tagSets); 
         Arrays.sort(sortedRef, comparator);
       }
     }

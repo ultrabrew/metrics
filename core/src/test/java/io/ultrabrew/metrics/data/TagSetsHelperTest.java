@@ -23,36 +23,36 @@ public class TagSetsHelperTest {
     final String[] tagSet5 = new String[]{"testTag3", "value"};
     final String[] tagSet6 = null;
 
-    assertEquals(0, TagSetsHelper.compare(tagSet1, tagSet1));
-    assertEquals(0, TagSetsHelper.compare(tagSet2, tagSet2));
-    assertEquals(0, TagSetsHelper.compare(tagSet3, tagSet3));
-    assertEquals(0, TagSetsHelper.compare(tagSet4, tagSet4));
-    assertEquals(0, TagSetsHelper.compare(tagSet4, tagSet5));
-    assertEquals(0, TagSetsHelper.compare(tagSet6, tagSet6));
+    assertEquals(0, TagSetsComparator.compare(tagSet1, tagSet1));
+    assertEquals(0, TagSetsComparator.compare(tagSet2, tagSet2));
+    assertEquals(0, TagSetsComparator.compare(tagSet3, tagSet3));
+    assertEquals(0, TagSetsComparator.compare(tagSet4, tagSet4));
+    assertEquals(0, TagSetsComparator.compare(tagSet4, tagSet5));
+    assertEquals(0, TagSetsComparator.compare(tagSet6, tagSet6));
 
-    assertThat(TagSetsHelper.compare(tagSet1, tagSet2), lessThan(0));
-    assertThat(TagSetsHelper.compare(tagSet1, tagSet3), lessThan(0));
-    assertThat(TagSetsHelper.compare(tagSet1, tagSet4), lessThan(0));
-    assertThat(TagSetsHelper.compare(tagSet2, tagSet3), lessThan(0));
-    assertThat(TagSetsHelper.compare(tagSet2, tagSet4), lessThan(0));
-    assertThat(TagSetsHelper.compare(tagSet3, tagSet4), lessThan(0));
+    assertThat(TagSetsComparator.compare(tagSet1, tagSet2), lessThan(0));
+    assertThat(TagSetsComparator.compare(tagSet1, tagSet3), lessThan(0));
+    assertThat(TagSetsComparator.compare(tagSet1, tagSet4), lessThan(0));
+    assertThat(TagSetsComparator.compare(tagSet2, tagSet3), lessThan(0));
+    assertThat(TagSetsComparator.compare(tagSet2, tagSet4), lessThan(0));
+    assertThat(TagSetsComparator.compare(tagSet3, tagSet4), lessThan(0));
 
-    assertThat(TagSetsHelper.compare(tagSet1, tagSet6), lessThan(0));
-    assertThat(TagSetsHelper.compare(tagSet2, tagSet6), lessThan(0));
-    assertThat(TagSetsHelper.compare(tagSet3, tagSet6), lessThan(0));
-    assertThat(TagSetsHelper.compare(tagSet4, tagSet6), lessThan(0));
+    assertThat(TagSetsComparator.compare(tagSet1, tagSet6), lessThan(0));
+    assertThat(TagSetsComparator.compare(tagSet2, tagSet6), lessThan(0));
+    assertThat(TagSetsComparator.compare(tagSet3, tagSet6), lessThan(0));
+    assertThat(TagSetsComparator.compare(tagSet4, tagSet6), lessThan(0));
 
-    assertThat(TagSetsHelper.compare(tagSet5, tagSet3), greaterThan(0));
-    assertThat(TagSetsHelper.compare(tagSet5, tagSet2), greaterThan(0));
-    assertThat(TagSetsHelper.compare(tagSet5, tagSet1), greaterThan(0));
-    assertThat(TagSetsHelper.compare(tagSet3, tagSet2), greaterThan(0));
-    assertThat(TagSetsHelper.compare(tagSet3, tagSet1), greaterThan(0));
-    assertThat(TagSetsHelper.compare(tagSet2, tagSet1), greaterThan(0));
+    assertThat(TagSetsComparator.compare(tagSet5, tagSet3), greaterThan(0));
+    assertThat(TagSetsComparator.compare(tagSet5, tagSet2), greaterThan(0));
+    assertThat(TagSetsComparator.compare(tagSet5, tagSet1), greaterThan(0));
+    assertThat(TagSetsComparator.compare(tagSet3, tagSet2), greaterThan(0));
+    assertThat(TagSetsComparator.compare(tagSet3, tagSet1), greaterThan(0));
+    assertThat(TagSetsComparator.compare(tagSet2, tagSet1), greaterThan(0));
 
-    assertThat(TagSetsHelper.compare(tagSet6, tagSet4), greaterThan(0));
-    assertThat(TagSetsHelper.compare(tagSet6, tagSet3), greaterThan(0));
-    assertThat(TagSetsHelper.compare(tagSet6, tagSet2), greaterThan(0));
-    assertThat(TagSetsHelper.compare(tagSet6, tagSet1), greaterThan(0));
+    assertThat(TagSetsComparator.compare(tagSet6, tagSet4), greaterThan(0));
+    assertThat(TagSetsComparator.compare(tagSet6, tagSet3), greaterThan(0));
+    assertThat(TagSetsComparator.compare(tagSet6, tagSet2), greaterThan(0));
+    assertThat(TagSetsComparator.compare(tagSet6, tagSet1), greaterThan(0));
   }
 
   @Test
@@ -61,17 +61,17 @@ public class TagSetsHelperTest {
     final String[] tagSet2 = new String[]{"testTag", "value"};
     final String[] tagSet3 = new String[]{null, "value"};
 
-    assertEquals(0, TagSetsHelper.compare(tagSet1, tagSet1));
-    assertEquals(0, TagSetsHelper.compare(tagSet2, tagSet2));
-    assertEquals(0, TagSetsHelper.compare(tagSet3, tagSet3));
+    assertEquals(0, TagSetsComparator.compare(tagSet1, tagSet1));
+    assertEquals(0, TagSetsComparator.compare(tagSet2, tagSet2));
+    assertEquals(0, TagSetsComparator.compare(tagSet3, tagSet3));
 
-    assertThat(TagSetsHelper.compare(tagSet2, tagSet1), lessThan(0));
-    assertThat(TagSetsHelper.compare(tagSet2, tagSet3), lessThan(0));
-    assertThat(TagSetsHelper.compare(tagSet1, tagSet3), lessThan(0));
+    assertThat(TagSetsComparator.compare(tagSet2, tagSet1), lessThan(0));
+    assertThat(TagSetsComparator.compare(tagSet2, tagSet3), lessThan(0));
+    assertThat(TagSetsComparator.compare(tagSet1, tagSet3), lessThan(0));
 
-    assertThat(TagSetsHelper.compare(tagSet1, tagSet2), greaterThan(0));
-    assertThat(TagSetsHelper.compare(tagSet3, tagSet1), greaterThan(0));
-    assertThat(TagSetsHelper.compare(tagSet3, tagSet2), greaterThan(0));
+    assertThat(TagSetsComparator.compare(tagSet1, tagSet2), greaterThan(0));
+    assertThat(TagSetsComparator.compare(tagSet3, tagSet1), greaterThan(0));
+    assertThat(TagSetsComparator.compare(tagSet3, tagSet2), greaterThan(0));
   }
   
   @Test
@@ -86,7 +86,7 @@ public class TagSetsHelperTest {
     tagSet[2] = tagSet3;
     tagSet[3] = tagSet4;
     tagSet[4] = null;
-    TagSetsHelper comparator = new TagSetsHelper(tagSet);
+    TagSetsComparator comparator = new TagSetsComparator(tagSet);
     Integer first = null;
     Integer second = null;
 
@@ -139,7 +139,7 @@ public class TagSetsHelperTest {
     tagSet[0] = tagSet1;
     tagSet[1] = tagSet2;
     tagSet[2] = tagSet3;
-    TagSetsHelper comparator = new TagSetsHelper(tagSet);
+    TagSetsComparator comparator = new TagSetsComparator(tagSet);
     Integer first = 0;
     Integer second = 1;
     assertEquals(1, comparator.compare(first, second));
