@@ -12,6 +12,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import mockit.Deencapsulation;
@@ -601,5 +602,65 @@ public class BasicHistogramAggregatorTest {
     assertTrue(cursor.next());
     assertArrayEquals(tagset1, cursor.getTags());
     assertEquals("test", cursor.getMetricId());
+  }
+
+  @Test
+  public void testTagSetReuse() {
+    DistributionBucket bucket = new DistributionBucket(new long[]{0, 10, 100});
+    final BasicHistogramAggregator table = new BasicHistogramAggregator("test", bucket);
+
+    String[] tagset = {"testTag", "value"};
+    String[] tagset1 = Arrays.copyOf(tagset, tagset.length);
+    table.apply(tagset, -1, CURRENT_TIME);
+    table.apply(tagset, 0, CURRENT_TIME);
+    table.apply(tagset, 1L, CURRENT_TIME);
+    table.apply(tagset, 10, CURRENT_TIME);
+    table.apply(tagset, 50, CURRENT_TIME);
+    table.apply(tagset, 100, CURRENT_TIME);
+    table.apply(tagset, 150, CURRENT_TIME);
+    table.apply(tagset, 101, CURRENT_TIME);
+
+    tagset[1] = "value1";
+    String[] tagset2 = Arrays.copyOf(tagset, tagset.length);
+    table.apply(tagset, 0, CURRENT_TIME);
+    table.apply(tagset, 1L, CURRENT_TIME);
+    table.apply(tagset, 20, CURRENT_TIME);
+    table.apply(tagset, 90, CURRENT_TIME);
+    table.apply(tagset, 100, CURRENT_TIME);
+    table.apply(tagset, 250, CURRENT_TIME);
+    table.apply(tagset, 20, CURRENT_TIME);
+
+    assertEquals(2, table.size());
+
+    Cursor cursor = table.cursor();
+    assertTrue(cursor.next());
+    assertArrayEquals(
+            new String[]{"count", "sum", "min", "max", "lastValue", "0_10", "10_100", "overflow", "underflow"},
+            cursor.getFields());
+    assertArrayEquals(tagset1, cursor.getTags());
+    assertEquals(CURRENT_TIME, cursor.lastUpdated()); // last updated timestamp
+    assertEquals(8, cursor.readLong(0)); // count
+    assertEquals(411, cursor.readLong(1)); // sum
+    assertEquals(-1, cursor.readLong(2)); // min
+    assertEquals(150, cursor.readLong(3)); // max
+    assertEquals(101, cursor.readLong(4)); // lastValue
+    assertEquals(2, cursor.readLong(5)); // [0,10)
+    assertEquals(2, cursor.readLong(6)); // [10,100)
+    assertEquals(3, cursor.readLong(7)); // overflow
+    assertEquals(1, cursor.readLong(8)); // underflow
+
+    assertTrue(cursor.next());
+    assertArrayEquals(tagset2, cursor.getTags());
+    assertEquals(CURRENT_TIME, cursor.lastUpdated()); // last updated timestamp
+    assertEquals(7, cursor.readLong(0)); // count
+    assertEquals(481, cursor.readLong(1)); // sum
+    assertEquals(0, cursor.readLong(2)); // min
+    assertEquals(250, cursor.readLong(3)); // max
+    assertEquals(20, cursor.readLong(4)); // lastValue
+    assertEquals(2, cursor.readLong(5)); // [0,10)
+    assertEquals(3, cursor.readLong(6)); // [10,100)
+    assertEquals(2, cursor.readLong(7)); // overflow
+    assertEquals(0, cursor.readLong(8)); // underflow
+
   }
 }

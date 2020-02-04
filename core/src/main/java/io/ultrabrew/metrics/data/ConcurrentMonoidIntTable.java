@@ -377,7 +377,7 @@ public abstract class ConcurrentMonoidIntTable {
               }
 
               // Store tags in the tag array for iteration purposes only
-              tagSets[tagIndex] = tags;
+              tagSets[tagIndex] = Arrays.copyOf(tags, tags.length);
 
               // Encode table index and slot index into a long.
               // Upper 32 bits represent the table index and lower 32 bits represent the slot index.
