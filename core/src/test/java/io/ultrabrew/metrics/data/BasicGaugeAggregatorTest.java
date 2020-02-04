@@ -122,4 +122,62 @@ public class BasicGaugeAggregatorTest {
     assertEquals(128, aggregator.capacity());
     assertEquals(4096, maxCapacity);
   }
+
+  /*
+   * See <a href="https://github.com/ultrabrew/metrics/issues/29>Issue #29</a>
+   */
+  @Test
+  public void testTagSetReuse() {
+    final BasicGaugeAggregator aggregator = new BasicGaugeAggregator("test", 3, 3);
+
+    final String tv1 = "tagv1";
+    final String tv2 = "tagv2";
+    final String tv3 = "tagv3";
+
+    final String[] tags = new String[]{"tagk", tv1};
+    final int hash1 = Arrays.hashCode(tags);
+    aggregator.apply(tags, 1L, CURRENT_TIME);
+    tags[1] = tv2;
+    final int hash2 = Arrays.hashCode(tags);
+    aggregator.apply(tags, 2L, CURRENT_TIME);
+    tags[1] = tv3;
+    final int hash3 = Arrays.hashCode(tags);
+    aggregator.apply(tags, 3L, CURRENT_TIME);
+    tags[1] = tv2;
+    aggregator.apply(tags, 2L, CURRENT_TIME);
+
+    assertEquals(3, aggregator.size());
+    Cursor cursor = aggregator.cursor();
+    int found = 1;
+    while(cursor.next()) {
+      final int hash = Arrays.hashCode(cursor.getTags());
+      if (hash == hash1) {
+        assertEquals(1L, cursor.readLong(0)); // count
+        assertEquals(1L, cursor.readLong(1)); // sum
+        assertEquals(1L, cursor.readLong(2)); // min
+        assertEquals(1L, cursor.readLong(3)); // max
+        assertEquals(1L, cursor.readLong(4)); // last
+        found *= 3;
+      } else if (hash == hash2) {
+        assertEquals(2L, cursor.readLong(0)); // count
+        assertEquals(4L, cursor.readLong(1)); // sum
+        assertEquals(2L, cursor.readLong(2)); // min
+        assertEquals(2L, cursor.readLong(3)); // max
+        assertEquals(2L, cursor.readLong(4)); // last
+        found *= 5;
+      } else if (hash == hash3) {
+        assertEquals(1L, cursor.readLong(0)); // count
+        assertEquals(3L, cursor.readLong(1)); // sum
+        assertEquals(3L, cursor.readLong(2)); // min
+        assertEquals(3L, cursor.readLong(3)); // max
+        assertEquals(3L, cursor.readLong(4)); // last
+        found *= 7;
+      } else {
+        fail("Unknown hashcode");
+      }
+    }
+    assertEquals(105, found, "all expected hash codes were not found");
+
+  }
+
 }

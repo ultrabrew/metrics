@@ -56,15 +56,15 @@ public class MultiCursorTest {
             Arrays.asList(timerAggregator, gaugeAggregator, counterAggregator,
                 AggregatingReporter.NOOP));
 
-    final Map<String[], List<String>> records = new java.util.HashMap<>();
+    final Map<Integer, List<String>> records = new java.util.HashMap<>();
 
     while (multiCursor.next()) {
       CursorEntry entry = multiCursor.nextCursorEntry();
       while (entry != null) {
         final List<String> metricIds = records
-            .getOrDefault(multiCursor.getTags(), new java.util.ArrayList<>());
+            .getOrDefault(Arrays.hashCode(multiCursor.getTags()), new java.util.ArrayList<>());
         metricIds.add(entry.getMetricId());
-        records.put(multiCursor.getTags(), metricIds);
+        records.put(Arrays.hashCode(multiCursor.getTags()), metricIds);
         log.info("{} {}", multiCursor.getTags(), entry.getMetricId());
 
         entry = multiCursor.nextCursorEntry();
@@ -72,12 +72,16 @@ public class MultiCursorTest {
       assertNull(multiCursor.nextCursorEntry());
     }
     assertFalse(multiCursor.next());
-
     assertEquals(4, records.size());
-    assertThat(records.get(tagSet1), containsInAnyOrder("gauge", "counter"));
+
+    for(Map.Entry<Integer, List<String>> entry: records.entrySet()) {
+      log.info("{} {} {}", entry.getKey(), entry.getValue());
+    }
+
+    assertThat(records.get(Arrays.hashCode(tagSet1)), containsInAnyOrder("gauge", "counter"));
     // Because timerAggregator is first in the list, its tagset2b is used for both
-    assertThat(records.get(tagSet2b), containsInAnyOrder("gauge", "timer"));
-    assertThat(records.get(tagSet3), containsInAnyOrder("gauge"));
-    assertThat(records.get(tagSet4), containsInAnyOrder("gauge", "counter"));
+    assertThat(records.get(Arrays.hashCode(tagSet2b)), containsInAnyOrder("gauge", "timer"));
+    assertThat(records.get(Arrays.hashCode(tagSet3)), containsInAnyOrder("gauge"));
+    assertThat(records.get(Arrays.hashCode(tagSet4)), containsInAnyOrder("gauge", "counter"));
   }
 }
