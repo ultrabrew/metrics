@@ -215,8 +215,8 @@ public class MetricRegistry {
   //--- INTERNAL METHODS ---
 
   void emit(final Metric metric, final long timestamp, final long value, final String[] tags) {
-    for (final Reporter r : reporters) {
-      r.emit(metric, timestamp, value, tags);
+    for (int i = 0; i < reporters.size(); i++) {
+      reporters.get(i).emit(metric, timestamp, value, tags);
     }
   }
 }
