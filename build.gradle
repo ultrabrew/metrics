@@ -82,7 +82,7 @@ subprojects {
     check.dependsOn cloverGenerateReport, dependencyCheckAnalyze
 
     dependencyCheck {
-        skipConfigurations = ['clover', 'jmh']
+        skipConfigurations = ['clover', 'jmh', 'spotbugs']
         format = 'ALL'
         failBuildOnCVSS = 4.0
     }
