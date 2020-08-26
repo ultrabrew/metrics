@@ -48,8 +48,6 @@ subprojects {
         clover group: 'org.openclover', name: 'clover', version: '4.2.1'
 
         spotbugsPlugins 'com.h3xstream.findsecbugs:findsecbugs-plugin:1.8.0'
-
-        archives group: 'org.apache.maven.wagon', name: 'wagon-ssh-external', version: '3.2.0'
     }
 
     test {
@@ -82,7 +80,7 @@ subprojects {
     check.dependsOn cloverGenerateReport, dependencyCheckAnalyze
 
     dependencyCheck {
-        skipConfigurations = ['clover', 'jmh']
+        skipConfigurations = ['clover', 'jmh', 'spotbugs']
         format = 'ALL'
         failBuildOnCVSS = 4.0
     }
