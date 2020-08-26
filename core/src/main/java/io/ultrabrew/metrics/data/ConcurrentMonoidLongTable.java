@@ -337,7 +337,7 @@ public abstract class ConcurrentMonoidLongTable implements Aggregator {
   private boolean growTable() {
 
     if (capacity >= maxCapacity) {
-      LOGGER.error("Maximum linear probing table capacity reached");
+      LOGGER.error("Maximum linear probing table capacity reached (needed {}, max {}, metric-id \"{}\")", capacity, maxCapacity, metricId);
       return false;
     }
 
