@@ -4,6 +4,7 @@
 
 package io.ultrabrew.metrics.reporters.influxdb;
 
+import java.util.Arrays;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.BufferOverflowException;
@@ -17,12 +18,15 @@ import org.apache.http.entity.ContentType;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This class provides methods to access InfluxDB.
  */
 public class InfluxDBClient {
-
+  private static final Logger LOGGER = LoggerFactory.getLogger(InfluxDBClient.class);
+  
   private static final String UTF_8 = StandardCharsets.UTF_8.name();
   private static final byte WHITESPACE = ' ';
   private static final byte COMMA = ',';
@@ -57,8 +61,25 @@ public class InfluxDBClient {
   private void doWrite(final String measurement, final String[] tags, final String[] fields,
       final long timestamp)
       throws IOException {
+    if (measurement == null || measurement.isEmpty()) {
+      LOGGER.warn("Null or empty measurement.");
+      return;
+    }
+    int rollback = byteBuffer.position();
     byteBuffer.put(measurement.getBytes(UTF_8));
     for (int i = 0; i < tags.length; i += 2) {
+      if (tags[i] == null || tags[i].isEmpty()) {
+        LOGGER.warn("Null or empty tag key in tags array: " 
+            + Arrays.toString(tags) + " for measurement " + measurement);
+        byteBuffer.position(rollback);
+        return;
+      }
+      if (tags[i + 1] == null || tags[i + 1].isEmpty()) {
+        LOGGER.warn("Null or empty tag value in tags array: " 
+            + Arrays.toString(tags) + " for measurement " + measurement);
+        byteBuffer.position(rollback);
+        return;
+      }
       byteBuffer.put(COMMA)
           .put(tags[i].getBytes(UTF_8))
           .put(EQUALS)
@@ -70,6 +91,18 @@ public class InfluxDBClient {
     for (int i = 0; i < fields.length; i += 2) {
       if (!f) {
         byteBuffer.put(COMMA);
+      }
+      if (fields[i] == null || fields[i].isEmpty()) {
+        LOGGER.warn("Null or empty field name in array: " 
+            + Arrays.toString(fields) + " for measurement " + measurement);
+        byteBuffer.position(rollback);
+        return;
+      }
+      if (fields[i + 1] == null || fields[i + 1].isEmpty()) {
+        LOGGER.warn("Null or empty field value in array: " 
+            + Arrays.toString(fields) + " for measurement " + measurement);
+        byteBuffer.position(rollback);
+        return;
       }
       byteBuffer.put(fields[i].getBytes(UTF_8))
           .put(EQUALS)

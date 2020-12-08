@@ -4,6 +4,8 @@
 
 package io.ultrabrew.metrics.reporters.opentsdb;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import java.util.Arrays;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
@@ -73,10 +75,33 @@ class OpenTSDBHttpClient {
         .build();
   }
 
+  @SuppressFBWarnings(value="NP", justification="Null check IS performed on tags")
   void write(final String metricName,
       final String[] tags,
       final long timestamp,
       final String value) throws IOException {
+    // validation
+    if (metricName == null || metricName.isEmpty()) {
+      LOG.warn("Null or empty metric name.");
+      return;
+    }
+    if (value == null || value.isEmpty()) {
+      LOG.warn("Null or empty value.");
+      return;
+    }
+    if (tags != null) {
+      if (tags.length % 2 != 0) {
+        LOG.warn("Uneven tag count: " + Arrays.toString(tags) + " for metric " + metricName);
+        return;
+      }
+      for (int i = 0; i < tags.length; i++) {
+        if (tags[i] == null || tags[i].length() < 1) {
+          LOG.warn("Null tag key or value in: " + Arrays.toString(tags) + " for metric " + metricName);
+          return;
+        }
+      }
+    }
+    
     if (currentBatchSize++ > 0) {
       writer.write(',');
     }
