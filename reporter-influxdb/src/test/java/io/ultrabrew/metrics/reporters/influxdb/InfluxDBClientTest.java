@@ -148,6 +148,22 @@ public class InfluxDBClientTest {
   }
 
   @Test
+  public void testNullStrings() throws Exception {
+    new Expectations() {{
+      
+    }};
+    client.write(null, new String[] { "host", "web01" }, new String[] { "temp", "80" }, 1534055562000000003L);
+    client.write("cpu_load_short", new String[] { null, "web01" }, new String[] { "temp", "80" }, 1534055562000000003L);
+    client.write("cpu_load_short", new String[] { "host", null }, new String[] { "temp", "80" }, 1534055562000000003L);
+    client.write("cpu_load_short", new String[] { "host", "web01" }, new String[] { null, "80" }, 1534055562000000003L);
+    client.write("cpu_load_short", new String[] { "host", "web01" }, new String[] { "temp", null }, 1534055562000000003L);
+    new Verifications() {{
+      EntityUtils.consumeQuietly((HttpEntity) any);
+      times = 0;
+    }};
+  }
+  
+  @Test
   public void testTooLargeMeasurement() throws IOException {
     InfluxDBClient c = new InfluxDBClient(URI.create("http://localhost:8086/write?db=test"), 10);
     assertThrows(IllegalArgumentException.class,

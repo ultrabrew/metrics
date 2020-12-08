@@ -64,6 +64,20 @@ public class InfluxDBReporterTest {
     ByteBuffer buffer = Deencapsulation.getField(c, "byteBuffer");
     assertEquals(12765, buffer.capacity());
   }
+  
+  @Test
+  public void testSeEndpoint() {
+    InfluxDBReporter r = InfluxDBReporter.builder()
+        .withBaseUri(TEST_URI)
+        .withDatabase("test") // ignored
+        .withEndpoint("/my/change?db=foo")
+        .withBufferSize(12765)
+        .build();
+
+    InfluxDBClient c = Deencapsulation.getField(r, "dbClient");
+    URI uri = Deencapsulation.getField(c, "dbUri");
+    assertEquals(TEST_URI + "/my/change?db=foo", uri.toString());
+  }
 
   @Test
   public void testReporting(@Mocked CloseableHttpClient httpClient,

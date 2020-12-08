@@ -5,6 +5,7 @@
 package io.ultrabrew.metrics.reporters.opentsdb;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.ultrabrew.metrics.util.Strings;
 import java.util.Arrays;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -75,30 +76,31 @@ class OpenTSDBHttpClient {
         .build();
   }
 
-  @SuppressFBWarnings(value="NP", justification="Null check IS performed on tags")
   void write(final String metricName,
       final String[] tags,
       final long timestamp,
       final String value) throws IOException {
     // validation
-    if (metricName == null || metricName.isEmpty()) {
+    if (Strings.isNullOrEmpty(metricName)) {
       LOG.warn("Null or empty metric name.");
       return;
     }
-    if (value == null || value.isEmpty()) {
+    if (Strings.isNullOrEmpty(value)) {
       LOG.warn("Null or empty value.");
       return;
     }
-    if (tags != null) {
-      if (tags.length % 2 != 0) {
-        LOG.warn("Uneven tag count: " + Arrays.toString(tags) + " for metric " + metricName);
+    if (tags == null) {
+      LOG.warn("At least one tag pair must be present.");
+      return;
+    }
+    if (tags.length % 2 != 0) {
+      LOG.warn("Uneven tag count: " + Arrays.toString(tags) + " for metric " + metricName);
+      return;
+    }
+    for (int i = 0; i < tags.length; i++) {
+      if (Strings.isNullOrEmpty(tags[i])) {
+        LOG.warn("Null tag key or value in: " + Arrays.toString(tags) + " for metric " + metricName);
         return;
-      }
-      for (int i = 0; i < tags.length; i++) {
-        if (tags[i] == null || tags[i].length() < 1) {
-          LOG.warn("Null tag key or value in: " + Arrays.toString(tags) + " for metric " + metricName);
-          return;
-        }
       }
     }
     

@@ -11,6 +11,7 @@ import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import mockit.Expectations;
 import mockit.Mocked;
+import mockit.Verifications;
 import org.apache.http.StatusLine;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpUriRequest;
@@ -86,6 +87,23 @@ public class OpenTSDBHttpClientTest {
     assertEquals(0, client.currentBatchSize);
   }
 
+  @Test
+  public void testNullStringsAndTagsValidation() throws Exception {
+    new Expectations() {{
+      
+    }};
+    OpenTSDBHttpClient client = new OpenTSDBHttpClient(DUMMY_DB_URI, 64, true);
+    client.write(null, new String[] { "host", "web01" }, 1534055562000000003L, "80");
+    client.write("cpu_load_short.temp", new String[] { null, "web01" }, 1534055562000000003L, "80");
+    client.write("cpu_load_short.temp", new String[] { "host", null }, 1534055562000000003L, "80");
+    client.write("cpu_load_short.temp", new String[] { "host", "web01" }, 1534055562000000003L, null);
+    client.write("cpu_load_short.temp", null, 1534055562000000003L, "80");
+    client.write("cpu_load_short.temp", new String[] { "host" }, 1534055562000000003L, "80");
+    new Verifications() {{
+      times = 0;
+    }};
+  }
+  
   @Test
   public void testEscapeString() throws Exception {
     OpenTSDBHttpClient c = new OpenTSDBHttpClient(DUMMY_DB_URI, 64, false);

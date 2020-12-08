@@ -4,6 +4,7 @@
 
 package io.ultrabrew.metrics.reporters.influxdb;
 
+import io.ultrabrew.metrics.util.Strings;
 import java.util.Arrays;
 import java.io.IOException;
 import java.net.URI;
@@ -61,20 +62,20 @@ public class InfluxDBClient {
   private void doWrite(final String measurement, final String[] tags, final String[] fields,
       final long timestamp)
       throws IOException {
-    if (measurement == null || measurement.isEmpty()) {
+    if (Strings.isNullOrEmpty(measurement)) {
       LOGGER.warn("Null or empty measurement.");
       return;
     }
     int rollback = byteBuffer.position();
     byteBuffer.put(measurement.getBytes(UTF_8));
     for (int i = 0; i < tags.length; i += 2) {
-      if (tags[i] == null || tags[i].isEmpty()) {
+      if (Strings.isNullOrEmpty(tags[i])) {
         LOGGER.warn("Null or empty tag key in tags array: " 
             + Arrays.toString(tags) + " for measurement " + measurement);
         byteBuffer.position(rollback);
         return;
       }
-      if (tags[i + 1] == null || tags[i + 1].isEmpty()) {
+      if (Strings.isNullOrEmpty(tags[i + 1])) {
         LOGGER.warn("Null or empty tag value in tags array: " 
             + Arrays.toString(tags) + " for measurement " + measurement);
         byteBuffer.position(rollback);
@@ -92,13 +93,13 @@ public class InfluxDBClient {
       if (!f) {
         byteBuffer.put(COMMA);
       }
-      if (fields[i] == null || fields[i].isEmpty()) {
+      if (Strings.isNullOrEmpty(fields[i])) {
         LOGGER.warn("Null or empty field name in array: " 
             + Arrays.toString(fields) + " for measurement " + measurement);
         byteBuffer.position(rollback);
         return;
       }
-      if (fields[i + 1] == null || fields[i + 1].isEmpty()) {
+      if (Strings.isNullOrEmpty(fields[i + 1])) {
         LOGGER.warn("Null or empty field value in array: " 
             + Arrays.toString(fields) + " for measurement " + measurement);
         byteBuffer.position(rollback);
