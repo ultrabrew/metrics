@@ -9,14 +9,17 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import mockit.Capturing;
 import mockit.Expectations;
 import mockit.Mocked;
 import mockit.Verifications;
 import org.apache.http.StatusLine;
 import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.junit.jupiter.api.Test;
+import org.apache.http.util.EntityUtils;
 
 public class OpenTSDBHttpClientTest {
 
@@ -89,6 +92,14 @@ public class OpenTSDBHttpClientTest {
 
   @Test
   public void testNullStringsAndTagsValidation() throws Exception {
+    new Expectations() {{
+      httpClient.execute((HttpUriRequest) any);
+      result = closeableHttpResponse;
+      closeableHttpResponse.getStatusLine();
+      result = statusLine;
+      statusLine.getStatusCode();
+      result = 200;
+    }};
     OpenTSDBHttpClient client = new OpenTSDBHttpClient(DUMMY_DB_URI, 64, true);
     client.write(null, new String[] { "host", "web01" }, 1534055562000000003L, "80");
     client.write("cpu_load_short.temp", new String[] { null, "web01" }, 1534055562000000003L, "80");
@@ -96,6 +107,14 @@ public class OpenTSDBHttpClientTest {
     client.write("cpu_load_short.temp", new String[] { "host", "web01" }, 1534055562000000003L, null);
     client.write("cpu_load_short.temp", null, 1534055562000000003L, "80");
     client.write("cpu_load_short.temp", new String[] { "host" }, 1534055562000000003L, "80");
+    client.flush();
+    new Verifications() {{
+      HttpPost request;
+      httpClient.execute(request = withCapture());
+      times = 1;
+      assertEquals("[{\"metric\":\"cpu_load_short.temp\",\"timestamp\":1534055562000000003,\"tags\":{\"host\":\"NULL\"},\"value\":80}]", 
+                     EntityUtils.toString(request.getEntity()));
+    }};
   }
   
   @Test

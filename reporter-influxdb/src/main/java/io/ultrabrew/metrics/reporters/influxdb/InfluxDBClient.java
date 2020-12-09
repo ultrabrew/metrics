@@ -33,6 +33,7 @@ public class InfluxDBClient {
   private static final byte COMMA = ',';
   private static final byte EQUALS = '=';
   private static final byte NEWLINE = '\n';
+  private static final byte[] NULL_STRING = new byte[] { 'N', 'U', 'L', 'L' };
 
   private final ByteBuffer byteBuffer;
   private final URI dbUri;
@@ -76,15 +77,15 @@ public class InfluxDBClient {
         return;
       }
       if (Strings.isNullOrEmpty(tags[i + 1])) {
-        LOGGER.warn("Null or empty tag value in tags array: {} for measurement {}", 
-          Arrays.toString(tags), measurement);
-        byteBuffer.position(rollback);
-        return;
+        // TODO - Some users want this, some don't. Set a flag in the builder.
+        //LOGGER.warn("Null or empty tag value in tags array: {} for measurement {}", 
+        //  Arrays.toString(tags), measurement);
       }
       byteBuffer.put(COMMA)
           .put(tags[i].getBytes(UTF_8))
           .put(EQUALS)
-          .put(tags[i + 1].getBytes(UTF_8));
+          .put(Strings.isNullOrEmpty(tags[i + 1]) ? NULL_STRING : 
+            tags[i + 1].getBytes(UTF_8));
     }
     byteBuffer.put(WHITESPACE);
 

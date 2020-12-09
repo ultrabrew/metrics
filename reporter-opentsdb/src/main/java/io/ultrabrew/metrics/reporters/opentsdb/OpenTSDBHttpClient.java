@@ -4,7 +4,6 @@
 
 package io.ultrabrew.metrics.reporters.opentsdb;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.ultrabrew.metrics.util.Strings;
 import java.util.Arrays;
 import java.io.ByteArrayOutputStream;
@@ -98,8 +97,8 @@ class OpenTSDBHttpClient {
       return;
     }
     for (int i = 0; i < tags.length; i++) {
-      if (Strings.isNullOrEmpty(tags[i])) {
-        LOG.warn("Null tag key or value in: {} for metric {}", Arrays.toString(tags), metricName);
+      if (i % 2 == 0 && Strings.isNullOrEmpty(tags[i])) {
+        LOG.warn("Null tag key in: {} for metric {}", Arrays.toString(tags), metricName);
         return;
       }
     }
@@ -118,7 +117,11 @@ class OpenTSDBHttpClient {
     writer.write(TAGS);
     boolean toggle = true;
     for (int i = 0; i < tags.length; i++) {
-      writeEscapedString(tags[i]);
+      if (i % 2 != 0 && tags[i] == null) {
+        writeEscapedString("NULL");
+      } else {
+        writeEscapedString(tags[i]);
+      }
       if (toggle) {
         writer.write(':');
       } else if (i + 1 < tags.length) {
