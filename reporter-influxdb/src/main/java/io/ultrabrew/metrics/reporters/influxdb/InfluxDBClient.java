@@ -70,14 +70,14 @@ public class InfluxDBClient {
     byteBuffer.put(measurement.getBytes(UTF_8));
     for (int i = 0; i < tags.length; i += 2) {
       if (Strings.isNullOrEmpty(tags[i])) {
-        LOGGER.warn("Null or empty tag key in tags array: " 
-            + Arrays.toString(tags) + " for measurement " + measurement);
+        LOGGER.warn("Null or empty tag key in tags array: {} for measurement {}", 
+          Arrays.toString(tags), measurement);
         byteBuffer.position(rollback);
         return;
       }
       if (Strings.isNullOrEmpty(tags[i + 1])) {
-        LOGGER.warn("Null or empty tag value in tags array: " 
-            + Arrays.toString(tags) + " for measurement " + measurement);
+        LOGGER.warn("Null or empty tag value in tags array: {} for measurement {}", 
+          Arrays.toString(tags), measurement);
         byteBuffer.position(rollback);
         return;
       }
@@ -94,14 +94,14 @@ public class InfluxDBClient {
         byteBuffer.put(COMMA);
       }
       if (Strings.isNullOrEmpty(fields[i])) {
-        LOGGER.warn("Null or empty field name in array: " 
-            + Arrays.toString(fields) + " for measurement " + measurement);
+        LOGGER.warn("Null or empty field name in array: {} for measurement {}", 
+          Arrays.toString(fields), measurement);
         byteBuffer.position(rollback);
         return;
       }
       if (Strings.isNullOrEmpty(fields[i + 1])) {
-        LOGGER.warn("Null or empty field value in array: " 
-            + Arrays.toString(fields) + " for measurement " + measurement);
+        LOGGER.warn("Null or empty field value in array: {} for measurement {}", 
+          Arrays.toString(fields), measurement);
         byteBuffer.position(rollback);
         return;
       }
@@ -167,4 +167,5 @@ public class InfluxDBClient {
       byteBuffer.clear();
     }
   }
+  
 }

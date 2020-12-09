@@ -94,12 +94,12 @@ class OpenTSDBHttpClient {
       return;
     }
     if (tags.length % 2 != 0) {
-      LOG.warn("Uneven tag count: " + Arrays.toString(tags) + " for metric " + metricName);
+      LOG.warn("Uneven tag count: {} for metric {}", Arrays.toString(tags), metricName);
       return;
     }
     for (int i = 0; i < tags.length; i++) {
       if (Strings.isNullOrEmpty(tags[i])) {
-        LOG.warn("Null tag key or value in: " + Arrays.toString(tags) + " for metric " + metricName);
+        LOG.warn("Null tag key or value in: {} for metric {}", Arrays.toString(tags), metricName);
         return;
       }
     }

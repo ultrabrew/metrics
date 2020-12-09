@@ -10,6 +10,7 @@ import io.ultrabrew.metrics.data.Cursor;
 import io.ultrabrew.metrics.data.CursorEntry;
 import io.ultrabrew.metrics.data.Type;
 import io.ultrabrew.metrics.reporters.TimeWindowReporter;
+import io.ultrabrew.metrics.util.Strings;
 import java.io.IOException;
 import java.net.URI;
 import java.util.Map;
@@ -150,11 +151,11 @@ public class InfluxDBReporter extends TimeWindowReporter {
       if (baseUri == null) {
         throw new IllegalArgumentException("Invalid baseUri");
       }
-      if ((database == null || database.isEmpty()) && 
-          (endpoint == null || endpoint.isEmpty())) {
+      if (Strings.isNullOrEmpty(database) && 
+          Strings.isNullOrEmpty(endpoint)) {
         throw new IllegalArgumentException("Invalid database");
       }
-      if (endpoint != null && !endpoint.isEmpty()) {
+      if (!Strings.isNullOrEmpty(endpoint)) {
         return new InfluxDBReporter(baseUri.resolve(endpoint), windowSeconds,
             bufferSize, defaultAggregators, metricAggregators);
       }

@@ -148,18 +148,28 @@ public class InfluxDBClientTest {
   }
 
   @Test
-  public void testNullStrings() throws Exception {
+  public void testNullStrings() throws IOException {
     new Expectations() {{
-      
+      httpClient.execute((HttpUriRequest) any);
+      result = closeableHttpResponse;
+      closeableHttpResponse.getEntity();
+      result = new BasicHttpEntity();
+      closeableHttpResponse.getStatusLine();
+      result = statusLine;
+      statusLine.getStatusCode();
+      result = 200;
     }};
     client.write(null, new String[] { "host", "web01" }, new String[] { "temp", "80" }, 1534055562000000003L);
     client.write("cpu_load_short", new String[] { null, "web01" }, new String[] { "temp", "80" }, 1534055562000000003L);
+    // one good one in the middle
+    client.write("cpu_load_short", new String[] { "host", "web01" }, new String[] { "temp", "80" }, 1534055562000000003L);
     client.write("cpu_load_short", new String[] { "host", null }, new String[] { "temp", "80" }, 1534055562000000003L);
     client.write("cpu_load_short", new String[] { "host", "web01" }, new String[] { null, "80" }, 1534055562000000003L);
     client.write("cpu_load_short", new String[] { "host", "web01" }, new String[] { "temp", null }, 1534055562000000003L);
+    client.flush();
     new Verifications() {{
-      EntityUtils.consumeQuietly((HttpEntity) any);
-      times = 0;
+      httpClient.execute((HttpUriRequest) any);
+      times = 1;
     }};
   }
   

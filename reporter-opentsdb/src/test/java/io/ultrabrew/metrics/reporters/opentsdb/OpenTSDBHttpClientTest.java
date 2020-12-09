@@ -89,9 +89,6 @@ public class OpenTSDBHttpClientTest {
 
   @Test
   public void testNullStringsAndTagsValidation() throws Exception {
-    new Expectations() {{
-      
-    }};
     OpenTSDBHttpClient client = new OpenTSDBHttpClient(DUMMY_DB_URI, 64, true);
     client.write(null, new String[] { "host", "web01" }, 1534055562000000003L, "80");
     client.write("cpu_load_short.temp", new String[] { null, "web01" }, 1534055562000000003L, "80");
@@ -99,9 +96,6 @@ public class OpenTSDBHttpClientTest {
     client.write("cpu_load_short.temp", new String[] { "host", "web01" }, 1534055562000000003L, null);
     client.write("cpu_load_short.temp", null, 1534055562000000003L, "80");
     client.write("cpu_load_short.temp", new String[] { "host" }, 1534055562000000003L, "80");
-    new Verifications() {{
-      times = 0;
-    }};
   }
   
   @Test
