@@ -4,6 +4,8 @@
 
 package io.ultrabrew.metrics.reporters.influxdb;
 
+import io.ultrabrew.metrics.util.Strings;
+import java.util.Arrays;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.BufferOverflowException;
@@ -17,17 +19,21 @@ import org.apache.http.entity.ContentType;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This class provides methods to access InfluxDB.
  */
 public class InfluxDBClient {
-
+  private static final Logger LOGGER = LoggerFactory.getLogger(InfluxDBClient.class);
+  
   private static final String UTF_8 = StandardCharsets.UTF_8.name();
   private static final byte WHITESPACE = ' ';
   private static final byte COMMA = ',';
   private static final byte EQUALS = '=';
   private static final byte NEWLINE = '\n';
+  private static final byte[] NULL_STRING = new byte[] { 'N', 'U', 'L', 'L' };
 
   private final ByteBuffer byteBuffer;
   private final URI dbUri;
@@ -57,12 +63,29 @@ public class InfluxDBClient {
   private void doWrite(final String measurement, final String[] tags, final String[] fields,
       final long timestamp)
       throws IOException {
+    if (Strings.isNullOrEmpty(measurement)) {
+      LOGGER.warn("Null or empty measurement.");
+      return;
+    }
+    int rollback = byteBuffer.position();
     byteBuffer.put(measurement.getBytes(UTF_8));
     for (int i = 0; i < tags.length; i += 2) {
+      if (Strings.isNullOrEmpty(tags[i])) {
+        LOGGER.warn("Null or empty tag key in tags array: {} for measurement {}", 
+          Arrays.toString(tags), measurement);
+        byteBuffer.position(rollback);
+        return;
+      }
+      if (Strings.isNullOrEmpty(tags[i + 1])) {
+        // TODO - Some users want this, some don't. Set a flag in the builder.
+        //LOGGER.warn("Null or empty tag value in tags array: {} for measurement {}", 
+        //  Arrays.toString(tags), measurement);
+      }
       byteBuffer.put(COMMA)
           .put(tags[i].getBytes(UTF_8))
           .put(EQUALS)
-          .put(tags[i + 1].getBytes(UTF_8));
+          .put(Strings.isNullOrEmpty(tags[i + 1]) ? NULL_STRING : 
+            tags[i + 1].getBytes(UTF_8));
     }
     byteBuffer.put(WHITESPACE);
 
@@ -70,6 +93,18 @@ public class InfluxDBClient {
     for (int i = 0; i < fields.length; i += 2) {
       if (!f) {
         byteBuffer.put(COMMA);
+      }
+      if (Strings.isNullOrEmpty(fields[i])) {
+        LOGGER.warn("Null or empty field name in array: {} for measurement {}", 
+          Arrays.toString(fields), measurement);
+        byteBuffer.position(rollback);
+        return;
+      }
+      if (Strings.isNullOrEmpty(fields[i + 1])) {
+        LOGGER.warn("Null or empty field value in array: {} for measurement {}", 
+          Arrays.toString(fields), measurement);
+        byteBuffer.position(rollback);
+        return;
       }
       byteBuffer.put(fields[i].getBytes(UTF_8))
           .put(EQUALS)
@@ -133,4 +168,5 @@ public class InfluxDBClient {
       byteBuffer.clear();
     }
   }
+  
 }

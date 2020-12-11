@@ -10,6 +10,7 @@ import io.ultrabrew.metrics.data.Cursor;
 import io.ultrabrew.metrics.data.CursorEntry;
 import io.ultrabrew.metrics.data.Type;
 import io.ultrabrew.metrics.reporters.TimeWindowReporter;
+import io.ultrabrew.metrics.util.Strings;
 import java.io.IOException;
 import java.net.URI;
 import java.util.Map;
@@ -82,6 +83,7 @@ public class InfluxDBReporter extends TimeWindowReporter {
   public static class Builder extends TimeWindowReporterBuilder<Builder, InfluxDBReporter> {
 
     private URI baseUri = null;
+    private String endpoint = null;
     private String database = null;
     private int windowSeconds = 1;
     private int bufferSize = 64 * 1024;
@@ -96,6 +98,18 @@ public class InfluxDBReporter extends TimeWindowReporter {
      */
     public Builder withBaseUri(final URI baseUri) {
       this.baseUri = baseUri;
+      return this;
+    }
+    
+    /**
+     * An optional endpoint to build the URI that, when provided, overrides the 
+     * default `/write?db=$database`. You must supply the full URI string, e.g.
+     * `/api/put/influx/write?db=mydatabase`. 
+     * @param endpoint An optional non-null endpoint to apply to the base URI.
+     * @return The builder.
+     */
+    public Builder withEndpoint(final String endpoint) {
+      this.endpoint = endpoint;
       return this;
     }
 
@@ -137,8 +151,13 @@ public class InfluxDBReporter extends TimeWindowReporter {
       if (baseUri == null) {
         throw new IllegalArgumentException("Invalid baseUri");
       }
-      if (database == null || database.isEmpty()) {
+      if (Strings.isNullOrEmpty(database) && 
+          Strings.isNullOrEmpty(endpoint)) {
         throw new IllegalArgumentException("Invalid database");
+      }
+      if (!Strings.isNullOrEmpty(endpoint)) {
+        return new InfluxDBReporter(baseUri.resolve(endpoint), windowSeconds,
+            bufferSize, defaultAggregators, metricAggregators);
       }
       return new InfluxDBReporter(baseUri.resolve("/write?db=" + database), windowSeconds,
           bufferSize, defaultAggregators, metricAggregators);

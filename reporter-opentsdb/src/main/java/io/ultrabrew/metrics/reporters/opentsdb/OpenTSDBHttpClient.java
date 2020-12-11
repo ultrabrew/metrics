@@ -4,6 +4,8 @@
 
 package io.ultrabrew.metrics.reporters.opentsdb;
 
+import io.ultrabrew.metrics.util.Strings;
+import java.util.Arrays;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
@@ -77,6 +79,30 @@ class OpenTSDBHttpClient {
       final String[] tags,
       final long timestamp,
       final String value) throws IOException {
+    // validation
+    if (Strings.isNullOrEmpty(metricName)) {
+      LOG.warn("Null or empty metric name.");
+      return;
+    }
+    if (Strings.isNullOrEmpty(value)) {
+      LOG.warn("Null or empty value.");
+      return;
+    }
+    if (tags == null) {
+      LOG.warn("At least one tag pair must be present.");
+      return;
+    }
+    if (tags.length % 2 != 0) {
+      LOG.warn("Uneven tag count: {} for metric {}", Arrays.toString(tags), metricName);
+      return;
+    }
+    for (int i = 0; i < tags.length; i++) {
+      if (i % 2 == 0 && Strings.isNullOrEmpty(tags[i])) {
+        LOG.warn("Null tag key in: {} for metric {}", Arrays.toString(tags), metricName);
+        return;
+      }
+    }
+    
     if (currentBatchSize++ > 0) {
       writer.write(',');
     }
@@ -91,7 +117,11 @@ class OpenTSDBHttpClient {
     writer.write(TAGS);
     boolean toggle = true;
     for (int i = 0; i < tags.length; i++) {
-      writeEscapedString(tags[i]);
+      if (i % 2 != 0 && tags[i] == null) {
+        writeEscapedString("NULL");
+      } else {
+        writeEscapedString(tags[i]);
+      }
       if (toggle) {
         writer.write(':');
       } else if (i + 1 < tags.length) {

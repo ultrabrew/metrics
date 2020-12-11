@@ -19,6 +19,7 @@ import mockit.Mocked;
 import mockit.Verifications;
 import org.apache.http.StatusLine;
 import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.junit.jupiter.api.Test;
@@ -63,6 +64,42 @@ public class InfluxDBReporterTest {
     InfluxDBClient c = Deencapsulation.getField(r, "dbClient");
     ByteBuffer buffer = Deencapsulation.getField(c, "byteBuffer");
     assertEquals(12765, buffer.capacity());
+  }
+  
+  @Test
+  public void testSeEndpoint(@Mocked CloseableHttpClient httpClient,
+      @Mocked CloseableHttpResponse closeableHttpResponse, @Mocked StatusLine statusLine)
+      throws InterruptedException, IOException {
+    new Expectations() {{
+      httpClient.execute((HttpUriRequest) any);
+      result = closeableHttpResponse;
+      closeableHttpResponse.getStatusLine();
+      result = statusLine;
+      statusLine.getStatusCode();
+      result = 200;
+    }};
+    
+    MetricRegistry registry = new MetricRegistry();
+    InfluxDBReporter r = InfluxDBReporter.builder()
+        .withBaseUri(TEST_URI)
+        .withDatabase("test") // ignored
+        .withEndpoint("/my/change?db=foo")
+        .withBufferSize(12765)
+        .build();
+
+    registry.addReporter(r);
+
+    Counter counter = registry.counter("counter");
+    counter.inc("tag", "value");
+
+    Thread.sleep(3000);
+
+    new Verifications() {{
+      HttpPost request;
+      httpClient.execute(request = withCapture());
+      times = 1;
+      assertEquals(TEST_URI + "/my/change?db=foo", request.getURI().toString());
+    }};
   }
 
   @Test

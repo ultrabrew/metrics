@@ -14,5 +14,5 @@ dependencies {
     compile platform(group: 'org.apache.logging.log4j', name: 'log4j-bom', version: '2.13.3')
     compile group: 'org.apache.logging.log4j', name: 'log4j-core'
     compile group: 'org.apache.logging.log4j', name: 'log4j-slf4j-impl'
-    compile group: 'io.undertow', name: 'undertow-core', version: '2.1.3.Final'
+    compile group: 'io.undertow', name: 'undertow-core', version: '2.2.3.Final'
 }
