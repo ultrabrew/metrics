@@ -195,9 +195,9 @@ public abstract class TimeWindowReporter implements Reporter, AutoCloseable {
      * @param maxCardinality maximum cardinality of data in the histogram
      */
     public B addHistogram(final String metricId, final DistributionBucket bucket, final int maxCardinality) {
-        this.metricAggregators
-            .put(metricId, (metric) -> new BasicHistogramAggregator(metricId, bucket, maxCardinality));
-        return (B) this;
+      this.metricAggregators
+          .put(metricId, (metric) -> new BasicHistogramAggregator(metricId, bucket, maxCardinality));
+      return (B) this;
     }
 
       /**
@@ -207,7 +207,7 @@ public abstract class TimeWindowReporter implements Reporter, AutoCloseable {
        * @param bucket distribution bucket
        */
     public B addHistogram(final String metricId, final DistributionBucket bucket) {
-        return addHistogram(metricId, bucket, DEFAULT_MAX_CARDINALITY);
+      return addHistogram(metricId, bucket, DEFAULT_MAX_CARDINALITY);
     }
 
     public abstract R build();
