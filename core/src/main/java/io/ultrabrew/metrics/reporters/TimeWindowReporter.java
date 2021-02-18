@@ -4,6 +4,7 @@
 
 package io.ultrabrew.metrics.reporters;
 
+import static io.ultrabrew.metrics.Metric.DEFAULT_MAX_CARDINALITY;
 import static io.ultrabrew.metrics.reporters.AggregatingReporter.DEFAULT_AGGREGATORS;
 
 import io.ultrabrew.metrics.Metric;
@@ -191,11 +192,22 @@ public abstract class TimeWindowReporter implements Reporter, AutoCloseable {
      *
      * @param metricId identifier of the metric
      * @param bucket distribution bucket
+     * @param maxCardinality maximum cardinality of data in the histogram
      */
-    public B addHistogram(final String metricId, final DistributionBucket bucket) {
+    public B addHistogram(final String metricId, final DistributionBucket bucket, final int maxCardinality) {
       this.metricAggregators
-          .put(metricId, (metric) -> new BasicHistogramAggregator(metricId, bucket));
+          .put(metricId, (metric) -> new BasicHistogramAggregator(metricId, bucket, maxCardinality));
       return (B) this;
+    }
+
+      /**
+       * Add histograms to a specific metric
+       *
+       * @param metricId identifier of the metric
+       * @param bucket distribution bucket
+       */
+    public B addHistogram(final String metricId, final DistributionBucket bucket) {
+      return addHistogram(metricId, bucket, DEFAULT_MAX_CARDINALITY);
     }
 
     public abstract R build();
