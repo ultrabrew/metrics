@@ -4,14 +4,15 @@
 
 package io.ultrabrew.metrics.data;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import sun.misc.Unsafe;
+
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import sun.misc.Unsafe;
 
 /**
  * A simple thread-safe linear probing hash table to be used for a monoid operation to aggregate
@@ -118,7 +119,7 @@ public abstract class ConcurrentMonoidLongTable implements Aggregator {
 
   /**
    * Create a simple linear probing hash table for a monoid operation.
-   *  @param metricId identifier of the metric
+   * @param metricId identifier of the metric
    * @param maxCapacity maximum capacity of table in records.
    * @param initialCapacity requested capacity of table in records
    * @param fields sorted array of field names used in reporting
@@ -337,7 +338,8 @@ public abstract class ConcurrentMonoidLongTable implements Aggregator {
   private boolean growTable() {
 
     if (capacity >= maxCapacity) {
-      LOGGER.error("Maximum linear probing table capacity reached (needed {}, max {}, metric-id \"{}\")", capacity, maxCapacity, metricId);
+      LOGGER.error(
+          "Maximum cardinality reached for metric: {} cardinality: {}", metricId, capacity);
       return false;
     }
 

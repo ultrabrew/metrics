@@ -43,7 +43,6 @@ public class BasicHistogramAggregator extends ConcurrentMonoidIntTable implement
   private static final String[] AGGREGATION_FIELDS = {"count", "sum", "min", "max", "lastValue"};
   private static final long[] IDENTITY = {0L, 0L, Long.MAX_VALUE, Long.MIN_VALUE, 0L};
 
-  private final String metricId;
   private final DistributionBucket buckets;
 
   private final String[] fields;
@@ -82,8 +81,7 @@ public class BasicHistogramAggregator extends ConcurrentMonoidIntTable implement
    */
   public BasicHistogramAggregator(final String metricId, final DistributionBucket buckets,
       final int maxCardinality, final int cardinality) {
-    super(AGGREGATION_FIELDS.length + buckets.getCount(), maxCardinality, cardinality, IDENTITY);
-    this.metricId = metricId;
+    super(metricId, AGGREGATION_FIELDS.length + buckets.getCount(), maxCardinality, cardinality, IDENTITY);
     this.buckets = buckets;
     this.fields = buildFields();
     this.types = buildTypes();

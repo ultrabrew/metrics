@@ -4,14 +4,15 @@
 
 package io.ultrabrew.metrics.data;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import sun.misc.Unsafe;
+
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import sun.misc.Unsafe;
 
 public abstract class ConcurrentMonoidIntTable {
 
@@ -40,6 +41,8 @@ public abstract class ConcurrentMonoidIntTable {
       throw new Error(e);
     }
   }
+
+  protected final String metricId;
   ///CLOVER:ON
 
   /**
@@ -64,17 +67,18 @@ public abstract class ConcurrentMonoidIntTable {
   private volatile int used = 0;
 
   /**
-   *  @param recordSize number of fields in a record
+   * @param metricId identifier of the metric
+   * @param recordSize number of fields in a record
    * @param maxCapacity maximum capacity of table in records. Table doesn't grow beyond this value.
    * @param initialCapacity requested capacity of table in records
    * @param identity monoid's identity for the agg fields
    */
-  protected ConcurrentMonoidIntTable(final int recordSize, final int maxCapacity, int initialCapacity,
-      final long[] identity) {
-    this(identity.length, recordSize - identity.length, maxCapacity, initialCapacity, identity);
+  protected ConcurrentMonoidIntTable(final String metricId, final int recordSize, final int maxCapacity, int initialCapacity,
+                                     final long[] identity) {
+    this(metricId, identity.length, recordSize - identity.length, maxCapacity, initialCapacity, identity);
   }
 
-  private ConcurrentMonoidIntTable(final int numAggFields, final int dataSize,
+  private ConcurrentMonoidIntTable(final String metricId, final int numAggFields, final int dataSize,
       final int maxCapacity, int initialCapacity, final long[] identity) {
 
     if (initialCapacity < 0) {
@@ -89,6 +93,7 @@ public abstract class ConcurrentMonoidIntTable {
     if (initialCapacity == 0) {
       initialCapacity = DEFAULT_INITIAL_CAPACITY;
     }
+    this.metricId = metricId;
     this.numAggFields = numAggFields;
     final int numInts = (RESERVED_FIELDS + numAggFields) * 2 + dataSize;
     // Align to L1 cache line (64-byte)
@@ -410,7 +415,8 @@ public abstract class ConcurrentMonoidIntTable {
   private boolean growTable() {
 
     if (capacity >= maxCapacity) {
-      LOGGER.error("Maximum table capacity reached");
+      LOGGER.error(
+          "Maximum cardinality reached for metric: {} cardinality: {}", metricId, capacity);
       return false;
     }
 
