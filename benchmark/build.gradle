@@ -12,6 +12,9 @@ dependencies {
     jmh group: 'io.dropwizard.metrics', name: 'metrics-core', version: '3.2.2'
     jmh group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.11.1'
     jmh group: 'org.apache.logging.log4j', name: 'log4j-slf4j-impl', version: '2.11.1'
+    jmh group: 'io.opencensus', name: 'opencensus-api', version: '0.24.0'
+    jmh group: 'io.opencensus', name: 'opencensus-impl', version: '0.24.0'
+    jmh group: 'io.opencensus', name: 'opencensus-exporter-metrics-ocagent', version: '0.24.0'
 }
 
 jmh {
