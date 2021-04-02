@@ -73,11 +73,11 @@ public class BasicGaugeAggregator extends ConcurrentMonoidLongTable {
   }
 
   @Override
-  public void combine(final long[] table, final long baseOffset, final long value) {
-    add(table, baseOffset, 0, 1L);
-    add(table, baseOffset, 1, value);
-    min(table, baseOffset, 2, value);
-    max(table, baseOffset, 3, value);
-    set(table, baseOffset, 4, value);
+  public void combine(final long[] table, final int slotStartIndex, final long value) {
+    add(table, slotStartIndex, 0, 1L);
+    add(table, slotStartIndex, 1, value);
+    min(table, slotStartIndex, 2, value);
+    max(table, slotStartIndex, 3, value);
+    set(table, slotStartIndex, 4, value);
   }
 }

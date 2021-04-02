@@ -4,7 +4,7 @@ buildscript {
     }
 
     dependencies {
-        classpath group: 'com.bmuschko', name: 'gradle-clover-plugin', version: '2.2.2'
+      //  classpath group: 'com.bmuschko', name: 'gradle-clover-plugin', version: '2.2.2'
         classpath group: 'com.github.ben-manes', name: 'gradle-versions-plugin', version: '0.20.0'
         classpath group: 'me.champeau.gradle', name: 'jmh-gradle-plugin', version: '0.4.8'
         classpath group: 'org.owasp', name: 'dependency-check-gradle', version: '5.3.2.1'
@@ -22,15 +22,20 @@ description = """Measure behavior of critical components in production"""
 subprojects {
     apply plugin: 'java'
     apply plugin: 'maven-publish'
-    apply plugin: 'com.bmuschko.clover'
+   // apply plugin: 'com.bmuschko.clover'
     apply plugin: 'com.github.spotbugs'
     apply plugin: 'org.owasp.dependencycheck'
 
-    sourceCompatibility = 1.8
-    targetCompatibility = 1.8
+    sourceCompatibility = 1.9
+    targetCompatibility = 1.9
 
     group = 'io.ultrabrew.' + rootProject.name
     archivesBaseName = rootProject.name + '-' + name
+
+    java {
+        sourceCompatibility = JavaVersion.VERSION_1_9
+        targetCompatibility = JavaVersion.VERSION_1_9
+    }
 
     repositories {
         jcenter()
@@ -45,7 +50,7 @@ subprojects {
         testRuntime group: 'org.junit.jupiter', name: 'junit-jupiter-engine', version: '5.3.2'
         testCompile group: 'org.hamcrest', name: 'hamcrest-all', version: '1.3'
 
-        clover group: 'org.openclover', name: 'clover', version: '4.2.1'
+        //clover group: 'org.openclover', name: 'clover', version: '4.2.1'
 
         spotbugsPlugins 'com.h3xstream.findsecbugs:findsecbugs-plugin:1.8.0'
     }
@@ -68,16 +73,16 @@ subprojects {
         }
     }
 
-    clover {
-        targetPercentage = '100.000%'
-        report {
-            html = true
-            testResultsDir = project.tasks.getByName('test').reports.junitXml.destination
-            testResultsInclude = 'TEST-*.xml'
-        }
-    }
+//    clover {
+//        targetPercentage = '100.000%'
+//        report {
+//            html = true
+//            testResultsDir = project.tasks.getByName('test').reports.junitXml.destination
+//            testResultsInclude = 'TEST-*.xml'
+//        }
+//    }
 
-    check.dependsOn cloverGenerateReport, dependencyCheckAnalyze
+    check.dependsOn dependencyCheckAnalyze
 
     dependencyCheck {
         skipConfigurations = ['clover', 'jmh', 'spotbugs']

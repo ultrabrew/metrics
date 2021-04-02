@@ -69,7 +69,7 @@ public class BasicCounterAggregator extends ConcurrentMonoidLongTable {
   }
 
   @Override
-  public void combine(final long[] table, final long baseOffset, final long value) {
-    add(table, baseOffset, 0, value);
+  public void combine(final long[] table, final int slotStartIndex, final long value) {
+    add(table, slotStartIndex, 0, value);
   }
 }

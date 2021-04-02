@@ -19,7 +19,7 @@ public class ConcurrentMonoidLongTableTest {
         new Type[]{Type.LONG},
         new long[]{0L, 1L}) {
       @Override
-      protected void combine(long[] table, final long baseOffset, final long value) {
+      protected void combine(long[] table, final int slotIndex, final long value) {
         // no-op
       }
     });
