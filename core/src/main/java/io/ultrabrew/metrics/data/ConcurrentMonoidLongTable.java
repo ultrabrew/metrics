@@ -4,14 +4,16 @@
 
 package io.ultrabrew.metrics.data;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.VarHandle;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import sun.misc.Unsafe;
 
 /**
  * A simple thread-safe linear probing hash table to be used for a monoid operation to aggregate
@@ -22,7 +24,7 @@ import sun.misc.Unsafe;
  * boolean)} method to find any existing record or create a new record if none found. If a new
  * record is created it will be initialized with initialized {@link #identity} to store the monoid
  * identity in the left hand value, before applying the monoid binary operation with {@link
- * #combine(long[], long, long)}.</p>
+ * #combine(long[], int, long)}.</p>
  *
  * <p>For performance reasons, the monoid implementations may choose to avoid atomic operation on
  * the whole record, and may apply the binary operation or setting the identity for each field in
@@ -43,15 +45,9 @@ public abstract class ConcurrentMonoidLongTable implements Aggregator {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(ConcurrentMonoidLongTable.class);
 
-  /**
-   * Unsafe class for atomic operations on the hash table.
-   */
-  private static final Unsafe unsafe = UnsafeHelper.unsafe;
-
   private static final int TAGSETS_MAX_INCREMENT = 131072; // 128k
 
   private static final int RESERVED_FIELDS = 2;
-  private static final long usedOffset;
 
   private static final int DEFAULT_INITIAL_CAPACITY = 16;
   private static final float DEFAULT_LOAD_FACTOR = 0.7f;
@@ -62,21 +58,23 @@ public abstract class ConcurrentMonoidLongTable implements Aggregator {
   private static final long TABLE_MASK = 0x0FFFFFFF00000000L;
   private static final long SLOT_MASK = 0x00000000FFFFFFFFL;
   private static final long NOT_FOUND = 0x1000000000000000L;
-
+  
+  private static final VarHandle USED;
+  private static final VarHandle TABLE;
 
   ///CLOVER:OFF
-  // Turning off clover because Unsafe can't be safely mocked without crashing or otherwise
-  // hindering JVM, and Class can't be mocked
+  // Turning off clover because this can't be mocked
   static {
     try {
-      usedOffset = unsafe
-          .objectFieldOffset(ConcurrentMonoidLongTable.class.getDeclaredField("used"));
-    } catch (NoSuchFieldException e) {
+      MethodHandles.Lookup lookup = MethodHandles.lookup();
+      USED = MethodHandles.privateLookupIn(ConcurrentMonoidLongTable.class, lookup)
+          .findVarHandle(ConcurrentMonoidLongTable.class, "used", int.class);
+      TABLE = MethodHandles.arrayElementVarHandle(long[].class);
+    } catch (NoSuchFieldException | IllegalAccessException e) {
       throw new Error(e);
     }
   }
   ///CLOVER:ON
-
 
   /**
    * Identifier of the metric this hash table is associated with.
@@ -84,7 +82,7 @@ public abstract class ConcurrentMonoidLongTable implements Aggregator {
   public final String metricId;
 
   /**
-   * The multiple long array objects to manipulate with the unsafe atomic operations.
+   * The multiple long array objects to manipulate with the VarHandle atomic operations.
    */
   private List<long[]> tables;
 
@@ -118,7 +116,7 @@ public abstract class ConcurrentMonoidLongTable implements Aggregator {
 
   /**
    * Create a simple linear probing hash table for a monoid operation.
-   *  @param metricId identifier of the metric
+   * @param metricId identifier of the metric
    * @param maxCapacity maximum capacity of table in records.
    * @param initialCapacity requested capacity of table in records
    * @param fields sorted array of field names used in reporting
@@ -172,13 +170,12 @@ public abstract class ConcurrentMonoidLongTable implements Aggregator {
     // Upper 32 bits represent the table index and lower 32 bits represent the slot index.
     // This logic is replicated in multiple places for performance reasons.
     int tableIndex = (int) ((index & TABLE_MASK) >> 32);
-    int slotIndex = (int) (index & SLOT_MASK);
+    int slotStartIndex = (int) (index & SLOT_MASK);
     long[] table = tables.get(tableIndex);
 
-    final long base = Unsafe.ARRAY_LONG_BASE_OFFSET + slotIndex * Unsafe.ARRAY_LONG_INDEX_SCALE;
-    unsafe.putLongVolatile(table, base + Unsafe.ARRAY_LONG_INDEX_SCALE, timestamp);
+    TABLE.setRelease(table, slotStartIndex + 1, timestamp);
 
-    combine(table, base, value);
+    combine(table, slotStartIndex, value);
   }
 
   @Override
@@ -197,7 +194,7 @@ public abstract class ConcurrentMonoidLongTable implements Aggregator {
    * @return the number of elements in this hash table
    */
   public int size() {
-    return unsafe.getInt(this, usedOffset);
+    return (int) USED.getVolatile(this);
   }
 
   /**
@@ -210,30 +207,29 @@ public abstract class ConcurrentMonoidLongTable implements Aggregator {
   }
 
   /**
-   * Execute the monoid binary operation on given value to the record with the given base offset in
+   * Execute the monoid binary operation on given value to the record with the given start index in
    * the table.
    *
    * <p>The following methods have been provided to allow atomic thread-safe modification of fields
    * in the record</p>
    *
    * <ul>
-   * <li>{@link #set(long[], long, long, long)} - Replace field's value with given value</li>
-   * <li>{@link #add(long[], long, long, long)} - Add given value to field's existing value</li>
-   * <li>{@link #min(long[], long, long, long)} - Replace field's value, if its larger than given
+   * <li>{@link #set(long[], int, int, long)} - Replace field's value with given value</li>
+   * <li>{@link #add(long[], int, int, long)} - Add given value to field's existing value</li>
+   * <li>{@link #min(long[], int, int, long)} - Replace field's value, if its larger than given
    * value</li>
-   * <li>{@link #max(long[], long, long, long)} - Replace field's value, if its smaller than given
+   * <li>{@link #max(long[], int, int, long)} - Replace field's value, if its smaller than given
    * value</li>
    * </ul>
    *
    * @param table data container to be passed to the modification method
-   * @param baseOffset base offset of the record in the table containing the left hand value
+   * @param slotStartIndex index to the start of the record in the table containing the left hand value
    * @param value right hand value to apply the monoid binary operation
    */
-  protected abstract void combine(long[] table, final long baseOffset, final long value);
-
+  protected abstract void combine(long[] table, final int slotStartIndex, final long value);
 
   /**
-   * Find index of the record for the given key in the linear probing table.
+   * Find index to the start of the record for the given key in the linear probing table.
    *
    * <p>When a slot in the table is taken, it will never be released nor changed.</p>
    *
@@ -250,17 +246,21 @@ public abstract class ConcurrentMonoidLongTable implements Aggregator {
       int tableCapacity = tableCapacities.get(tableIndex);
       final int slot = getSlot(key, table.length / recordSize);
       final int startIndex = slot * recordSize;
-      int slotIndex = startIndex;
+      int slotStartIndex = startIndex;
       for (; ; ) {
-        long offset = Unsafe.ARRAY_LONG_BASE_OFFSET + slotIndex * Unsafe.ARRAY_LONG_INDEX_SCALE;
-        long candidate = unsafe.getLongVolatile(table, offset);
+        // TODO: Since we use VarHandles, we can get rid of this call
+        //       using the VarHandle.compareAndExchange() method. Need
+        //       to be careful with reading though, possibly moving
+        //       the code to different method.
+        //       But it will complicate the size constrain guarantee.
+        long candidate = (long) TABLE.getVolatile(table, slotStartIndex);
 
         // check if we found our key
         if (key == candidate) {
           // Encode table index and slot index into a long.
           // Upper 32 bits represent the table index and lower 32 bits represent the slot index.
           // This logic is replicated in multiple places for performance reasons.
-          return ((long) tableIndex) << 32 | ((long) slotIndex);
+          return ((long) tableIndex) << 32 | ((long) slotStartIndex);
         }
 
         boolean emptySlot = 0L == candidate;
@@ -273,23 +273,26 @@ public abstract class ConcurrentMonoidLongTable implements Aggregator {
             break; // we're writing but the table is 70% full
           } else {
             ///CLOVER:OFF
-            // No reliable way to test without being able to mock unsafe
-            if (unsafe.compareAndSwapLong(table, offset, 0L, key)) { // try to reserve it
+            // No reliable way to test without being able to mock
+
+            // TODO: Potential issue with multiple slots having the same identity.
+            //       What if 2 threads come to this with the same key? One of them
+            //       will win, another - move forward.
+            if (TABLE.compareAndSet(table, slotStartIndex, 0L, key)) { // try to reserve it
               ///CLOVER:ON
 
               //increment the record count
               recordCount.incrementAndGet();
 
               // reset update timestamp
-              unsafe.putLongVolatile(table, offset + Unsafe.ARRAY_LONG_INDEX_SCALE, 0L);
+              TABLE.setVolatile(table, slotStartIndex + 1, 0L);
               // It is ok if we lose some data from other threads while writing identity
               for (int j = 0; j < identity.length; j++) {
-                unsafe.putLongVolatile(table,
-                    offset + (RESERVED_FIELDS + j) * Unsafe.ARRAY_LONG_INDEX_SCALE, identity[j]);
+                TABLE.setVolatile(table, slotStartIndex + RESERVED_FIELDS + j, identity[j]);
               }
 
               //increment the total size;
-              int tagIndex = unsafe.getAndAddInt(this, usedOffset, 1);
+              int tagIndex = (int) USED.getAndAdd(this, 1);
               if (tagIndex >= tagSets.length) {
                 // grow tag set
                 synchronized (this) {
@@ -309,15 +312,15 @@ public abstract class ConcurrentMonoidLongTable implements Aggregator {
               // Encode table index and slot index into a long.
               // Upper 32 bits represent the table index and lower 32 bits represent the slot index.
               // This logic is replicated in multiple places for performance reasons.
-              return ((long) tableIndex) << 32 | ((long) slotIndex);
+              return ((long) tableIndex) << 32 | ((long) slotStartIndex);
             }
           }
         } else {
-          slotIndex += recordSize;
-          if (slotIndex >= table.length) {
-            slotIndex = 0;
+          slotStartIndex += recordSize;
+          if (slotStartIndex >= table.length) {
+            slotStartIndex = 0;
           }
-          if (slotIndex == startIndex) {
+          if (slotStartIndex == startIndex) {
             break; // check the next table
           }
         }
@@ -398,163 +401,149 @@ public abstract class ConcurrentMonoidLongTable implements Aggregator {
    * Adds a new value to the existing value in the given field index.
    *
    * @param table the table containing the values
-   * @param baseOffset base offset of the record in the table containing the left hand value
+   * @param slotStartIndex index to the start of the record in the table containing the left hand value
    * @param index index of the field
    * @param value value to be added
    * @return new accumulated value of the field index
    */
-  protected long add(final long[] table, final long baseOffset, final long index,
+  protected long add(final long[] table, final int slotStartIndex, final int index,
       final long value) {
-    final long offset = baseOffset + (RESERVED_FIELDS + index) * Unsafe.ARRAY_LONG_INDEX_SCALE;
-    return unsafe.getAndAddLong(table, offset, value) + value;
+    return (long) TABLE.getAndAdd(table, slotStartIndex + RESERVED_FIELDS + index, value) + value;
   }
 
   /**
    * Adds a new double value to the existing value in the given field index.
    *
    * @param table the table containing the values
-   * @param baseOffset base offset of the record in the table containing the left hand value
+   * @param slotStartIndex index to the start of the record in the table containing the left hand value
    * @param index index of the field
    * @param value value to be added
    * @return new accumulated value of the field index
    */
-  protected double add(final long[] table, final long baseOffset, final long index,
-      final double value) {
-    final long offset = ((RESERVED_FIELDS + index) * Unsafe.ARRAY_LONG_INDEX_SCALE) + baseOffset;
+  protected double add(final long[] table, final int slotStartIndex, final int index, final double value) {
+    final int offset = slotStartIndex + RESERVED_FIELDS + index;
     long old;
     double old_d, new_d;
     do {
-      old = unsafe.getLongVolatile(table, offset);
+      old = (long) TABLE.getVolatile(table, offset);
       old_d = Double.longBitsToDouble(old);
       new_d = old_d + value;
       ///CLOVER:OFF
-      // No reliable way to test without being able to mock unsafe
-    } while (!unsafe.compareAndSwapLong(table, offset, old, Double.doubleToRawLongBits(new_d)));
+      // No reliable way to test without being able to mock
+      // TODO: We can employ compareExchange here not to re-fetch old again.
+    } while (!TABLE.compareAndSet(table, offset, old, Double.doubleToRawLongBits(new_d)));
     ///CLOVER:ON
     return new_d;
   }
 
   /**
    * Replaces the existing value in the given field index with the given value.
-   *
    * @param table the table containing the values
-   * @param baseOffset base offset of the record in the table containing the left hand value
+   * @param slotStartIndex index to the start of the record in the table containing the left hand value
    * @param index index of the field
    * @param value new value
    */
-  protected void set(final long[] table, final long baseOffset, final long index,
-      final long value) {
-    final long offset = baseOffset + (RESERVED_FIELDS + index) * Unsafe.ARRAY_LONG_INDEX_SCALE;
-    unsafe.putLongVolatile(table, offset, value);
+  protected void set(final long[] table, final int slotStartIndex, final int index, final long value) {
+    TABLE.setVolatile(table, slotStartIndex + RESERVED_FIELDS + index, value);
   }
 
   /**
    * Replaces the existing double value in the given field index with the given value.
-   *
    * @param table the table containing the values
-   * @param baseOffset base offset of the record in the table containing the left hand value
+   * @param slotStartIndex index to the start of the record in the table containing the left hand value
    * @param index index of the field
    * @param value new value
    */
-  protected void set(final long[] table, final long baseOffset, final long index,
-      final double value) {
-    final long offset = baseOffset + (RESERVED_FIELDS + index) * Unsafe.ARRAY_LONG_INDEX_SCALE;
-    unsafe.putLongVolatile(table, offset, Double.doubleToLongBits(value));
+  protected void set(final long[] table, final int slotStartIndex, final int index, final double value) {
+    TABLE.setVolatile(table, slotStartIndex + RESERVED_FIELDS + index, Double.doubleToLongBits(value));
   }
 
   /**
    * Set a new value as minimum if its lower than existing value in the given field index.
-   *
    * @param table the table containing the values
-   * @param baseOffset base offset of the record in the table containing the left hand value
+   * @param slotStartIndex index to the start of the record in the table containing the left hand value
    * @param index index of the field
    * @param value new value
    */
-  protected void min(final long[] table, final long baseOffset, final long index,
-      final long value) {
-    final long offset = baseOffset + (RESERVED_FIELDS + index) * Unsafe.ARRAY_LONG_INDEX_SCALE;
+  protected void min(final long[] table, final int slotStartIndex, final int index, final long value) {
+    final int offset = slotStartIndex + RESERVED_FIELDS + index;
     long old;
     do {
-      old = unsafe.getLong(table, offset);
+      old = (long) TABLE.getVolatile(table, offset);
       if (value >= old) {
         return;
       }
       ///CLOVER:OFF
-      // No reliable way to test without being able to mock unsafe
-    } while (!unsafe.compareAndSwapLong(table, offset, old, value));
+      // No reliable way to test without being able to mock
+      // TODO: We can employ compareExchange here not to re-fetch old again.
+    } while (!TABLE.compareAndSet(table, offset, old, value));
     ///CLOVER:ON
   }
 
   /**
    * Set a new double value as minimum if its lower than existing value in the given field index.
-   *
    * @param table the table containing the values
-   * @param baseOffset base offset of the record in the table containing the left hand value
+   * @param slotStartIndex index to the start of the record in the table containing the left hand value
    * @param index index of the field
    * @param value new value
    */
-  protected void min(final long[] table, final long baseOffset, final long index,
-      final double value) {
-    final long offset = baseOffset + (RESERVED_FIELDS + index) * Unsafe.ARRAY_LONG_INDEX_SCALE;
+  protected void min(final long[] table, final int slotStartIndex, final int index, final double value) {
+    final int offset = slotStartIndex + RESERVED_FIELDS + index;
     long old;
     double old_d;
     do {
-      old = unsafe.getLong(table, offset);
+      old = (long) TABLE.getVolatile(table, offset);
       old_d = Double.longBitsToDouble(old);
       if (value >= old_d) {
         return;
       }
       ///CLOVER:OFF
-      // No reliable way to test without being able to mock unsafe
-    } while (!unsafe.compareAndSwapLong(table, offset, old, Double.doubleToRawLongBits(value)));
+      // No reliable way to test without being able to mock
+    } while (!TABLE.compareAndSet(table, offset, old, Double.doubleToRawLongBits(value)));
     ///CLOVER:ON
   }
 
   /**
    * Set a new value as maximum if its higher than existing value in the given field index.
-   *
    * @param table the table containing the values
-   * @param baseOffset base offset of the record in the table containing the left hand value
+   * @param slotStartIndex index to the start of the record in the table containing the left hand value
    * @param index index of the field
    * @param value new value
    */
-  protected void max(final long[] table, final long baseOffset, final long index,
-      final long value) {
-    final long offset = baseOffset + (RESERVED_FIELDS + index) * Unsafe.ARRAY_LONG_INDEX_SCALE;
+  protected void max(final long[] table, final int slotStartIndex, final int index, final long value) {
+    final int offset = slotStartIndex + RESERVED_FIELDS + index;
     long old;
     do {
-      old = unsafe.getLong(table, offset);
+      old = (long) TABLE.getVolatile(table, offset);
       if (value <= old) {
         return;
       }
       ///CLOVER:OFF
-      // No reliable way to test without being able to mock unsafe
-    } while (!unsafe.compareAndSwapLong(table, offset, old, value));
+      // No reliable way to test without being able to mock
+    } while (!TABLE.compareAndSet(table, offset, old, value));
     ///CLOVER:ON
   }
 
   /**
    * Set a new double value as maximum if its higher than existing value in the given field index.
-   *
    * @param table the table containing the values
-   * @param baseOffset base offset of the record in the table containing the left hand value
+   * @param slotStartIndex index to the start of the record in the table containing the left hand value
    * @param index index of the field
    * @param value new value
    */
-  protected void max(final long[] table, final long baseOffset, final long index,
-      final double value) {
-    final long offset = baseOffset + (RESERVED_FIELDS + index) * Unsafe.ARRAY_LONG_INDEX_SCALE;
+  protected void max(final long[] table, final int slotStartIndex, final int index, final double value) {
+    final int offset = slotStartIndex + RESERVED_FIELDS + index;
     long old;
     double old_d;
     do {
-      old = unsafe.getLong(table, offset);
+      old = (long) TABLE.getVolatile(table, offset);
       old_d = Double.longBitsToDouble(old);
       if (value <= old_d) {
         return;
       }
       ///CLOVER:OFF
-      // No reliable way to test without being able to mock unsafe
-    } while (!unsafe.compareAndSwapLong(table, offset, old, Double.doubleToRawLongBits(value)));
+      // No reliable way to test without being able to mock
+    } while (!TABLE.compareAndSet(table, offset, old, Double.doubleToRawLongBits(value)));
     ///CLOVER:ON
   }
 
@@ -574,7 +563,7 @@ public abstract class ConcurrentMonoidLongTable implements Aggregator {
     final private Type[] types;
     final private String[][] tagSets;
     private int i = -1;
-    private long base = 0;
+    private int base = 0;
     private long[] table;
 
     private CursorImpl(final String[][] tagSets, final String[] fields, final Type[] types,
@@ -613,10 +602,10 @@ public abstract class ConcurrentMonoidLongTable implements Aggregator {
       // Upper 32 bits represent the table index and lower 32 bits represent the slot index.
       // This logic is replicated in multiple places for performance reasons.
       int tableIndex = (int) ((index & TABLE_MASK) >> 32);
-      int slotIndex = (int) (index & SLOT_MASK);
+      int slotStartIndex = (int) (index & SLOT_MASK);
 
       table = tables.get(tableIndex);
-      base = Unsafe.ARRAY_LONG_BASE_OFFSET + slotIndex * Unsafe.ARRAY_LONG_INDEX_SCALE;
+      base = slotStartIndex;
       return true;
     }
 
@@ -633,7 +622,7 @@ public abstract class ConcurrentMonoidLongTable implements Aggregator {
       if (i < 0 || i >= tagSets.length || tagSets[i] == null) {
         throw new IndexOutOfBoundsException("Not a valid row index: " + i);
       }
-      return unsafe.getLongVolatile(table, base + Unsafe.ARRAY_LONG_INDEX_SCALE);
+      return (long) TABLE.getVolatile(table, base + 1);
     }
 
     @Override
@@ -644,8 +633,7 @@ public abstract class ConcurrentMonoidLongTable implements Aggregator {
       if (index < 0 || index >= fields.length) {
         throw new IndexOutOfBoundsException("Not a valid field index: " + index);
       }
-      return unsafe
-          .getLongVolatile(table, base + (index + RESERVED_FIELDS) * Unsafe.ARRAY_LONG_INDEX_SCALE);
+      return (long) TABLE.getVolatile(table, base + RESERVED_FIELDS + index);
     }
 
     @Override
@@ -661,9 +649,7 @@ public abstract class ConcurrentMonoidLongTable implements Aggregator {
       if (index < 0 || index >= fields.length) {
         throw new IndexOutOfBoundsException("Not a valid field index: " + index);
       }
-      return unsafe
-          .getAndSetLong(table, base + (index + RESERVED_FIELDS) * Unsafe.ARRAY_LONG_INDEX_SCALE,
-              identity[index]);
+      return (long) TABLE.getAndSet(table, base + RESERVED_FIELDS + index, identity[index]);
     }
 
     @Override

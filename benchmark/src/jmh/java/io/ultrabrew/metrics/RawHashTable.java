@@ -4,23 +4,27 @@
 
 package io.ultrabrew.metrics;
 
-import io.ultrabrew.metrics.data.UnsafeHelper;
+import java.lang.invoke.MethodHandles;
 import java.util.Arrays;
-import sun.misc.Unsafe;
+import java.lang.invoke.VarHandle;
 
 public class RawHashTable {
 
-  private static final Unsafe unsafe = UnsafeHelper.unsafe;
   private static final int RECORD_SIZE = 8; // align to 64-byte cache line
-  private static final long usedOffset;
-  private static final long scanLengthOffset;
+  private static final VarHandle USED;
+  private static final VarHandle SCAN_LENGTH;
+  private static final VarHandle TABLE;
+
 
   static {
     try {
-      usedOffset = unsafe.objectFieldOffset(RawHashTable.class.getDeclaredField("used"));
-      scanLengthOffset = unsafe
-          .objectFieldOffset(RawHashTable.class.getDeclaredField("scanLength"));
-    } catch (NoSuchFieldException e) {
+      MethodHandles.Lookup lookup = MethodHandles.lookup();
+      USED = MethodHandles.privateLookupIn(RawHashTable.class, lookup)
+          .findVarHandle(RawHashTable.class, "used", int.class);
+      SCAN_LENGTH = MethodHandles.privateLookupIn(RawHashTable.class, lookup)
+          .findVarHandle(RawHashTable.class, "scanLength", int.class);
+      TABLE = MethodHandles.arrayElementVarHandle(long[].class);
+    } catch (NoSuchFieldException | IllegalAccessException e) {
       throw new Error(e);
     }
   }
@@ -37,13 +41,12 @@ public class RawHashTable {
 
   public void put(final String[] tags, final long value) {
     final long hashCode = Arrays.hashCode(tags);
-    final int i = index(hashCode);
-    final long base = Unsafe.ARRAY_LONG_BASE_OFFSET + i * Unsafe.ARRAY_LONG_INDEX_SCALE;
+    final int base = index(hashCode);
 
-    unsafe.getAndAddLong(table, base + Unsafe.ARRAY_LONG_INDEX_SCALE, 1L);
-    unsafe.getAndAddLong(table, base + 2 * Unsafe.ARRAY_LONG_INDEX_SCALE, value);
-    min(base + 3 * Unsafe.ARRAY_LONG_INDEX_SCALE, value);
-    max(base + 4 * Unsafe.ARRAY_LONG_INDEX_SCALE, value);
+    TABLE.getAndAdd(table, base + 1, 1L);
+    TABLE.getAndAdd(table, base + 2, value);
+    min(base + 3, value);
+    max(base + 4, value);
   }
 
   public long getCount(final String[] tags) {
@@ -63,7 +66,7 @@ public class RawHashTable {
   }
 
   public int size() {
-    return unsafe.getIntVolatile(this, usedOffset);
+    return (int) USED.getVolatile(this);
   }
 
   public int capacity() {
@@ -71,40 +74,39 @@ public class RawHashTable {
   }
 
   public int lastScanLength() {
-    return unsafe.getIntVolatile(this, scanLengthOffset);
+    return (int) SCAN_LENGTH.getVolatile(this);
   }
 
   private long getLong(final String[] tags, int offset) {
     final long hashCode = Arrays.hashCode(tags);
-    final int i = index(hashCode);
-    final long base = Unsafe.ARRAY_LONG_BASE_OFFSET + i * Unsafe.ARRAY_LONG_INDEX_SCALE;
+    final int base = index(hashCode);
 
-    return unsafe.getLongVolatile(table, base + offset * Unsafe.ARRAY_LONG_INDEX_SCALE);
+    return (long) TABLE.getVolatile(table, base + offset);
   }
 
   private void min(final long offset, final long value) {
     long old;
     do {
-      old = unsafe.getLong(table, offset);
+      old = (long) TABLE.getVolatile(table, offset);
       if (value >= old) {
         return;
       }
       ///CLOVER:OFF
       // No reliable way to test without being able to mock unsafe
-    } while (!unsafe.compareAndSwapLong(table, offset, old, value));
+    } while (!TABLE.compareAndSet(table, offset, old, value));
     ///CLOVER:ON
   }
 
   private void max(final long offset, final long value) {
     long old;
     do {
-      old = unsafe.getLong(table, offset);
+      old = (long) TABLE.getVolatile(table, offset);
       if (value <= old) {
         return;
       }
       ///CLOVER:OFF
       // No reliable way to test without being able to mock unsafe
-    } while (!unsafe.compareAndSwapLong(table, offset, old, value));
+    } while (!TABLE.compareAndSet(table, offset, old, value));
     ///CLOVER:ON
   }
 
@@ -115,12 +117,12 @@ public class RawHashTable {
 
     for (int counter = 1; ; counter++) {
 
-      final long offset = Unsafe.ARRAY_LONG_BASE_OFFSET + i * Unsafe.ARRAY_LONG_INDEX_SCALE;
+      final long offset = i;
 
       // check if we found our key
-      final long candidate = unsafe.getLongVolatile(table, offset);
+      final long candidate = (long) TABLE.getVolatile(table, offset);
       if (key == candidate) {
-        unsafe.putIntVolatile(this, scanLengthOffset, counter);
+        SCAN_LENGTH.setVolatile(this, counter);
         return i;
       }
 
@@ -130,14 +132,14 @@ public class RawHashTable {
 
         ///CLOVER:OFF
         // No reliable way to test without being able to mock unsafe
-        if (unsafe.compareAndSwapLong(table, offset, 0L, key)) {
+        if (TABLE.compareAndSet(table, offset, 0L, key)) {
           ///CLOVER:ON
 
-          final int localUsed = unsafe.getAndAddInt(this, usedOffset, 1) + 1;
-          unsafe.putLongVolatile(table, offset + 3 * Unsafe.ARRAY_LONG_INDEX_SCALE, Long.MAX_VALUE);
-          unsafe.putLongVolatile(table, offset + 4 * Unsafe.ARRAY_LONG_INDEX_SCALE, Long.MIN_VALUE);
+          final int unused = (int) USED.getAndAdd(this, 1) + 1;
+          TABLE.setVolatile(table, offset + 3, Long.MAX_VALUE);
+          TABLE.setVolatile(table, offset + 4, Long.MIN_VALUE);
 
-          unsafe.putIntVolatile(this, scanLengthOffset, counter);
+          SCAN_LENGTH.setVolatile(this, counter);
           return i;
         }
       } else {

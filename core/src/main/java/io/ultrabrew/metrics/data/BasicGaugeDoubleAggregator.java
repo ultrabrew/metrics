@@ -75,12 +75,12 @@ public class BasicGaugeDoubleAggregator extends ConcurrentMonoidLongTable {
   }
 
   @Override
-  public void combine(final long[] table, final long baseOffset, final long value) {
+  public void combine(final long[] table, final int slotStartIndex, final long value) {
     final double d = Double.longBitsToDouble(value);
-    add(table, baseOffset, 0, 1L);
-    add(table, baseOffset, 1, d);
-    min(table, baseOffset, 2, d);
-    max(table, baseOffset, 3, d);
-    set(table, baseOffset, 4, d);
+    add(table, slotStartIndex, 0, 1L);
+    add(table, slotStartIndex, 1, d);
+    min(table, slotStartIndex, 2, d);
+    max(table, slotStartIndex, 3, d);
+    set(table, slotStartIndex, 4, d);
   }
 }
