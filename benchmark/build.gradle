@@ -4,6 +4,8 @@ publishMavenJavaPublicationToMavenRepository {
     enabled = false
 }
 
+description = 'Metrics Benchmarks'
+
 dependencies {
     jmh project(':core')
 

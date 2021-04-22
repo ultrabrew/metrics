@@ -1,3 +1,5 @@
+description = 'Influxdb reporter for Ultrabrew Metrics'
+
 dependencies {
     api project(':core')
     implementation group: 'org.apache.httpcomponents', name: 'httpclient', version: '4.5.13'

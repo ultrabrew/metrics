@@ -1,3 +1,5 @@
+description = 'A lightweight, high-performance Java instrumentation library'
+
 dependencies {
     api group: 'org.slf4j', name: 'slf4j-api', version:'1.7.25'
 
