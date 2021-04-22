@@ -1,3 +1,6 @@
+import org.gradle.api.JavaVersion
+import org.gradle.api.publish.maven.MavenPublication
+
 buildscript {
     repositories {
         maven { url "https://plugins.gradle.org/m2" }
@@ -26,8 +29,8 @@ subprojects {
     apply plugin: 'com.github.spotbugs'
     apply plugin: 'org.owasp.dependencycheck'
 
-    sourceCompatibility = 1.8
-    targetCompatibility = 1.8
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
 
     group = 'io.ultrabrew.' + rootProject.name
     archivesBaseName = rootProject.name + '-' + name
@@ -97,18 +100,9 @@ subprojects {
         enabled = false
     }
 
-    task sourceJar(type: Jar) {
-        classifier = 'sources'
-        from sourceSets.main.allSource
-    }
-
-    task javadocJar(type: Jar, dependsOn: javadoc) {
-        classifier = 'javadoc'
-        from javadoc.destinationDir
-    }
-
-    javadoc.options {
-        noQualifiers << 'java.*'
+    java {
+        withJavadocJar()
+        withSourcesJar()
     }
 
     reckon {
@@ -119,13 +113,8 @@ subprojects {
     publishing {
         publications {
             mavenJava(MavenPublication) {
+                artifactId = archivesBaseName
                 from components.java
-                artifact sourceJar
-                artifact javadocJar
-
-                afterEvaluate {
-                    artifactId = archivesBaseName
-                }
             }
         }
 
