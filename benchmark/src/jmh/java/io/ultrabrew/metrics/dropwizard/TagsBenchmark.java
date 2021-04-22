@@ -57,7 +57,7 @@ public class TagsBenchmark {
     ultrabrewCounter = ultrabrewRegistry.counter("counter");
     ultrabrewTimer = ultrabrewRegistry.timer("timer");
     ultrabrewGauge = ultrabrewRegistry.gauge("gauge");
-    ultrabrewReporter = new SLF4JReporter("ultrabrew");
+    ultrabrewReporter = SLF4JReporter.builder().withName("ultrabrew").build();
     ultrabrewRegistry.addReporter(ultrabrewReporter);
 
     dropwizardRegistry = new com.codahale.metrics.MetricRegistry();

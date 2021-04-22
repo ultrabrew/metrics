@@ -1,8 +1,9 @@
 dependencies {
-    compile group: 'org.slf4j', name: 'slf4j-api', version:'1.7.25'
+    api group: 'org.slf4j', name: 'slf4j-api', version:'1.7.25'
 
-    testCompile group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.11.1'
-    testCompile group: 'org.apache.logging.log4j', name: 'log4j-slf4j-impl', version: '2.11.1'
+    testImplementation platform(group: 'org.apache.logging.log4j', name: 'log4j-bom', version: '2.14.1')
+    testImplementation group: 'org.apache.logging.log4j', name: 'log4j-core'
+    testImplementation group: 'org.apache.logging.log4j', name: 'log4j-slf4j-impl'
 }
 
 /*gitPublish {
