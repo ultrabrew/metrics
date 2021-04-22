@@ -85,6 +85,7 @@ subprojects {
         format = 'ALL'
         failBuildOnCVSS = 4.0
         cve {
+            // workaround to the broken NVD files: https://github.com/jeremylong/DependencyCheck/issues/3306
             urlModified = "https://freedumbytes.gitlab.io/setup/nist-nvd-mirror/nvdcve-1.1-modified.json.gz"
             urlBase = "https://freedumbytes.gitlab.io/setup/nist-nvd-mirror/nvdcve-1.1-%d.json.gz"
         }
