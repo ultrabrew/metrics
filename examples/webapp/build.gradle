@@ -7,11 +7,11 @@ publishMavenJavaPublicationToMavenRepository {
 }
 
 dependencies {
-    compile project(':core')
+    implementation project(':core')
 
-    compile platform(group: 'org.apache.logging.log4j', name: 'log4j-bom', version: '2.13.3')
-    compile group: 'org.apache.logging.log4j', name: 'log4j-core'
-    compile group: 'org.apache.logging.log4j', name: 'log4j-slf4j-impl'
+    implementation platform(group: 'org.apache.logging.log4j', name: 'log4j-bom', version: '2.14.1')
+    implementation group: 'org.apache.logging.log4j', name: 'log4j-core'
+    implementation group: 'org.apache.logging.log4j', name: 'log4j-slf4j-impl'
 
     providedCompile group: 'javax.servlet', name: 'javax.servlet-api', version: '3.1.0'
 }

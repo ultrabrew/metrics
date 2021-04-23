@@ -4,14 +4,17 @@ publishMavenJavaPublicationToMavenRepository {
     enabled = false
 }
 
+description = 'Metrics Benchmarks'
+
 dependencies {
     jmh project(':core')
 
-    jmh group: 'org.openjdk.jmh', name: 'jmh-core', version: '1.21'
-    jmh group: 'org.openjdk.jmh', name: 'jmh-generator-annprocess', version: '1.21'
-    jmh group: 'io.dropwizard.metrics', name: 'metrics-core', version: '3.2.2'
-    jmh group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.11.1'
-    jmh group: 'org.apache.logging.log4j', name: 'log4j-slf4j-impl', version: '2.11.1'
+    jmh group: 'org.openjdk.jmh', name: 'jmh-core', version: '1.29'
+    jmh group: 'org.openjdk.jmh', name: 'jmh-generator-annprocess', version: '1.29'
+    jmh group: 'io.dropwizard.metrics', name: 'metrics-core', version: '4.1.19'
+    jmh platform(group: 'org.apache.logging.log4j', name: 'log4j-bom', version: '2.14.1')
+    jmh group: 'org.apache.logging.log4j', name: 'log4j-core'
+    jmh group: 'org.apache.logging.log4j', name: 'log4j-slf4j-impl'
 }
 
 jmh {
@@ -20,6 +23,10 @@ jmh {
     zip64 = true
     duplicateClassesStrategy = 'warn'
     //profilers = ['hs_gc']
+}
+
+spotbugsJmh {
+    enabled = false
 }
 
 // XXX Is this still needed if we upgrade jmh plugin to latest?
