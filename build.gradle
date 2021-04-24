@@ -173,7 +173,8 @@ subprojects {
 
     signing {
         if (project.hasProperty('signingKey') && project.hasProperty('signingPassword')) {
-            def signingKey = findProperty("signingKey")
+            def signingKeyEncoded = findProperty("signingKey")
+            def signingKey = new String(signingKeyEncoded.decodeBase64())
             def signingPassword = findProperty("signingPassword")
             useInMemoryPgpKeys(signingKey, signingPassword)
 
