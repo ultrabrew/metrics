@@ -116,7 +116,9 @@ subprojects {
                 from components.java
                 pom {
                     name = project.name
-                    description = project.description
+                    project.afterEvaluate {
+                        description = project.description
+                    }
                     url = 'http://ultrabrew.io'
                     scm {
                         connection = 'scm:git:git://github.com/ultrabrew/metrics.git'
