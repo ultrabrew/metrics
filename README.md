@@ -112,30 +112,22 @@ in the `bintray.com` maven repository, where the `core` project libraries are fo
 
 ```gradle
 repositories {
-  maven { url 'https://dl.bintray.com/ultrabrew/m2' }
+  mavenCentral()
 }
 
 dependencies {
-  compile group: 'io.ultrabrew.metrics', name: 'metrics-{your reporter}', version: '0.3.0'
+  compile group: 'io.ultrabrew.metrics', name: 'metrics-{your reporter}', version: '0.8.0'
 }
 ```
 
 ### Maven
 
 ```pom.xml
-<repositories>
-  <repository>
-    <id>bintray-ultrabrew-maven</id>
-    <name>bintray</name>
-    <url>https://dl.bintray.com/ultrabrew/m2</url>
-  </repository>
-</repositories>
-
 <dependencies>
    <dependency>
      <groupId>io.ultrabrew.metrics</groupId>
      <artifactId>metrics-{your reporter}</artifactId>
-     <version>0.3.0</version>
+     <version>0.8.0</version>
    </dependency>
 </dependencies>
 ```
