@@ -26,8 +26,8 @@ import java.util.function.Predicate;
  */
 public class DistributionBucket {
 
-  private static final String UNDERFLOW = "underflow";
-  private static final String OVERFLOW = "overflow";
+  public static final String UNDERFLOW = "underflow";
+  public static final String OVERFLOW = "overflow";
 
   private final long[] buckets;
   private final NameSpec nameSpec;
@@ -56,8 +56,11 @@ public class DistributionBucket {
     this.nameSpec = nameSpec;
   }
 
+  /**
+   * @return count of buckets including {@link #OVERFLOW} and {@link #UNDERFLOW} buckets.
+   */
   public int getCount() {
-    return buckets.length + 1; // includes the underflow and overflow buckets
+    return buckets.length + 1;
   }
 
   /**
