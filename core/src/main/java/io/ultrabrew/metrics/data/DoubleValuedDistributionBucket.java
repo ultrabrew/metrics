@@ -15,15 +15,16 @@ import static io.ultrabrew.metrics.data.DistributionBucket.UNDERFLOW;
  * bucket is an sorted array of unique numeric values. Each bucket represents a distribution range
  * of the measurement.
  *
- * <p>For a given distribution array: [0, 10, 100, 500, 1000], the buckets would be like:
+ * <p>For a given distribution array: [0.0, 0.5, 1.0, 1.25, 50.0, 100.0], the buckets would be like:
  *
  * <ul>
- *   <li>[0,10) for values 0-9
- *   <li>[10,100) for values 10-99
- *   <li>[100,500) for values 100-499
- *   <li>[500,1000) for values 500-999
- *   <li>overflow for values {@literal >}= 1000
- *   <li>underflow for values {@literal <} 0
+ *   <li>[0.0,0.5) for  0.0 {@literal <=} value {@literal <} 0.5
+ *   <li>[0.5,1.0) for 0.5 {@literal <=} value {@literal <} 1.0
+ *   <li>[1.0,1.25) for 1.0 {@literal <=} value {@literal <} 1.25
+ *   <li>[1.25,50.0) for 1.25 {@literal <=} value {@literal <} 50.0
+ *   <li>[50.0, 100.0) for 50.0 {@literal <=} value {@literal <} 100.0
+ *   <li>overflow for values {@literal >}= 100.0
+ *   <li>underflow for values {@literal <} 0.0
  * </ul>
  *
  * @see BasicDoubleValuedHistogramAggregator
