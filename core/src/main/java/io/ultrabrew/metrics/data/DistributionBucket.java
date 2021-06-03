@@ -24,10 +24,7 @@ import java.util.function.Predicate;
  * @see BasicHistogramAggregator
  * @see NameSpec
  */
-public class DistributionBucket {
-
-  public static final String UNDERFLOW = "underflow";
-  public static final String OVERFLOW = "overflow";
+public class DistributionBucket implements DistributionBucketIF<DistributionBucket> {
 
   private final long[] buckets;
   private final NameSpec nameSpec;
@@ -59,6 +56,7 @@ public class DistributionBucket {
   /**
    * @return count of buckets including {@link #OVERFLOW} and {@link #UNDERFLOW} buckets.
    */
+  @Override
   public int getCount() {
     return buckets.length + 1;
   }
@@ -120,6 +118,7 @@ public class DistributionBucket {
    *
    * @return array of bucket names
    */
+  @Override
   public String[] getBucketNames() {
     int bucketCount = buckets.length;
     String[] names = new String[bucketCount + 1];
@@ -130,6 +129,11 @@ public class DistributionBucket {
     names[i++] = OVERFLOW;
     names[i++] = UNDERFLOW;
     return names;
+  }
+
+  @Override
+  public Aggregator buildAggregator(String metricId, DistributionBucket bucket, int maxCardinality) {
+    return new BasicHistogramAggregator(metricId, bucket, maxCardinality);
   }
 
   private static boolean isSorted(final long[] buckets) {

@@ -7,9 +7,6 @@ package io.ultrabrew.metrics.data;
 import java.util.Arrays;
 import java.util.function.Predicate;
 
-import static io.ultrabrew.metrics.data.DistributionBucket.OVERFLOW;
-import static io.ultrabrew.metrics.data.DistributionBucket.UNDERFLOW;
-
 /**
  * A distribution bucket specification used for histograms of a double valued metric. A distribution
  * bucket is an sorted array of unique numeric values. Each bucket represents a distribution range
@@ -30,7 +27,7 @@ import static io.ultrabrew.metrics.data.DistributionBucket.UNDERFLOW;
  * @see BasicDoubleValuedHistogramAggregator
  * @see NameSpec
  */
-public class DoubleValuedDistributionBucket {
+public class DoubleValuedDistributionBucket implements DistributionBucketIF<DoubleValuedDistributionBucket> {
 
   private final double[] buckets;
   private final NameSpec spec;
@@ -68,11 +65,17 @@ public class DoubleValuedDistributionBucket {
   }
 
   /**
-   * @return count of buckets including {@link DistributionBucket#OVERFLOW} and {@link
-   *     DistributionBucket#UNDERFLOW} buckets.
+   * @return count of buckets including {@link DistributionBucketIF#OVERFLOW} and {@link
+   *     DistributionBucketIF#UNDERFLOW} buckets.
    */
+  @Override
   public int getCount() {
-    return buckets.length + 1; // includes the underflow and overflow buckets
+    return buckets.length + 1;
+  }
+
+  @Override
+  public Aggregator buildAggregator(String metricId, DoubleValuedDistributionBucket bucket, int maxCardinality) {
+    return new BasicDoubleValuedHistogramAggregator(metricId, bucket, maxCardinality);
   }
 
   /**
@@ -132,6 +135,7 @@ public class DoubleValuedDistributionBucket {
    *
    * @return array of bucket names
    */
+  @Override
   public String[] getBucketNames() {
     int bucketCount = buckets.length;
     String[] names = new String[bucketCount + 1];

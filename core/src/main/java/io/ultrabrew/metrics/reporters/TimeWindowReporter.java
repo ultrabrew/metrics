@@ -10,6 +10,7 @@ import io.ultrabrew.metrics.data.Aggregator;
 import io.ultrabrew.metrics.data.BasicDoubleValuedHistogramAggregator;
 import io.ultrabrew.metrics.data.BasicHistogramAggregator;
 import io.ultrabrew.metrics.data.DistributionBucket;
+import io.ultrabrew.metrics.data.DistributionBucketIF;
 import io.ultrabrew.metrics.data.DoubleValuedDistributionBucket;
 import io.ultrabrew.metrics.util.Intervals;
 import org.slf4j.Logger;
@@ -197,22 +198,9 @@ public abstract class TimeWindowReporter implements Reporter, AutoCloseable {
      * @param bucket distribution bucket
      * @param maxCardinality maximum cardinality of data in the histogram
      */
-    public B addHistogram(final String metricId, final DistributionBucket bucket, final int maxCardinality) {
+    public B addHistogram(final String metricId, final DistributionBucketIF bucket, final int maxCardinality) {
       this.metricAggregators
-          .put(metricId, (metric) -> new BasicHistogramAggregator(metricId, bucket, maxCardinality));
-      return (B) this;
-    }
-
-    /**
-     * Add histograms to a specific metric
-     *
-     * @param metricId identifier of the metric
-     * @param bucket distribution bucket
-     * @param maxCardinality maximum cardinality of data in the histogram
-     */
-    public B addHistogram(final String metricId, final DoubleValuedDistributionBucket bucket, final int maxCardinality) {
-      this.metricAggregators
-          .put(metricId, (metric) -> new BasicDoubleValuedHistogramAggregator(metricId, bucket, maxCardinality));
+          .put(metricId, (metric) -> bucket.buildAggregator(metricId, bucket, maxCardinality));
       return (B) this;
     }
 
@@ -222,17 +210,7 @@ public abstract class TimeWindowReporter implements Reporter, AutoCloseable {
      * @param metricId identifier of the metric
      * @param bucket distribution bucket
      */
-    public B addHistogram(final String metricId, final DistributionBucket bucket) {
-      return addHistogram(metricId, bucket, DEFAULT_MAX_CARDINALITY);
-    }
-
-    /**
-     * Add histograms to a specific metric
-     *
-     * @param metricId identifier of the metric
-     * @param bucket distribution bucket
-     */
-    public B addHistogram(final String metricId, final DoubleValuedDistributionBucket bucket) {
+    public B addHistogram(final String metricId, final DistributionBucketIF bucket) {
       return addHistogram(metricId, bucket, DEFAULT_MAX_CARDINALITY);
     }
 
