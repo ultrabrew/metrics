@@ -289,9 +289,9 @@ There two types of distribution buckets available:
 - `DoubleValuedDistributionBucket` represented by a primitive `double` array
   
 ##### DistributionBucket
-Used to represent the distribution of a integer value. For example time spent in milliseconds or size of a messaging queue.
+Used to represent the distribution of an integer value. For example time spent in milliseconds or size of a messaging queue.
 
-For a given distribution array: [0, 10, 100, 500, 1000], the buckets would be like:
+For a given array of latency distribution in milliseconds [0, 10, 100, 500, 1000], the buckets would be like:
 * [0,10) for values 0-9
 * [10,100) for values 10-99
 * [100,500) for values 100-499
@@ -312,19 +312,20 @@ For a given distribution array: [0, 10, 100, 500, 1000], the buckets would be li
 
   Timer timer = metricRegistry.timer(metricId);    // creates a timer metric with id "latency"
 
-  long start = Timer.start();
+  long start = System.currentTimeMillis();
   // doSomething();
-  timer.stop(start, tagset); // records the latency and the distribution.
+  long end = System.currentTimeMillis();  
+  timer.update(end - start, tagset); // records the latency and the distribution in millisecond.
 ```
 
 ##### DoubleValuedDistributionBucket
-Used to represent the distribution of a floating point value. For example ads auction price.
+Used to represent the distribution of a double-precision floating point value. For example ads auction price.
 
 For a given distribution array: [0.0, 0.25, 0.5, 1.0, 10.0], the buckets would be like:
-* [0.0, 0.25) for values between 0.0-0.24
-* [0.25, 0.5) for values 0.25-0.4
-* [0.5, 1.0) for values 0.5-0.9
-* [1.0, 10.0) for values 1.0-9.9
+* [0.0, 0.25) for 0.0 <= value < 0.25
+* [0.25, 0.5) for 0.25 <= value < 0.5
+* [0.5, 1.0) for 0.5 <= value < 1.0
+* [1.0, 10.0) for 1.0 <= value < 10.0
 * overflow  for values  >= 10.0
 * underflow for values  < 0.0
 
@@ -339,7 +340,7 @@ For a given distribution array: [0.0, 0.25, 0.5, 1.0, 10.0], the buckets would b
 
   String[] tagset = new String[] {"experiment", "exp1"};
 
-  GuageDouble autionPrice = metricRegistry.gaugeDouble(metricId);    // creates a guage double metric with id "auction_price"
+  GaugeDouble autionPrice = metricRegistry.gaugeDouble(metricId);    // creates a guage double metric with id "auction_price"
 
   double price = getAuctionPrice();
   autionPrice.set(price, tagset1); // records the auction_price and the distribution.
