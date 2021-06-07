@@ -291,17 +291,17 @@ There two types of distribution buckets available:
 ##### DistributionBucket
 Used to represent the distribution of an integer value. For example time spent in milliseconds or size of a messaging queue.
 
-For a given array of latency distribution in milliseconds [0, 10, 100, 500, 1000], the buckets would be like:
-* [0,10) for values 0-9
-* [10,100) for values 10-99
-* [100,500) for values 100-499
-* [500,1000) for values 500-999
-* overflow  for values  >= 1000
+For a given array of latency distribution in nanoseconds [0, 10_000_000, 100_000_000, 500_000_000, 1000_000_000], the buckets would be like:
+* [0,10_000_000) for values 0 - 9_999_999
+* [10_000_000,100_000_000) for values 10_000_000 - 99_999_999
+* [100_000_000,500_000_000) for values 100_000_000 - 499_999_999
+* [500_000_000,1000_000_000) for values 500_000_000 - 999999999
+* overflow  for values  >= 1000_000_000
 * underflow for values  < 0
 
 ```Java
   String metricId = "latency";
-  DistributionBucket distributionBucket = new DistributionBucket(new long[]{0, 10, 50, 100});
+  DistributionBucket distributionBucket = new DistributionBucket(new long[]{0, 10_000_000, 100_000_000, 500_000_000, 1000_000_000});
 
   SLF4JReporter reporter =
       SLF4JReporter.builder().withName("metrics")
@@ -312,10 +312,9 @@ For a given array of latency distribution in milliseconds [0, 10, 100, 500, 1000
 
   Timer timer = metricRegistry.timer(metricId);    // creates a timer metric with id "latency"
 
-  long start = System.currentTimeMillis();
+  long start = Timer.start();
   // doSomething();
-  long end = System.currentTimeMillis();  
-  timer.update(end - start, tagset); // records the latency and the distribution in millisecond.
+  timer.stop(start, tagset); // records the latency and the distribution in nanoseconds.
 ```
 
 ##### DoubleValuedDistributionBucket
