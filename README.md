@@ -289,13 +289,13 @@ There two types of distribution buckets available:
 - `DoubleValuedDistributionBucket` represented by a primitive `double` array
   
 ##### DistributionBucket
-Used to represent the distribution of an integer value. For example time spent in milliseconds or size of a messaging queue.
+Used to represent the distribution of an integer value. For example time spent in nanoseconds or size of a messaging queue.
 
 For a given array of latency distribution in nanoseconds [0, 10_000_000, 100_000_000, 500_000_000, 1000_000_000], the buckets would be like:
 * [0,10_000_000) for values 0 - 9_999_999
 * [10_000_000,100_000_000) for values 10_000_000 - 99_999_999
 * [100_000_000,500_000_000) for values 100_000_000 - 499_999_999
-* [500_000_000,1000_000_000) for values 500_000_000 - 999999999
+* [500_000_000,1000_000_000) for values 500_000_000 - 999_999_999
 * overflow  for values  >= 1000_000_000
 * underflow for values  < 0
 
@@ -339,7 +339,7 @@ For a given distribution array: [0.0, 0.25, 0.5, 1.0, 10.0], the buckets would b
 
   String[] tagset = new String[] {"experiment", "exp1"};
 
-  GaugeDouble autionPrice = metricRegistry.gaugeDouble(metricId);    // creates a guage double metric with id "auction_price"
+  GaugeDouble autionPrice = metricRegistry.gaugeDouble(metricId);    // creates a gauge double metric with id "auction_price"
 
   double price = getAuctionPrice();
   autionPrice.set(price, tagset1); // records the auction_price and the distribution.
