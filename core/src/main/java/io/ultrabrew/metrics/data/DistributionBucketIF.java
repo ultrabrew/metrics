@@ -13,7 +13,20 @@ package io.ultrabrew.metrics.data;
  */
 public interface DistributionBucketIF<B extends DistributionBucketIF> {
 
+  /**
+   * A constant used by {@link #getBucketNames()} to name the underflow bucket.
+   *
+   * @see DistributionBucket#getBucketNames()
+   * @see DoubleValuedDistributionBucket#getBucketNames()
+   */
   String UNDERFLOW = "underflow";
+
+  /**
+   * A constant used {@link #getBucketNames()} to name the overflow bucket.
+   *
+   * @see DistributionBucket#getBucketNames()
+   * @see DoubleValuedDistributionBucket#getBucketNames()
+   */
   String OVERFLOW = "overflow";
 
   /** @return count of buckets including {@link #OVERFLOW} and {@link #UNDERFLOW} buckets. */
@@ -21,6 +34,20 @@ public interface DistributionBucketIF<B extends DistributionBucketIF> {
 
   /**
    * Generates the bucket names for representation purpose.
+   *
+   * <p>For the bucket values: [0, 10, 100, 500, 1000], the names would look like:
+   *
+   * <ul>
+   *   <li>0_10
+   *   <li>10_100
+   *   <li>100_500
+   *   <li>500_1000
+   *   <li>{@link #OVERFLOW}
+   *   <li>{@link #UNDERFLOW}
+   * </ul>
+   *
+   * The {@link #OVERFLOW} bucket would contain the count of all the values {@literal >}= 1000. The
+   * {@link #UNDERFLOW} bucket would contain the count of all the values {@literal <} 0.
    *
    * @return array of bucket names
    */
