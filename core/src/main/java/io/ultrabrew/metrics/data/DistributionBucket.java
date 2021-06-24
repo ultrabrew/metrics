@@ -13,12 +13,12 @@ import java.util.function.Predicate;
  *
  * <P>For a given distribution array: [0, 10, 100, 500, 1000], the buckets would be like:</P>
  * <ul>
- * <li>[0,10) for values 0-9</li>
- * <li>[10,100) for values 10-99</li>
- * <li>[100,500) for values 100-499</li>
- * <li>[500,1000) for values 500-999</li>
- * <li>overflow  for values {@literal >}= 1000</li>
- * <li>underflow for values {@literal <} 0</li>
+ * <li>[0, 10) for 0 {@literal <=} value {@literal <} 9
+ * <li>[10, 100) for 10 {@literal <=} value {@literal <} 99
+ * <li>[100, 500) for 100 {@literal <=} value {@literal <} 499
+ * <li>[500, 1000) for 500 {@literal <=} value {@literal <} 999
+ * <li>overflow  for values {@literal >}= 1000
+ * <li>underflow for values {@literal <} 0
  * </ul>
  *
  * @see BasicHistogramAggregator

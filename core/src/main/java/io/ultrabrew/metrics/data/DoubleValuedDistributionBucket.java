@@ -15,10 +15,10 @@ import java.util.function.Predicate;
  * <p>For a given distribution array: [0.0, 0.5, 1.0, 1.25, 50.0, 100.0], the buckets would be like:
  *
  * <ul>
- *   <li>[0.0,0.5) for  0.0 {@literal <=} value {@literal <} 0.5
- *   <li>[0.5,1.0) for 0.5 {@literal <=} value {@literal <} 1.0
- *   <li>[1.0,1.25) for 1.0 {@literal <=} value {@literal <} 1.25
- *   <li>[1.25,50.0) for 1.25 {@literal <=} value {@literal <} 50.0
+ *   <li>[0.0, 0.5) for  0.0 {@literal <=} value {@literal <} 0.5
+ *   <li>[0.5, 1.0) for 0.5 {@literal <=} value {@literal <} 1.0
+ *   <li>[1.0, 1.25) for 1.0 {@literal <=} value {@literal <} 1.25
+ *   <li>[1.25, 50.0) for 1.25 {@literal <=} value {@literal <} 50.0
  *   <li>[50.0, 100.0) for 50.0 {@literal <=} value {@literal <} 100.0
  *   <li>overflow for values {@literal >}= 100.0
  *   <li>underflow for values {@literal <} 0.0
