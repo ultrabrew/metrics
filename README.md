@@ -116,7 +116,7 @@ repositories {
 }
 
 dependencies {
-  compile group: 'io.ultrabrew.metrics', name: 'metrics-{your reporter}', version: '0.8.0'
+  compile group: 'io.ultrabrew.metrics', name: 'metrics-{your reporter}', version: '0.9.0'
 }
 ```
 
@@ -127,7 +127,7 @@ dependencies {
    <dependency>
      <groupId>io.ultrabrew.metrics</groupId>
      <artifactId>metrics-{your reporter}</artifactId>
-     <version>0.8.0</version>
+     <version>0.9.0</version>
    </dependency>
 </dependencies>
 ```
@@ -279,6 +279,72 @@ SLF4J Logger.
   SLF4JReporter reporter = SLF4JReporter.builder().withName("metrics").build();
   metricRegistry.addReporter(reporter);
 ```
+
+#### Histograms
+
+In the current implementation, clients must define the distribution buckets and associate them in the reporter with the name of the metric to be histogrammed.
+
+There two types of distribution buckets available:
+- `DistributionBucket` represented by a primitive `long` array.
+- `DoubleValuedDistributionBucket` represented by a primitive `double` array
+  
+##### DistributionBucket
+Used to represent the distribution of an integer value. For example time spent in nanoseconds or size of a messaging queue.
+
+For a given array of latency distribution in nanoseconds [0, 10_000_000, 100_000_000, 500_000_000, 1000_000_000], the buckets would be like:
+* [0, 10_000_000) for 0 <= value < 9_999_999
+* [10_000_000, 100_000_000) for 10_000_000 <= value < 99_999_999
+* [100_000_000, 500_000_000) for 100_000_000 <= value < 499_999_999
+* [500_000_000, 1000_000_000) for 500_000_000 <= value < 999_999_999
+* overflow  for values  >= 1000_000_000
+* underflow for values  < 0
+
+```Java
+  String metricId = "latency";
+  DistributionBucket distributionBucket = new DistributionBucket(new long[]{0, 10_000_000, 100_000_000, 500_000_000, 1000_000_000});
+
+  SLF4JReporter reporter =
+      SLF4JReporter.builder().withName("metrics")
+          .addHistogram(metricId, distributionBucket)    // add histogram for metric with id "latency"
+          .build();
+    
+  String[] tagset = new String[] {"method", "GET", "resource", "metrics", "status", "200"};
+
+  Timer timer = metricRegistry.timer(metricId);    // creates a timer metric with id "latency"
+
+  long start = Timer.start();
+  // doSomething();
+  timer.stop(start, tagset); // records the latency and the distribution in nanoseconds.
+```
+
+##### DoubleValuedDistributionBucket
+Used to represent the distribution of a double-precision floating point value. For example ads auction price.
+
+For a given distribution array: [0.0, 0.25, 0.5, 1.0, 5.0, 10.0], the buckets would be like:
+* [0.0, 0.25) for 0.0 <= value < 0.25
+* [0.25, 0.5) for 0.25 <= value < 0.5
+* [0.5, 1.0) for 0.5 <= value < 1.0
+* [1.0, 5.0) for 1.0 <= value < 5.0
+* [5.0, 10.0) for 5.0 <= value < 10.0
+* overflow  for values  >= 10.0
+* underflow for values  < 0.0
+
+```Java
+  String metricId = "auction_price";
+  DoubleValuedDistributionBucket distributionBucket = new DoubleValuedDistributionBucket(new double[]{0.0, 0.25, 0.5, 1.0, 5.0, 10.0});
+
+  SLF4JReporter reporter =
+      SLF4JReporter.builder().withName("metrics")
+            .addHistogram(metricId, distributionBucket)    // add histogram for metric with id "auction_price"
+            .build();
+
+  String[] tagset = new String[] {"experiment", "exp1"};
+
+  GaugeDouble auctionPrice = metricRegistry.gaugeDouble(metricId);    // creates a gauge double metric with id "auction_price"
+
+  auctionPrice.set(getAuctionPrice(), tagset); // records the auction_price and the distribution.
+```
+
 
 ## Contribute
 

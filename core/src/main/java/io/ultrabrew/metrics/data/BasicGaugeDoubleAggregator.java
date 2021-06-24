@@ -25,10 +25,9 @@ import io.ultrabrew.metrics.GaugeDouble;
  */
 public class BasicGaugeDoubleAggregator extends ConcurrentMonoidLongTable {
 
-  private static final String[] FIELDS = {"count", "sum", "min", "max", "lastValue"};
-  private static final Type[] TYPES = {Type.LONG, Type.DOUBLE, Type.DOUBLE, Type.DOUBLE,
-      Type.DOUBLE};
-  private static final long[] IDENTITY = {0L, 0L, Long.MAX_VALUE, Long.MIN_VALUE, 0L};
+  static final String[] FIELDS = {"count", "sum", "min", "max", "lastValue"};
+  static final Type[] TYPES = {Type.LONG, Type.DOUBLE, Type.DOUBLE, Type.DOUBLE, Type.DOUBLE};
+  static final long[] IDENTITY = {0L, 0L, Long.MAX_VALUE, Long.MIN_VALUE, 0L};
 
 
   /**
@@ -71,7 +70,12 @@ public class BasicGaugeDoubleAggregator extends ConcurrentMonoidLongTable {
    */
   public BasicGaugeDoubleAggregator(final String metricId, final int maxCardinality,
       final int cardinality) {
-    super(metricId, maxCardinality, cardinality, FIELDS, TYPES, IDENTITY);
+    this(metricId, maxCardinality, cardinality, FIELDS, TYPES, IDENTITY);
+  }
+
+  protected BasicGaugeDoubleAggregator(final String metricId, final int maxCardinality,
+      final int cardinality, final String[] fields, final Type[] types, final long[] identity) {
+    super(metricId, maxCardinality, cardinality, fields, types, identity);
   }
 
   @Override
@@ -83,4 +87,5 @@ public class BasicGaugeDoubleAggregator extends ConcurrentMonoidLongTable {
     max(table, baseOffset, 3, d);
     set(table, baseOffset, 4, d);
   }
+
 }

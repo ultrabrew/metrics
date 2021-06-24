@@ -19,6 +19,7 @@ import io.ultrabrew.metrics.Timer;
 import io.ultrabrew.metrics.data.Aggregator;
 import io.ultrabrew.metrics.data.Cursor;
 import io.ultrabrew.metrics.data.DistributionBucket;
+import io.ultrabrew.metrics.data.DoubleValuedDistributionBucket;
 import java.util.ArrayList;
 import java.util.List;
 import mockit.Capturing;
@@ -340,6 +341,68 @@ public class SLF4JReporterTest {
           "count=5 sum=338 min=15 max=100 lastValue=75 0_10=0 10_50=2 50_100=2 overflow=1 underflow=0",
           "latency");
     }};
+  }
+
+  @Test
+  void testDoubleValuedHistogram(@Injectable Logger logger) throws InterruptedException {
+
+    String metricId = "latency";
+    DoubleValuedDistributionBucket bucket =
+        new DoubleValuedDistributionBucket(new double[] {0.0, 10.5, 50.0, 100.0});
+
+    reporter =
+        SLF4JReporter.builder()
+            .withName("testHistogram")
+            .withStepSize(1)
+            .addHistogram(metricId, bucket)
+            .build();
+
+    Deencapsulation.setField(this.reporter, "reporter", logger);
+    MetricRegistry metricRegistry = new MetricRegistry();
+    metricRegistry.addReporter(this.reporter);
+
+    long start = System.currentTimeMillis();
+
+    GaugeDouble gauge = metricRegistry.gaugeDouble(metricId);
+    gauge.set(-2, "tag", "100");
+    gauge.set(-1, "tag", "100");
+    gauge.set(-1.0, "tag", "100");
+    gauge.set(0.0, "tag", "100");
+    gauge.set(9.0, "tag", "100");
+    gauge.set(10.25, "tag", "100");
+    gauge.set(10.5, "tag", "100");
+    gauge.set(49.25, "tag", "100");
+    gauge.set(50.0, "tag", "100");
+    gauge.set(150.05, "tag", "100");
+
+    gauge.set(15.25, "tag", "101");
+    gauge.set(49.0, "tag", "101");
+    gauge.set(99.23, "tag", "101");
+    gauge.set(100.0, "tag", "101");
+    gauge.set(200.0, "tag", "101");
+    gauge.set(75.0, "tag", "101");
+
+    Thread.sleep(calculateDelay(1000, start) + 150);
+
+    new Verifications() {
+      {
+        List<Object[]> objects = new ArrayList<>();
+        logger.info("lastUpdated={} {}{}{} {}", withCapture(objects));
+
+        assertEquals(2, objects.size());
+
+        compare(
+            objects.get(0),
+            "tag=100",
+            "count=10 sum=275.05 min=-2.0 max=150.05 lastValue=150.05 0.0_10.5=3 10.5_50.0=2 50.0_100.0=1 overflow=1 underflow=3",
+            "latency");
+        compare(
+            objects.get(1),
+            "tag=101",
+            "count=6 sum=538.48 min=15.25 max=200.0 lastValue=75.0 0.0_10.5=0 10.5_50.0=2 50.0_100.0=2 overflow=2 underflow=0",
+            "latency");
+      }
+    };
   }
 
   private void compare(final Object[] o, final String tags, final String fields,
