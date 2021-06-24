@@ -14,5 +14,6 @@ dependencies {
     implementation platform(group: 'org.apache.logging.log4j', name: 'log4j-bom', version: '2.14.1')
     implementation group: 'org.apache.logging.log4j', name: 'log4j-core'
     implementation group: 'org.apache.logging.log4j', name: 'log4j-slf4j-impl'
-    implementation group: 'io.undertow', name: 'undertow-core', version: '2.2.7.Final'
+    implementation group: 'io.undertow', name: 'undertow-core', version: '2.2.8.Final'
+    implementation group: 'org.jboss.xnio', name: 'xnio-nio', version: '3.8.4.Final'
 }
