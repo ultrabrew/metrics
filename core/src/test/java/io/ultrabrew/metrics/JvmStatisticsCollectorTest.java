@@ -5,11 +5,13 @@
 package io.ultrabrew.metrics;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
 
 import java.util.ArrayList;
 import java.util.List;
+
 import mockit.Mocked;
 import mockit.Verifications;
 import org.junit.jupiter.api.Test;
@@ -56,6 +58,9 @@ public class JvmStatisticsCollectorTest {
       assertEquals("jvm.thread.daemonCount", metrics.get(4).id);
       assertEquals("jvm.thread.count", metrics.get(5).id);
       assertEquals("jvm.thread.totalStartedCount", metrics.get(6).id);
+
+      metrics.forEach(m -> assertFalse(m.id.contains(" "), "Metric ID [" + m.id + "] contains illegal character"));
+      metrics.forEach(m -> assertFalse(m.id.contains("'"), "Metric ID [" + m.id + "] contains illegal character"));
 
       // There are some unverified items here, but they depend on the VM we're running on and are thus hard to verify
       // For the same reason, we can't verify the number of calls to reporter.emit() as it depends on the VM

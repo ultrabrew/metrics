@@ -148,14 +148,14 @@ public class JvmStatisticsCollector {
 
     for (MemoryPoolMXBean poolBean : ManagementFactory.getMemoryPoolMXBeans()) {
       MemoryUsage usage = poolBean.getUsage();
-      String prefix = "jvm.memorypool." + poolBean.getName().replace(' ', '_');
+      String prefix = "jvm.memorypool." + sanitizeName(poolBean.getName());
       setGauge(prefix + ".committed", usage.getCommitted());
       setGauge(prefix + ".used", usage.getUsed());
     }
 
     for (BufferPoolMXBean bufferPoolBean : ManagementFactory
         .getPlatformMXBeans(BufferPoolMXBean.class)) {
-      String prefix = "jvm.bufferpool." + bufferPoolBean.getName().replace(' ', '_');
+      String prefix = "jvm.bufferpool." + sanitizeName(bufferPoolBean.getName());
       setGauge(prefix + ".count", bufferPoolBean.getCount());
       setGauge(prefix + ".totalCapacity", bufferPoolBean.getTotalCapacity());
       setGauge(prefix + ".memoryUsed", bufferPoolBean.getMemoryUsed());
@@ -166,5 +166,9 @@ public class JvmStatisticsCollector {
       setGauge(prefix + ".count", collectorBean.getCollectionCount());
       setGauge(prefix + ".time", collectorBean.getCollectionTime());
     }
+  }
+
+  private String sanitizeName(String name) {
+    return name.replace(' ', '_').replace('\'', '_');
   }
 }
