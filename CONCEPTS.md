@@ -43,14 +43,15 @@ The values in a timeseries can be sparse i.e., there could be discontinuity in t
 
 ### Gauge
 A Gauge is a type of metric whose value can increase or decrease over various measurements. Gauges are represented using 64-bit longs. There is an implementation for Java Doubles as well. Gauges are aggregated over time and reported as
-* `Sum` (e.g., total latency of request processing over a minute)
-* `Count` (e.g., number of requests processed over a minute)
-* `Min` (e.g., lowest latency across all requests over a minute)
-* `Max` (e.g., highest latency across all requests over a minute)
+* `sum` (e.g., total latency of request processing over a minute)
+* `count` (e.g., number of requests processed over a minute)
+* `min` (e.g., lowest latency across all requests over a minute)
+* `max` (e.g., highest latency across all requests over a minute)
+* `lastValue` (e.g., last latency across all requests over a minute)
 
 ### Counter
 Counter is a type of metric whose value can increase or decrease by whole numbers. It is stored in a 64-bit long. Counter values are aggregated over time and reported as
-* `Sum` (e.g., total count of requests processed over a minute)
+* `sum` (e.g., total count of requests processed over a minute)
 
 ### Timer
 Timer is a type of metric useful for recording information about application latency. The underlying implementation of a timer is same as a Gauge with the same aggregations being reported. We plan to add higher-order aggregations for timers such as Histograms, Sketches, and T-digests for more accurate calculation of percentiles across servers or application instances. Timers have a helper function for recording the initial timestamp when the code to be measured starts executing.
