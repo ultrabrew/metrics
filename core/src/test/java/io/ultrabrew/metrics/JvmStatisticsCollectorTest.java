@@ -4,15 +4,16 @@
 
 package io.ultrabrew.metrics;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.fail;
-
+import java.lang.invoke.MethodHandle;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+
 import mockit.Mocked;
 import mockit.Verifications;
 import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 public class JvmStatisticsCollectorTest {
 
@@ -61,4 +62,74 @@ public class JvmStatisticsCollectorTest {
       // For the same reason, we can't verify the number of calls to reporter.emit() as it depends on the VM
     }};
   }
+
+  @Test
+  public void testCollectProcessCpuUsage(@Mocked Reporter reporter) {
+    MetricRegistry registry = new MetricRegistry();
+    registry.addReporter(reporter);
+    JvmStatisticsCollector collector = new JvmStatisticsCollector(registry);
+    MethodHandle methodHandle = collector.detectMethod(Double.class, "doubleValue");
+    collector.collectProcessCpuUsage(Double.valueOf(0.7d), methodHandle);
+
+    new Verifications() {{
+      List<Metric> metrics = new ArrayList<>();
+      reporter.emit(withCapture(metrics), anyLong, anyLong, (String[]) any);
+      assertEquals("jvm.cpu.usage", metrics.get(0).id);
+    }};
+  }
+
+  @Test
+  public void testCollectProcessCpuUsageNoMethodHandle(@Mocked Reporter reporter) {
+    MetricRegistry registry = new MetricRegistry();
+    registry.addReporter(reporter);
+    JvmStatisticsCollector collector = new JvmStatisticsCollector(registry);
+    collector.collectProcessCpuUsage(Double.valueOf(0.7d), null);
+
+    new Verifications() {{
+      reporter.emit((Metric) any, anyLong, anyLong, (String[]) any);
+      times = 0;
+    }};
+  }
+
+  @Test
+  public void testGetFirstClassFound(@Mocked MetricRegistry registry) {
+    JvmStatisticsCollector collector = new JvmStatisticsCollector(registry);
+    Class<?> clazz = collector.getFirstClassFound(Arrays.asList(
+            "java.lang.Double00",
+            "java.lang.Double"
+    ));
+    assertNotNull(clazz);
+  }
+
+  @Test
+  public void testGetFirstClassFoundNotFound(@Mocked MetricRegistry registry) {
+    JvmStatisticsCollector collector = new JvmStatisticsCollector(registry);
+    Class<?> clazz = collector.getFirstClassFound(Arrays.asList(
+            "java.lang.Double00"
+    ));
+    assertNull(clazz);
+  }
+
+  @Test
+  public void testDetectMethod(@Mocked MetricRegistry registry) {
+    JvmStatisticsCollector collector = new JvmStatisticsCollector(registry);
+    MethodHandle methodHandle = collector.detectMethod(Double.class, "doubleValue");
+    assertNotNull(methodHandle);
+
+  }
+
+  @Test
+  public void testDetectMethodNoClass(@Mocked MetricRegistry registry) {
+    JvmStatisticsCollector collector = new JvmStatisticsCollector(registry);
+    MethodHandle methodHandle = collector.detectMethod(null, "doubleValue");
+    assertNull(methodHandle);
+  }
+
+  @Test
+  public void testDetectMethodNoMethod(@Mocked MetricRegistry registry) {
+    JvmStatisticsCollector collector = new JvmStatisticsCollector(registry);
+    MethodHandle methodHandle = collector.detectMethod(null, "doubleValue00");
+    assertNull(methodHandle);
+  }
+
 }

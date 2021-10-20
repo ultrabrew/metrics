@@ -5,6 +5,10 @@
 package io.ultrabrew.metrics;
 
 import io.ultrabrew.metrics.util.Intervals;
+
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodType;
 import java.lang.management.BufferPoolMXBean;
 import java.lang.management.ClassLoadingMXBean;
 import java.lang.management.CompilationMXBean;
@@ -12,8 +16,11 @@ import java.lang.management.GarbageCollectorMXBean;
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryPoolMXBean;
 import java.lang.management.MemoryUsage;
+import java.lang.management.OperatingSystemMXBean;
 import java.lang.management.ThreadMXBean;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
@@ -50,6 +57,8 @@ import java.util.concurrent.TimeUnit;
  * <dd>Total number of garbage collections for this collector.</dd>
  * <dt>jvm.gc.&lt;collectorname&gt;.time</dt>
  * <dd>Approximate total time used by this collector in milliseconds.</dd>
+ * <dt>jvm.cpu.usage</dt>
+ * <dd>CPU usage in percents by JVM.</dd>
  * </dl>
  *
  * @see ClassLoadingMXBean
@@ -58,6 +67,7 @@ import java.util.concurrent.TimeUnit;
  * @see MemoryPoolMXBean
  * @see BufferPoolMXBean
  * @see GarbageCollectorMXBean
+ * @see OperatingSystemMXBean
  */
 public class JvmStatisticsCollector {
 
@@ -66,6 +76,17 @@ public class JvmStatisticsCollector {
   private final Semaphore exitRequest = new Semaphore(0);
   private Thread reportingThread = null;
 
+
+  private static final List<String> OPERATING_SYSTEM_BEAN_CLASS_NAMES = Arrays.asList(
+    "com.ibm.lang.management.OperatingSystemMXBean", // J9
+    "com.sun.management.OperatingSystemMXBean" // HotSpot
+  );
+
+  private final OperatingSystemMXBean operatingSystemBean;
+
+  private final MethodHandle processCpuUsage;
+
+
   /**
    * Create a JvmStatisticsCollector that emits statistics to the given {@link MetricRegistry}.
    *
@@ -73,6 +94,10 @@ public class JvmStatisticsCollector {
    */
   public JvmStatisticsCollector(final MetricRegistry registry) {
     this.registry = registry;
+
+    this.operatingSystemBean = ManagementFactory.getOperatingSystemMXBean();
+    Class<?> operatingSystemBeanClass = getFirstClassFound(OPERATING_SYSTEM_BEAN_CLASS_NAMES);
+    this.processCpuUsage = detectMethod(operatingSystemBeanClass, "getProcessCpuLoad");
   }
 
   /**
@@ -166,5 +191,53 @@ public class JvmStatisticsCollector {
       setGauge(prefix + ".count", collectorBean.getCollectionCount());
       setGauge(prefix + ".time", collectorBean.getCollectionTime());
     }
+
+    collectProcessCpuUsage(operatingSystemBean, processCpuUsage);
   }
+
+  void collectProcessCpuUsage(Object operatingSystemBean, MethodHandle processCpuUsage) {
+    if (processCpuUsage == null) {
+      return;
+    }
+    double value;
+    try {
+      value = (double) processCpuUsage.invoke(operatingSystemBean);
+    } catch (Throwable e) {
+      // CLOVER:OFF
+      // Unsupported JVM
+      return;
+      // CLOVER:ON
+    }
+    setGauge("jvm.cpu.usage", (long) (value * 100L));
+  }
+
+  MethodHandle detectMethod(Class<?> clazz, String name) {
+    if (clazz == null) {
+      return null;
+    }
+    MethodHandles.Lookup publicLookup = MethodHandles.publicLookup();
+    MethodType mt = MethodType.methodType(double.class);
+    try {
+      return publicLookup.findVirtual(clazz, name, mt);
+    } catch (NoSuchMethodException | IllegalAccessException e) {
+      // CLOVER:OFF
+      // Unsupported JVM
+      return null;
+      // CLOVER:ON
+    }
+  }
+
+  Class<?> getFirstClassFound(List<String> classNames) {
+    for (String className : classNames) {
+      try {
+        return Class.forName(className);
+      } catch (ClassNotFoundException ignore) {
+        // CLOVER:OFF
+        // Unsupported JVM
+        // CLOVER:ON
+      }
+    }
+    return null;
+  }
+
 }
