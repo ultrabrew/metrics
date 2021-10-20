@@ -5,6 +5,10 @@
 package io.ultrabrew.metrics;
 
 import io.ultrabrew.metrics.util.Intervals;
+
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodType;
 import java.lang.management.BufferPoolMXBean;
 import java.lang.management.ClassLoadingMXBean;
 import java.lang.management.CompilationMXBean;
@@ -14,8 +18,6 @@ import java.lang.management.MemoryPoolMXBean;
 import java.lang.management.MemoryUsage;
 import java.lang.management.OperatingSystemMXBean;
 import java.lang.management.ThreadMXBean;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -80,10 +82,7 @@ public class JvmStatisticsCollector {
     "com.sun.management.OperatingSystemMXBean" // HotSpot
   );
 
-  private final OperatingSystemMXBean operatingSystemBean;
-  private final Class<?> operatingSystemBeanClass;
-
-  private final Method processCpuUsage;
+  private final MethodHandle processCpuUsage;
 
 
   /**
@@ -94,9 +93,8 @@ public class JvmStatisticsCollector {
   public JvmStatisticsCollector(final MetricRegistry registry) {
     this.registry = registry;
 
-    this.operatingSystemBean = ManagementFactory.getOperatingSystemMXBean();
-    this.operatingSystemBeanClass = getFirstClassFound(OPERATING_SYSTEM_BEAN_CLASS_NAMES);
-    this.processCpuUsage = detectMethod("getProcessCpuLoad");
+    Class<?> operatingSystemBeanClass = getFirstClassFound(OPERATING_SYSTEM_BEAN_CLASS_NAMES);
+    this.processCpuUsage = detectMethod(operatingSystemBeanClass, "getProcessCpuLoad");
   }
 
   /**
@@ -196,22 +194,23 @@ public class JvmStatisticsCollector {
     }
   }
 
-  private long invoke(Method method) {
+  private long invoke(MethodHandle method) {
     try {
-      return method != null ? (long) (((double) method.invoke(operatingSystemBean)) * 100) : 0L;
-    } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-        return 0L;
+      return method != null ? (long) (((double) method.invokeExact()) * 100) : 0L;
+    } catch (Throwable e) {
+      return 0L;
     }
   }
 
-  private Method detectMethod(String name) {
-    if (operatingSystemBeanClass == null) {
+  private MethodHandle detectMethod(Class<?> clazz, String name) {
+    if (clazz == null) {
       return null;
     }
+    MethodHandles.Lookup publicLookup = MethodHandles.publicLookup();
+    MethodType mt = MethodType.methodType(double.class);
     try {
-      operatingSystemBeanClass.cast(operatingSystemBean);
-      return operatingSystemBeanClass.getDeclaredMethod(name);
-    } catch (ClassCastException | NoSuchMethodException | SecurityException e) {
+      return publicLookup.findVirtual(clazz, name, mt);
+    } catch (NoSuchMethodException | IllegalAccessException e) {
       return null;
     }
   }

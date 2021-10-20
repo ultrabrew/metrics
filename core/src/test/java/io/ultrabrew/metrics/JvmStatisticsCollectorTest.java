@@ -59,6 +59,9 @@ public class JvmStatisticsCollectorTest {
 
       // There are some unverified items here, but they depend on the VM we're running on and are thus hard to verify
       // For the same reason, we can't verify the number of calls to reporter.emit() as it depends on the VM
+
+      // should work on HotSpot and J9 jdks
+      assertEquals("jvm.cpu.usage",  metrics.get(metrics.size() - 1).id);
     }};
   }
 }
