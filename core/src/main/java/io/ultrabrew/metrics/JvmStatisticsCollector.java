@@ -82,6 +82,8 @@ public class JvmStatisticsCollector {
     "com.sun.management.OperatingSystemMXBean" // HotSpot
   );
 
+  private final OperatingSystemMXBean operatingSystemBean;
+
   private final MethodHandle processCpuUsage;
 
 
@@ -93,6 +95,7 @@ public class JvmStatisticsCollector {
   public JvmStatisticsCollector(final MetricRegistry registry) {
     this.registry = registry;
 
+    this.operatingSystemBean = ManagementFactory.getOperatingSystemMXBean();
     Class<?> operatingSystemBeanClass = getFirstClassFound(OPERATING_SYSTEM_BEAN_CLASS_NAMES);
     this.processCpuUsage = detectMethod(operatingSystemBeanClass, "getProcessCpuLoad");
   }
@@ -189,20 +192,26 @@ public class JvmStatisticsCollector {
       setGauge(prefix + ".time", collectorBean.getCollectionTime());
     }
 
-    if (processCpuUsage != null) {
-      setGauge("jvm.cpu.usage", invoke(processCpuUsage));
-    }
+    collectProcessCpuUsage(operatingSystemBean, processCpuUsage);
   }
 
-  private long invoke(MethodHandle method) {
+  void collectProcessCpuUsage(Object operatingSystemBean, MethodHandle processCpuUsage) {
+    if (processCpuUsage == null) {
+      return;
+    }
+    double value;
     try {
-      return method != null ? (long) (((double) method.invokeExact()) * 100) : 0L;
+      value = (double) processCpuUsage.invoke(operatingSystemBean);
     } catch (Throwable e) {
-      return 0L;
+      // CLOVER:OFF
+      // Unsupported JVM
+      return;
+      // CLOVER:ON
     }
+    setGauge("jvm.cpu.usage", (long) (value * 100L));
   }
 
-  private MethodHandle detectMethod(Class<?> clazz, String name) {
+  MethodHandle detectMethod(Class<?> clazz, String name) {
     if (clazz == null) {
       return null;
     }
@@ -211,11 +220,14 @@ public class JvmStatisticsCollector {
     try {
       return publicLookup.findVirtual(clazz, name, mt);
     } catch (NoSuchMethodException | IllegalAccessException e) {
+      // CLOVER:OFF
+      // Unsupported JVM
       return null;
+      // CLOVER:ON
     }
   }
 
-  private Class<?> getFirstClassFound(List<String> classNames) {
+  Class<?> getFirstClassFound(List<String> classNames) {
     for (String className : classNames) {
       try {
         return Class.forName(className);
